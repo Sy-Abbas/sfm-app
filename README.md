@@ -1,0 +1,2 @@
+# sfm-app
+ This GitHub repository contains the code for the Surplus Food Management (SFM) app, which is a versatile application designed to tackle the increasing problem of food wastage. The SFM app offers an innovative solution that connects local businesses and food banks to redistribute surplus food and reduce waste. The repository houses all the necessary code and dependencies required to run the SFM app. 

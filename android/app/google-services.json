@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "41279370159",
+    "project_id": "surplusfoodmanagement-af937",
+    "storage_bucket": "surplusfoodmanagement-af937.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:41279370159:android:d2229e06d06b638e2ef55a",
+        "android_client_info": {
+          "package_name": "xyz.surplusfoodmanagement.sfm"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "41279370159-qk4sfhvlkr658h3fmhjldt5q39rboobk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCRO_kRxAXjduLlcgRSqqXxyjc1Z_x5gqI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "41279370159-qk4sfhvlkr658h3fmhjldt5q39rboobk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
