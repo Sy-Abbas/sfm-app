@@ -26,6 +26,8 @@ class _HomeDonatorsState extends State<HomeDonators> {
                 final shouldLogout = await showLogOurDialog(context);
                 if (shouldLogout) {
                   await FirebaseAuth.instance.signOut();
+                  await FirebaseAuth.instance.signOut(); // clear cached data
+
                   Navigator.of(context).pushNamedAndRemoveUntil(
                     '/logindonator/',
                     (route) => false,

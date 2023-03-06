@@ -17,6 +17,7 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
   late final TextEditingController _password;
   bool isObscure = true;
   final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -106,6 +107,9 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
                                         0.072,
                                   ),
                                   TextFormField(
+                                    textInputAction: TextInputAction.next,
+                                    autovalidateMode:
+                                        AutovalidateMode.onUserInteraction,
                                     keyboardType: TextInputType.emailAddress,
                                     decoration: const InputDecoration(
                                       hintText: "Email Address",
@@ -138,6 +142,9 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
                                   ),
                                   const SizedBox(height: 14),
                                   TextFormField(
+                                    textInputAction: TextInputAction.next,
+                                    autovalidateMode:
+                                        AutovalidateMode.onUserInteraction,
                                     obscureText: isObscure,
                                     enableSuggestions: false,
                                     autocorrect: false,
@@ -192,9 +199,14 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
                                             MaterialStateProperty.all<Color>(
                                                 Colors.green)),
                                     onPressed: () async {
+                                      FocusManager.instance.primaryFocus
+                                          ?.unfocus();
                                       final email = _email.text;
                                       final password = _password.text;
                                       if (_formKey.currentState!.validate()) {
+                                        setState(() {
+                                          _isLoading = true;
+                                        });
                                         try {
                                           await FirebaseAuth.instance
                                               .signInWithEmailAndPassword(
@@ -206,10 +218,24 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
                                               user?.uid ?? "None");
                                           if (usertype == "NGOs") {
                                             if (user?.emailVerified ?? false) {
-                                              Navigator.of(context)
-                                                  .pushNamedAndRemoveUntil(
-                                                      '/homengo/',
-                                                      (route) => false);
+                                              String idDoc = await findDocID(
+                                                  user?.uid ?? "None", "NGOs");
+                                              bool isDetail =
+                                                  await detailsEntered(
+                                                      user?.uid ?? "None",
+                                                      "NGOs",
+                                                      idDoc);
+                                              if (isDetail == true) {
+                                                Navigator.of(context)
+                                                    .pushNamedAndRemoveUntil(
+                                                        '/homengo/',
+                                                        (route) => false);
+                                              } else {
+                                                Navigator.of(context)
+                                                    .pushNamedAndRemoveUntil(
+                                                        '/detailsngo/',
+                                                        (route) => false);
+                                              }
                                             } else {
                                               final shouldSend =
                                                   await verifyEmailDialog(
@@ -220,7 +246,10 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
                                               }
                                             }
                                           } else {
-                                            devetools.log("Invalid User");
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(const SnackBar(
+                                                    content:
+                                                        Text("Invalid User")));
                                           }
                                         } on FirebaseAuthException catch (e) {
                                           if (e.code == 'user-not-found') {
@@ -238,11 +267,18 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
                                                         "Wrong Password")));
                                             _password.clear();
                                           }
+                                        } finally {
+                                          setState(() {
+                                            _isLoading = false;
+                                          });
                                         }
                                       }
                                     },
-                                    child: const Text("Login",
-                                        style: TextStyle(color: Colors.white)),
+                                    child: _isLoading
+                                        ? const CircularProgressIndicator()
+                                        : const Text("Login",
+                                            style:
+                                                TextStyle(color: Colors.white)),
                                   ),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,

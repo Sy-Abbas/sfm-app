@@ -6,9 +6,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../main.dart';
 
-// import '../firebase_options.dart';
-// import 'package:firebase_core/firebase_core.dart';
-
 class RegisterViewNGO extends StatefulWidget {
   const RegisterViewNGO({super.key});
 
@@ -25,7 +22,8 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
   final _formKey = GlobalKey<FormState>();
   bool isObscure = true;
   bool isObscureC = true;
-  get devetools => null;
+  final focus = FocusNode();
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -45,6 +43,7 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
     _email.dispose();
     _password.dispose();
     _cpassword.dispose();
+
     super.dispose();
   }
 
@@ -122,6 +121,9 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                         0.072,
                                   ),
                                   TextFormField(
+                                    textInputAction: TextInputAction.next,
+                                    autovalidateMode:
+                                        AutovalidateMode.onUserInteraction,
                                     keyboardType: TextInputType.text,
                                     decoration: const InputDecoration(
                                       hintText: "Full Name",
@@ -149,6 +151,9 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                   ),
                                   const SizedBox(height: 10),
                                   TextFormField(
+                                    textInputAction: TextInputAction.next,
+                                    autovalidateMode:
+                                        AutovalidateMode.onUserInteraction,
                                     keyboardType: TextInputType.number,
                                     decoration: const InputDecoration(
                                       hintText: "Contact Number",
@@ -182,6 +187,9 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                   ),
                                   const SizedBox(height: 10),
                                   TextFormField(
+                                    textInputAction: TextInputAction.next,
+                                    autovalidateMode:
+                                        AutovalidateMode.onUserInteraction,
                                     keyboardType: TextInputType.emailAddress,
                                     decoration: const InputDecoration(
                                       hintText: "Email Address",
@@ -218,6 +226,12 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                     children: [
                                       Flexible(
                                         child: TextFormField(
+                                          autovalidateMode: AutovalidateMode
+                                              .onUserInteraction,
+                                          onFieldSubmitted: (v) {
+                                            FocusScope.of(context)
+                                                .requestFocus(focus);
+                                          },
                                           obscureText: isObscure,
                                           enableSuggestions: false,
                                           autocorrect: false,
@@ -273,6 +287,9 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                       ),
                                       Flexible(
                                         child: TextFormField(
+                                          autovalidateMode: AutovalidateMode
+                                              .onUserInteraction,
+                                          focusNode: focus,
                                           obscureText: isObscureC,
                                           enableSuggestions: false,
                                           autocorrect: false,
@@ -338,9 +355,14 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                             MaterialStateProperty.all<Color>(
                                                 Colors.green)),
                                     onPressed: () async {
+                                      FocusManager.instance.primaryFocus
+                                          ?.unfocus();
                                       final email = _email.text;
                                       final password = _password.text;
                                       if (_formKey.currentState!.validate()) {
+                                        setState(() {
+                                          _isLoading = true;
+                                        });
                                         try {
                                           await FirebaseAuth.instance
                                               .createUserWithEmailAndPassword(
@@ -360,6 +382,11 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                             'Full Name': _fullname.text,
                                             'Contact Number': _number.text,
                                             'Email': email,
+                                            'Address Line': "",
+                                            'City': "",
+                                            'Country': "",
+                                            'NGO Contact Number': "",
+                                            'NGO Name': "",
                                           });
                                           final shouldSend =
                                               await verifyEmailDialog(context);
@@ -385,6 +412,10 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                                     content:
                                                         Text("Invalid Email")));
                                           }
+                                        } finally {
+                                          setState(() {
+                                            _isLoading = false;
+                                          });
                                         }
                                       }
                                       _fullname.clear();
@@ -393,8 +424,11 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                       _password.clear();
                                       _cpassword.clear();
                                     },
-                                    child: const Text("Register",
-                                        style: TextStyle(color: Colors.white)),
+                                    child: _isLoading
+                                        ? const CircularProgressIndicator()
+                                        : const Text("Register",
+                                            style:
+                                                TextStyle(color: Colors.white)),
                                   ),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,

@@ -1,4 +1,3 @@
-// import 'dart:developer' as devetools show log;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sfm/assets/sfm_icons.dart';
@@ -11,6 +10,8 @@ import '../main.dart';
 
 final user = FirebaseAuth.instance.currentUser;
 var userType = "None";
+var userDocID = "None";
+bool isDe = false;
 
 class Check extends StatefulWidget {
   const Check({super.key});
@@ -38,9 +39,9 @@ class _CheckState extends State<Check> {
               if (user != null) {
                 if (user?.emailVerified ?? false) {
                   if (userType == "Donators") {
-                    return const HomeDonators();
+                    return const Check2("Donators");
                   } else if (userType == "NGOs") {
-                    return const HomeNGO();
+                    return const Check2("NGOs");
                   } else {
                     return const HomePage();
                   }
@@ -56,6 +57,54 @@ class _CheckState extends State<Check> {
               } else {
                 return const HomePage();
               }
+
+            default:
+              return const Scaffold();
+          }
+        }));
+  }
+}
+
+class Check2 extends StatefulWidget {
+  final String useT;
+  const Check2(this.useT, {super.key});
+  @override
+  State<Check2> createState() => _Check2State();
+}
+
+class _Check2State extends State<Check2> {
+  late Future<String> _isDetailed;
+
+  @override
+  void initState() {
+    String ut = widget.useT;
+    _isDetailed = checkingDetailed(ut);
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+        future: _isDetailed,
+        builder: ((context, snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.done:
+              if (isDe == false) {
+                if (widget.useT == "NGOs") {
+                  return const LoginViewNGO();
+                } else if (widget.useT == "Donators") {
+                  return const LoginViewDonator();
+                }
+              } else if (isDe == true) {
+                if (widget.useT == "NGOs") {
+                  return const HomeNGO();
+                } else if (widget.useT == "Donators") {
+                  return const HomeDonators();
+                }
+              } else {
+                return const HomePage();
+              }
+              return const HomePage();
 
             default:
               return const Scaffold();
@@ -225,5 +274,11 @@ class _HomePageState extends State<HomePage> {
 
 Future<String> doneGetting() async {
   userType = await getUserType(user?.uid ?? "None");
+  return "Done";
+}
+
+Future<String> checkingDetailed(String uT) async {
+  userDocID = await findDocID(user?.uid ?? "None", uT);
+  isDe = await detailsEntered(user?.uid ?? "None", uT, userDocID);
   return "Done";
 }

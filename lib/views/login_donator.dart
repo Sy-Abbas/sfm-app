@@ -17,6 +17,7 @@ class _LoginViewDonatorState extends State<LoginViewDonator> {
   late final TextEditingController _password;
   bool isObscure = true;
   final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -106,6 +107,9 @@ class _LoginViewDonatorState extends State<LoginViewDonator> {
                                         0.072,
                                   ),
                                   TextFormField(
+                                    textInputAction: TextInputAction.next,
+                                    autovalidateMode:
+                                        AutovalidateMode.onUserInteraction,
                                     keyboardType: TextInputType.emailAddress,
                                     decoration: const InputDecoration(
                                       hintText: "Email Address",
@@ -138,6 +142,9 @@ class _LoginViewDonatorState extends State<LoginViewDonator> {
                                   ),
                                   const SizedBox(height: 14),
                                   TextFormField(
+                                    textInputAction: TextInputAction.next,
+                                    autovalidateMode:
+                                        AutovalidateMode.onUserInteraction,
                                     obscureText: isObscure,
                                     enableSuggestions: false,
                                     autocorrect: false,
@@ -192,9 +199,15 @@ class _LoginViewDonatorState extends State<LoginViewDonator> {
                                             MaterialStateProperty.all<Color>(
                                                 Colors.green)),
                                     onPressed: () async {
+                                      FocusManager.instance.primaryFocus
+                                          ?.unfocus();
                                       final email = _email.text;
                                       final password = _password.text;
                                       if (_formKey.currentState!.validate()) {
+                                        setState(() {
+                                          _isLoading =
+                                              true; // set isLoading state variable to true
+                                        });
                                         try {
                                           await FirebaseAuth.instance
                                               .signInWithEmailAndPassword(
@@ -206,10 +219,25 @@ class _LoginViewDonatorState extends State<LoginViewDonator> {
                                               user?.uid ?? "None");
                                           if (usertype == "Donators") {
                                             if (user?.emailVerified ?? false) {
-                                              Navigator.of(context)
-                                                  .pushNamedAndRemoveUntil(
-                                                      '/homedonator/',
-                                                      (route) => false);
+                                              String idDoc = await findDocID(
+                                                  user?.uid ?? "None",
+                                                  "Donators");
+                                              bool isDetail =
+                                                  await detailsEntered(
+                                                      user?.uid ?? "None",
+                                                      "Donators",
+                                                      idDoc);
+                                              if (isDetail == true) {
+                                                Navigator.of(context)
+                                                    .pushNamedAndRemoveUntil(
+                                                        '/homedonator/',
+                                                        (route) => false);
+                                              } else {
+                                                Navigator.of(context)
+                                                    .pushNamedAndRemoveUntil(
+                                                        '/detailsdonator/',
+                                                        (route) => false);
+                                              }
                                             } else {
                                               final shouldSend =
                                                   await verifyEmailDialog(
@@ -220,7 +248,10 @@ class _LoginViewDonatorState extends State<LoginViewDonator> {
                                               }
                                             }
                                           } else {
-                                            devetools.log("Invalid User");
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(const SnackBar(
+                                                    content:
+                                                        Text("Invalid User")));
                                           }
                                         } on FirebaseAuthException catch (e) {
                                           if (e.code == 'user-not-found') {
@@ -239,11 +270,19 @@ class _LoginViewDonatorState extends State<LoginViewDonator> {
 
                                             _password.clear();
                                           }
+                                        } finally {
+                                          setState(() {
+                                            _isLoading =
+                                                false; // set isLoading state variable back to false
+                                          });
                                         }
                                       }
                                     },
-                                    child: const Text("Login",
-                                        style: TextStyle(color: Colors.white)),
+                                    child: _isLoading
+                                        ? const CircularProgressIndicator()
+                                        : const Text("Login",
+                                            style:
+                                                TextStyle(color: Colors.white)),
                                   ),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,

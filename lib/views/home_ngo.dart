@@ -26,7 +26,8 @@ class _HomeNGOState extends State<HomeNGO> {
                 final shouldLogout = await showLogOurDialog(context);
                 if (shouldLogout) {
                   await FirebaseAuth.instance.signOut();
-                  Navigator.of(context).pushNamedAndRemoveUntil(
+                  await FirebaseAuth.instance.signOut(); // clear cached data
+                  await Navigator.of(context).pushNamedAndRemoveUntil(
                     '/loginngo/',
                     (route) => false,
                   );

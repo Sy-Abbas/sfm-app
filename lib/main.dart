@@ -2,6 +2,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:sfm/views/details_donator.dart';
+import 'package:sfm/views/details_ngo.dart';
 import 'package:sfm/views/home_donator.dart';
 import 'package:sfm/views/home_ngo.dart';
 import 'package:sfm/views/home_page.dart';
@@ -27,6 +29,8 @@ void main() {
       '/registerngo/': ((context) => const RegisterViewNGO()),
       '/homedonator/': ((context) => const HomeDonators()),
       '/homengo/': ((context) => const HomeNGO()),
+      '/detailsngo/': ((context) => const DetailsNGO()),
+      '/detailsdonator/': ((context) => const DetailsDonator()),
     },
   ));
 }
@@ -103,5 +107,31 @@ Future<String> getUserType(String uid) async {
     return "NGOs";
   } else {
     return "None";
+  }
+}
+
+Future<String> findDocID(String uid, String userT) async {
+  String toBe = "None";
+  await FirebaseFirestore.instance
+      .collection(userT)
+      .get()
+      .then((QuerySnapshot querySnapshot) {
+    for (var element in querySnapshot.docs) {
+      if (element["uid"] == uid) {
+        toBe = element.id;
+      }
+    }
+  });
+  return toBe;
+}
+
+Future<bool> detailsEntered(String uid, String userT, String userIDs) async {
+  // devetools.log(uid);
+  final data =
+      await FirebaseFirestore.instance.collection(userT).doc(userIDs).get();
+  if (data['Country'] == "") {
+    return false;
+  } else {
+    return true;
   }
 }

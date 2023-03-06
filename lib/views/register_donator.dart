@@ -23,6 +23,8 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
   bool isObscure = true;
   bool isObscureC = true;
   get devetools => null;
+  final focus = FocusNode();
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -119,6 +121,9 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                         0.072,
                                   ),
                                   TextFormField(
+                                    textInputAction: TextInputAction.next,
+                                    autovalidateMode:
+                                        AutovalidateMode.onUserInteraction,
                                     keyboardType: TextInputType.text,
                                     decoration: const InputDecoration(
                                       hintText: "Full Name",
@@ -146,6 +151,9 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                   ),
                                   const SizedBox(height: 10),
                                   TextFormField(
+                                    textInputAction: TextInputAction.next,
+                                    autovalidateMode:
+                                        AutovalidateMode.onUserInteraction,
                                     keyboardType: TextInputType.number,
                                     decoration: const InputDecoration(
                                       hintText: "Contact Number",
@@ -179,6 +187,9 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                   ),
                                   const SizedBox(height: 10),
                                   TextFormField(
+                                    textInputAction: TextInputAction.next,
+                                    autovalidateMode:
+                                        AutovalidateMode.onUserInteraction,
                                     keyboardType: TextInputType.emailAddress,
                                     decoration: const InputDecoration(
                                       hintText: "Email Address",
@@ -215,6 +226,12 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                     children: [
                                       Flexible(
                                         child: TextFormField(
+                                          onFieldSubmitted: (v) {
+                                            FocusScope.of(context)
+                                                .requestFocus(focus);
+                                          },
+                                          autovalidateMode: AutovalidateMode
+                                              .onUserInteraction,
                                           obscureText: isObscure,
                                           enableSuggestions: false,
                                           autocorrect: false,
@@ -270,6 +287,9 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                       ),
                                       Flexible(
                                         child: TextFormField(
+                                          focusNode: focus,
+                                          autovalidateMode: AutovalidateMode
+                                              .onUserInteraction,
                                           obscureText: isObscureC,
                                           enableSuggestions: false,
                                           autocorrect: false,
@@ -335,9 +355,14 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                             MaterialStateProperty.all<Color>(
                                                 Colors.green)),
                                     onPressed: () async {
+                                      FocusManager.instance.primaryFocus
+                                          ?.unfocus();
                                       final email = _email.text;
                                       final password = _password.text;
                                       if (_formKey.currentState!.validate()) {
+                                        setState(() {
+                                          _isLoading = true;
+                                        });
                                         try {
                                           await FirebaseAuth.instance
                                               .createUserWithEmailAndPassword(
@@ -357,6 +382,12 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                             'Full Name': _fullname.text,
                                             'Contact Number': _number.text,
                                             'Email': email,
+                                            'Address Line': "",
+                                            'City': "",
+                                            'Country': "",
+                                            'Cuisine': "",
+                                            'Store Contact Number': "",
+                                            'Store Name': "",
                                           });
                                           final shouldSend =
                                               await verifyEmailDialog(context);
@@ -382,6 +413,10 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                                     content:
                                                         Text("Invalid Email")));
                                           }
+                                        } finally {
+                                          setState(() {
+                                            _isLoading = false;
+                                          });
                                         }
                                         _fullname.clear();
                                         _number.clear();
@@ -390,8 +425,11 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                         _cpassword.clear();
                                       }
                                     },
-                                    child: const Text("Register",
-                                        style: TextStyle(color: Colors.white)),
+                                    child: _isLoading
+                                        ? const CircularProgressIndicator()
+                                        : const Text("Register",
+                                            style:
+                                                TextStyle(color: Colors.white)),
                                   ),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
