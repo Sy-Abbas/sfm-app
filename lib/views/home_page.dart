@@ -1,6 +1,7 @@
-import 'dart:developer' as devetools show log;
+// import 'dart:developer' as devetools show log;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:sfm/assets/sfm_icons.dart';
 import 'package:sfm/views/home_donator.dart';
 import 'package:sfm/views/home_ngo.dart';
 import 'package:sfm/views/login_donator.dart';
@@ -75,75 +76,147 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-          gradient: LinearGradient(
-        begin: Alignment.bottomCenter,
-        end: Alignment.topCenter,
-        colors: [Colors.black, Color(0xFF00242c), Color(0xFF81e291)],
-      )),
+        color: Color(0xFFDBE8D8),
+      ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        // appBar: AppBar(
-        //   title: const Text("Welcome to SFM"),
-        //   centerTitle: true,
-        //   backgroundColor: Colors.green,
-        // ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          centerTitle: true,
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              IconButton(
+                onPressed: (() {}),
+                icon: const Icon(SFMIcons.burger),
+                color: const Color(0xff138034),
+              ),
+              IconButton(
+                onPressed: (() {}),
+                icon: const Icon(SFMIcons.apple),
+                color: const Color(0xff138034),
+              ),
+              IconButton(
+                onPressed: (() {}),
+                icon: const Icon(SFMIcons.pizza),
+                color: const Color(0xff138034),
+              )
+            ],
+          ),
+        ),
+        body: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Center(
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 172,
+                      height: 172,
+                      decoration: const BoxDecoration(
+                          image: DecorationImage(
+                        image: AssetImage("assets/logo.png"),
+                        fit: BoxFit.fitWidth,
+                      )),
+                    ),
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.02,
+                    ),
+                    const Text(
+                      "Surplus Food Management",
+                      style: TextStyle(
+                          fontSize: 35,
+                          fontFamily: "Roboto",
+                          color: Color(0xff05240E)),
+                      textAlign: TextAlign.center,
+                    )
+                  ]),
+            ),
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.08,
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Container(
-                  width: 200,
-                  height: 200,
-                  // ignore: prefer_const_constructors
-                  decoration: BoxDecoration(
-                    image: const DecorationImage(
-                      image: AssetImage("assets/logo.png"),
-                      fit: BoxFit.fitWidth,
+                Center(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(42),
+                        topRight: Radius.circular(42)),
+                    child: Container(
+                      height: MediaQuery.of(context).size.height * 0.4,
+                      width: MediaQuery.of(context).size.width * 0.85,
+                      color: Colors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // ignore: prefer_const_constructors
+                              Text(
+                                "Ending Hunger, One Meal at a Time with SFM",
+                                style: const TextStyle(
+                                  fontSize: 25,
+                                  fontFamily: "Roboto",
+                                  color: Color(0xff05240E),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(
+                                height:
+                                    MediaQuery.of(context).size.height * 0.05,
+                              ),
+                              ElevatedButton(
+                                style: ButtonStyle(
+                                    backgroundColor:
+                                        MaterialStateProperty.all<Color>(
+                                            const Color(0xFF05240E))),
+                                onPressed: (() {
+                                  Navigator.of(context).pushNamedAndRemoveUntil(
+                                      '/logindonator/', (route) => true);
+                                }),
+                                child: const Text(
+                                  "Donators",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontFamily: "Roboto",
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                height:
+                                    MediaQuery.of(context).size.height * 0.02,
+                              ),
+                              ElevatedButton(
+                                style: ButtonStyle(
+                                    backgroundColor:
+                                        MaterialStateProperty.all<Color>(
+                                            const Color(0xFF05240E))),
+                                onPressed: (() {
+                                  Navigator.of(context).pushNamedAndRemoveUntil(
+                                      '/loginngo/', (route) => true);
+                                }),
+                                child: const Text(
+                                  "NGOs",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontFamily: "Roboto",
+                                  ),
+                                ),
+                              ),
+                            ]),
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 40),
-                const Text(
-                  "Reducing Food Waste, Feeding the Hungry",
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 40),
-                ElevatedButton(
-                  style: ButtonStyle(
-                      backgroundColor:
-                          MaterialStateProperty.all<Color>(Colors.green)),
-                  onPressed: (() {
-                    Navigator.of(context).pushNamedAndRemoveUntil(
-                        '/logindonator/', (route) => false);
-                  }),
-                  child: const Text(
-                    "Restaurant & Hotels",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  style: ButtonStyle(
-                      backgroundColor:
-                          MaterialStateProperty.all<Color>(Colors.green)),
-                  onPressed: (() {
-                    Navigator.of(context).pushNamedAndRemoveUntil(
-                        '/loginngo/', (route) => false);
-                  }),
-                  child: const Text(
-                    "NGOs",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
               ],
-            ),
-          ),
+            )
+          ],
         ),
       ),
     );
