@@ -25,7 +25,7 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
   get devetools => null;
   final focus = FocusNode();
   bool _isLoading = false;
-
+  bool _clicked = false;
   @override
   void initState() {
     _fullname = TextEditingController();
@@ -101,6 +101,9 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                           padding: const EdgeInsets.all(14.0),
                           child: Form(
                             key: _formKey,
+                            autovalidateMode: _clicked
+                                ? AutovalidateMode.onUserInteraction
+                                : AutovalidateMode.disabled,
                             child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -122,12 +125,12 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                   ),
                                   TextFormField(
                                     textInputAction: TextInputAction.next,
-                                    autovalidateMode:
-                                        AutovalidateMode.onUserInteraction,
                                     keyboardType: TextInputType.text,
                                     decoration: const InputDecoration(
-                                      hintText: "Full Name",
-                                      hintStyle: TextStyle(color: Colors.grey),
+                                      labelText: "Full Name",
+                                      floatingLabelBehavior:
+                                          FloatingLabelBehavior.auto,
+                                      prefixIcon: Icon(Icons.person),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(14.0)),
@@ -152,12 +155,12 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                   const SizedBox(height: 10),
                                   TextFormField(
                                     textInputAction: TextInputAction.next,
-                                    autovalidateMode:
-                                        AutovalidateMode.onUserInteraction,
                                     keyboardType: TextInputType.number,
                                     decoration: const InputDecoration(
-                                      hintText: "Contact Number",
-                                      hintStyle: TextStyle(color: Colors.grey),
+                                      labelText: "Contact Number",
+                                      floatingLabelBehavior:
+                                          FloatingLabelBehavior.auto,
+                                      prefixIcon: Icon(Icons.phone),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(14.0)),
@@ -188,12 +191,12 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                   const SizedBox(height: 10),
                                   TextFormField(
                                     textInputAction: TextInputAction.next,
-                                    autovalidateMode:
-                                        AutovalidateMode.onUserInteraction,
                                     keyboardType: TextInputType.emailAddress,
                                     decoration: const InputDecoration(
-                                      hintText: "Email Address",
-                                      hintStyle: TextStyle(color: Colors.grey),
+                                      labelText: "Email",
+                                      floatingLabelBehavior:
+                                          FloatingLabelBehavior.auto,
+                                      prefixIcon: Icon(Icons.email),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(14.0)),
@@ -230,16 +233,14 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                             FocusScope.of(context)
                                                 .requestFocus(focus);
                                           },
-                                          autovalidateMode: AutovalidateMode
-                                              .onUserInteraction,
                                           obscureText: isObscure,
                                           enableSuggestions: false,
                                           autocorrect: false,
                                           decoration: InputDecoration(
-                                            hintText: "Password",
-                                            hintStyle: const TextStyle(
-                                                fontSize: 14,
-                                                color: Colors.grey),
+                                            labelText: "Password",
+                                            floatingLabelBehavior:
+                                                FloatingLabelBehavior.auto,
+                                            prefixIcon: const Icon(Icons.lock),
                                             border: const OutlineInputBorder(
                                               borderRadius: BorderRadius.all(
                                                   Radius.circular(14.0)),
@@ -288,16 +289,14 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                       Flexible(
                                         child: TextFormField(
                                           focusNode: focus,
-                                          autovalidateMode: AutovalidateMode
-                                              .onUserInteraction,
                                           obscureText: isObscureC,
                                           enableSuggestions: false,
                                           autocorrect: false,
                                           decoration: InputDecoration(
-                                            hintText: "Confirm Password",
-                                            hintStyle: const TextStyle(
-                                                fontSize: 14,
-                                                color: Colors.grey),
+                                            labelText: "Confirm Password",
+                                            floatingLabelBehavior:
+                                                FloatingLabelBehavior.auto,
+                                            prefixIcon: const Icon(Icons.lock),
                                             border: const OutlineInputBorder(
                                               borderRadius: BorderRadius.all(
                                                   Radius.circular(14.0)),
@@ -355,14 +354,47 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                             MaterialStateProperty.all<Color>(
                                                 Colors.green)),
                                     onPressed: () async {
+                                      setState(() {
+                                        _clicked = true;
+                                      });
                                       FocusManager.instance.primaryFocus
                                           ?.unfocus();
                                       final email = _email.text;
                                       final password = _password.text;
                                       if (_formKey.currentState!.validate()) {
-                                        setState(() {
-                                          _isLoading = true;
-                                        });
+                                        showDialog(
+                                            barrierDismissible: false,
+                                            context: context,
+                                            builder: (_) {
+                                              return Dialog(
+                                                // The background color
+                                                backgroundColor: Colors.white,
+                                                child: Padding(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(vertical: 20),
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            14.0),
+                                                    child: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: const [
+                                                        // The loading indicator
+                                                        CircularProgressIndicator(),
+                                                        SizedBox(
+                                                          width: 15,
+                                                        ),
+
+                                                        // Some text
+                                                        Text('Loading...')
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            });
+
                                         try {
                                           await FirebaseAuth.instance
                                               .createUserWithEmailAndPassword(
@@ -385,20 +417,19 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                             'Address Line': "",
                                             'City': "",
                                             'Country': "",
-                                            'Cuisine': "",
                                             'Store Contact Number': "",
                                             'Store Name': "",
                                           });
+                                          // ignore: unused_local_variable
                                           final shouldSend =
                                               await verifyEmailDialog(context);
-                                          if (shouldSend) {
-                                            await user?.sendEmailVerification();
-                                            Navigator.of(context)
-                                                .pushNamedAndRemoveUntil(
-                                              '/logindonator/',
-                                              (route) => false,
-                                            );
-                                          }
+
+                                          await user?.sendEmailVerification();
+                                          Navigator.of(context)
+                                              .pushNamedAndRemoveUntil(
+                                            '/logindonator/',
+                                            (route) => false,
+                                          );
                                         } on FirebaseAuthException catch (e) {
                                           if (e.code ==
                                               'email-already-in-use') {
@@ -406,30 +437,23 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                                 .showSnackBar(const SnackBar(
                                                     content: Text(
                                                         "Email already in use")));
+                                            _email.clear();
                                           } else if (e.code ==
                                               'invalid-email') {
                                             ScaffoldMessenger.of(context)
                                                 .showSnackBar(const SnackBar(
                                                     content:
                                                         Text("Invalid Email")));
+                                            _email.clear();
                                           }
-                                        } finally {
-                                          setState(() {
-                                            _isLoading = false;
-                                          });
-                                        }
-                                        _fullname.clear();
-                                        _number.clear();
-                                        _email.clear();
-                                        _password.clear();
-                                        _cpassword.clear();
+                                          Navigator.of(context).pop();
+                                        } finally {}
+
+                                        // Navigator.of(context).pop();
                                       }
                                     },
-                                    child: _isLoading
-                                        ? const CircularProgressIndicator()
-                                        : const Text("Register",
-                                            style:
-                                                TextStyle(color: Colors.white)),
+                                    child: const Text("Register",
+                                        style: TextStyle(color: Colors.white)),
                                   ),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,

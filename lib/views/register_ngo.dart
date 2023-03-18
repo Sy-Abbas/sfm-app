@@ -24,6 +24,7 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
   bool isObscureC = true;
   final focus = FocusNode();
   bool _isLoading = false;
+  bool _clicked = false;
 
   @override
   void initState() {
@@ -100,6 +101,9 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                         body: Padding(
                           padding: const EdgeInsets.all(14.0),
                           child: Form(
+                            autovalidateMode: _clicked
+                                ? AutovalidateMode.onUserInteraction
+                                : AutovalidateMode.disabled,
                             key: _formKey,
                             child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -122,12 +126,12 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                   ),
                                   TextFormField(
                                     textInputAction: TextInputAction.next,
-                                    autovalidateMode:
-                                        AutovalidateMode.onUserInteraction,
                                     keyboardType: TextInputType.text,
                                     decoration: const InputDecoration(
-                                      hintText: "Full Name",
-                                      hintStyle: TextStyle(color: Colors.grey),
+                                      labelText: "Full Name",
+                                      floatingLabelBehavior:
+                                          FloatingLabelBehavior.auto,
+                                      prefixIcon: Icon(Icons.person),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(14.0)),
@@ -152,12 +156,12 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                   const SizedBox(height: 10),
                                   TextFormField(
                                     textInputAction: TextInputAction.next,
-                                    autovalidateMode:
-                                        AutovalidateMode.onUserInteraction,
                                     keyboardType: TextInputType.number,
                                     decoration: const InputDecoration(
-                                      hintText: "Contact Number",
-                                      hintStyle: TextStyle(color: Colors.grey),
+                                      labelText: "Contact Number",
+                                      floatingLabelBehavior:
+                                          FloatingLabelBehavior.auto,
+                                      prefixIcon: Icon(Icons.phone),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(14.0)),
@@ -188,12 +192,12 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                   const SizedBox(height: 10),
                                   TextFormField(
                                     textInputAction: TextInputAction.next,
-                                    autovalidateMode:
-                                        AutovalidateMode.onUserInteraction,
                                     keyboardType: TextInputType.emailAddress,
                                     decoration: const InputDecoration(
-                                      hintText: "Email Address",
-                                      hintStyle: TextStyle(color: Colors.grey),
+                                      labelText: "Email",
+                                      floatingLabelBehavior:
+                                          FloatingLabelBehavior.auto,
+                                      prefixIcon: Icon(Icons.email),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(14.0)),
@@ -226,8 +230,6 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                     children: [
                                       Flexible(
                                         child: TextFormField(
-                                          autovalidateMode: AutovalidateMode
-                                              .onUserInteraction,
                                           onFieldSubmitted: (v) {
                                             FocusScope.of(context)
                                                 .requestFocus(focus);
@@ -236,10 +238,10 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                           enableSuggestions: false,
                                           autocorrect: false,
                                           decoration: InputDecoration(
-                                            hintText: "Password",
-                                            hintStyle: const TextStyle(
-                                                fontSize: 14,
-                                                color: Colors.grey),
+                                            labelText: "Password",
+                                            floatingLabelBehavior:
+                                                FloatingLabelBehavior.auto,
+                                            prefixIcon: const Icon(Icons.lock),
                                             border: const OutlineInputBorder(
                                               borderRadius: BorderRadius.all(
                                                   Radius.circular(14.0)),
@@ -287,17 +289,15 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                       ),
                                       Flexible(
                                         child: TextFormField(
-                                          autovalidateMode: AutovalidateMode
-                                              .onUserInteraction,
                                           focusNode: focus,
                                           obscureText: isObscureC,
                                           enableSuggestions: false,
                                           autocorrect: false,
                                           decoration: InputDecoration(
-                                            hintText: "Confirm Password",
-                                            hintStyle: const TextStyle(
-                                                fontSize: 14,
-                                                color: Colors.grey),
+                                            labelText: "Confirm Password",
+                                            floatingLabelBehavior:
+                                                FloatingLabelBehavior.auto,
+                                            prefixIcon: const Icon(Icons.lock),
                                             border: const OutlineInputBorder(
                                               borderRadius: BorderRadius.all(
                                                   Radius.circular(14.0)),
@@ -355,14 +355,46 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                             MaterialStateProperty.all<Color>(
                                                 Colors.green)),
                                     onPressed: () async {
+                                      setState(() {
+                                        _clicked = true;
+                                      });
                                       FocusManager.instance.primaryFocus
                                           ?.unfocus();
                                       final email = _email.text;
                                       final password = _password.text;
                                       if (_formKey.currentState!.validate()) {
-                                        setState(() {
-                                          _isLoading = true;
-                                        });
+                                        showDialog(
+                                            barrierDismissible: false,
+                                            context: context,
+                                            builder: (_) {
+                                              return Dialog(
+                                                // The background color
+                                                backgroundColor: Colors.white,
+                                                child: Padding(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(vertical: 20),
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            14.0),
+                                                    child: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: const [
+                                                        // The loading indicator
+                                                        CircularProgressIndicator(),
+                                                        SizedBox(
+                                                          width: 15,
+                                                        ),
+
+                                                        // Some text
+                                                        Text('Loading...')
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            });
                                         try {
                                           await FirebaseAuth.instance
                                               .createUserWithEmailAndPassword(
@@ -388,16 +420,15 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                             'NGO Contact Number': "",
                                             'NGO Name': "",
                                           });
+                                          // ignore: unused_local_variable
                                           final shouldSend =
                                               await verifyEmailDialog(context);
-                                          if (shouldSend) {
-                                            await user?.sendEmailVerification();
-                                            Navigator.of(context)
-                                                .pushNamedAndRemoveUntil(
-                                              '/loginngo/',
-                                              (route) => false,
-                                            );
-                                          }
+                                          await user?.sendEmailVerification();
+                                          Navigator.of(context)
+                                              .pushNamedAndRemoveUntil(
+                                            '/loginngo/',
+                                            (route) => false,
+                                          );
                                         } on FirebaseAuthException catch (e) {
                                           if (e.code ==
                                               'email-already-in-use') {
@@ -412,23 +443,12 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                                     content:
                                                         Text("Invalid Email")));
                                           }
-                                        } finally {
-                                          setState(() {
-                                            _isLoading = false;
-                                          });
-                                        }
+                                          Navigator.of(context).pop();
+                                        } finally {}
                                       }
-                                      _fullname.clear();
-                                      _number.clear();
-                                      _email.clear();
-                                      _password.clear();
-                                      _cpassword.clear();
                                     },
-                                    child: _isLoading
-                                        ? const CircularProgressIndicator()
-                                        : const Text("Register",
-                                            style:
-                                                TextStyle(color: Colors.white)),
+                                    child: const Text("Register",
+                                        style: TextStyle(color: Colors.white)),
                                   ),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,

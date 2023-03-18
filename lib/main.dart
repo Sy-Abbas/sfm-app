@@ -1,4 +1,4 @@
-// import 'dart:developer' as devetools show log;
+import 'dart:developer' as devetools show log;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +9,7 @@ import 'package:sfm/views/home_ngo.dart';
 import 'package:sfm/views/home_page.dart';
 import 'package:sfm/views/login_donator.dart';
 import 'package:sfm/views/login_ngo.dart';
+import 'package:sfm/views/profile_ngo_one.dart';
 import 'package:sfm/views/register_donator.dart';
 import 'package:sfm/views/register_ngo.dart';
 import 'firebase_options.dart';
@@ -17,22 +18,22 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
   runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    title: "Surplus Food Management",
-    theme: ThemeData(primarySwatch: Colors.blue),
-    home: const Initialize(),
-    routes: {
-      '/homepage/': (context) => const HomePage(),
-      '/logindonator/': ((context) => const LoginViewDonator()),
-      '/loginngo/': ((context) => const LoginViewNGO()),
-      '/registerdonator/': ((context) => const RegisterViewDonator()),
-      '/registerngo/': ((context) => const RegisterViewNGO()),
-      '/homedonator/': ((context) => const HomeDonators()),
-      '/homengo/': ((context) => const HomeNGO()),
-      '/detailsngo/': ((context) => const DetailsNGO()),
-      '/detailsdonator/': ((context) => const DetailsDonator()),
-    },
-  ));
+      debugShowCheckedModeBanner: false,
+      title: "Surplus Food Management",
+      theme: ThemeData(primarySwatch: Colors.green),
+      home: const Initialize(),
+      routes: {
+        '/homepage/': (context) => const HomePage(),
+        '/logindonator/': ((context) => const LoginViewDonator()),
+        '/loginngo/': ((context) => const LoginViewNGO()),
+        '/registerdonator/': ((context) => const RegisterViewDonator()),
+        '/registerngo/': ((context) => const RegisterViewNGO()),
+        '/homedonator/': ((context) => const HomeDonators()),
+        '/homengo/': ((context) => const HomeNGO()),
+        '/detailsngo/': ((context) => const DetailsNGO()),
+        '/detailsdonator/': ((context) => const DetailsDonator()),
+        '/profilengo/': ((context) => const GetDetailsNGO()),
+      }));
 }
 
 class Initialize extends StatelessWidget {
@@ -45,6 +46,7 @@ class Initialize extends StatelessWidget {
         options: DefaultFirebaseOptions.currentPlatform,
       ),
       builder: (context, snapshot) {
+        FocusManager.instance.primaryFocus?.unfocus();
         switch (snapshot.connectionState) {
           case ConnectionState.done:
             return const Check();
@@ -58,11 +60,12 @@ class Initialize extends StatelessWidget {
 
 Future<bool> verifyEmailDialog(BuildContext context) {
   return showDialog<bool>(
+      barrierDismissible: false,
       context: context,
       builder: ((context) {
         return AlertDialog(
           title: const Text("Verify Email"),
-          content: const Text("Send verify email?"),
+          content: const Text("Send verification email?"),
           actions: [
             TextButton(
               onPressed: (() {
@@ -133,5 +136,267 @@ Future<bool> detailsEntered(String uid, String userT, String userIDs) async {
     return false;
   } else {
     return true;
+  }
+}
+
+Future<bool> confirmChangesDialog(BuildContext context) {
+  return showDialog<bool>(
+      barrierDismissible: false,
+      context: context,
+      builder: ((context) {
+        return AlertDialog(
+          title: const Text("Confirm Changes"),
+          content: const Text("Are you sure you want to make these changes?"),
+          actions: [
+            TextButton(
+              onPressed: (() {
+                Navigator.of(context).pop(false);
+              }),
+              child: const Text("No"),
+            ),
+            TextButton(
+              onPressed: (() {
+                Navigator.of(context).pop(true);
+              }),
+              child: const Text("Yes"),
+            )
+          ],
+        );
+      })).then((value) => value ?? false);
+}
+
+class DropdownFormFieldCountry extends StatefulWidget {
+  final Widget? icon;
+  final String? labelText;
+  final List<String> items;
+  final Function(String?)? onChanged;
+  final String? Function(String?)? validator;
+  final String? initialValue;
+  final bool isEditing;
+  final bool? nullState;
+  bool? notSavedChanges;
+
+  DropdownFormFieldCountry(
+      {Key? key,
+      this.notSavedChanges,
+      this.icon,
+      this.labelText,
+      required this.items,
+      this.onChanged,
+      this.validator,
+      this.initialValue,
+      this.nullState,
+      required this.isEditing})
+      : super(key: key);
+
+  @override
+  _DropdownFormFieldCountryState createState() =>
+      _DropdownFormFieldCountryState();
+}
+
+class _DropdownFormFieldCountryState extends State<DropdownFormFieldCountry> {
+  String? _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = widget.initialValue;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.notSavedChanges ?? false) {
+      _value = widget.initialValue;
+      widget.notSavedChanges = null;
+    }
+    return FormField<String>(
+      initialValue: widget.initialValue,
+      validator: widget.validator,
+      builder: (FormFieldState<String> state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            InputDecorator(
+              decoration: InputDecoration(
+                enabledBorder: OutlineInputBorder(
+                  borderSide: widget.isEditing
+                      ? (state.hasError
+                          ? const BorderSide(color: Colors.red)
+                          : const BorderSide(color: Colors.black))
+                      : BorderSide(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(14.0),
+                ),
+                labelText: widget.labelText,
+                floatingLabelBehavior: FloatingLabelBehavior.auto,
+                floatingLabelStyle: state.hasError
+                    ? const TextStyle(color: Colors.red)
+                    : TextStyle(color: Colors.grey.shade600),
+                prefixIcon: widget.icon ?? const Icon(Icons.map),
+                filled: true,
+                fillColor:
+                    widget.isEditing ? Colors.white : Colors.grey.shade200,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: widget.isEditing ? _value : widget.initialValue,
+                    isDense: true,
+                    onChanged: widget.isEditing
+                        ? (String? newValue) {
+                            setState(() {
+                              _value = newValue;
+                              widget.onChanged?.call(newValue);
+                              state.didChange(newValue);
+                            });
+                          }
+                        : null,
+                    items: widget.items.map((String value) {
+                      return DropdownMenuItem<String>(
+                          value: value, child: Text(value));
+                    }).toList()),
+              ),
+            ),
+            if (state.hasError == true)
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top: 15, bottom: 2),
+                child: Text(
+                  state.errorText!,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).errorColor,
+                    height: 0.5,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class DropdownFormFieldCity extends StatefulWidget {
+  final String? labelText;
+  final List<String> items;
+  final Function(String?)? onChanged;
+  final String? Function(String?)? validator;
+  String? initialValue;
+  final bool isEditing;
+  bool nullState;
+  bool? notSavedChanges;
+
+  DropdownFormFieldCity(
+      {Key? key,
+      this.labelText,
+      required this.items,
+      this.notSavedChanges,
+      this.onChanged,
+      this.validator,
+      this.initialValue,
+      required this.nullState,
+      required this.isEditing})
+      : super(key: key);
+
+  @override
+  _DropdownFormFieldCityState createState() => _DropdownFormFieldCityState();
+}
+
+class _DropdownFormFieldCityState extends State<DropdownFormFieldCity> {
+  String? _value;
+  late bool _s;
+
+  @override
+  void initState() {
+    _s = false;
+    super.initState();
+    if (widget.nullState == true) {
+      _value = null;
+      widget.initialValue = null;
+    } else {
+      _value = widget.initialValue;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.nullState == true) {
+      devetools.log("message");
+      _value = null;
+      widget.initialValue = null;
+    }
+    if (widget.notSavedChanges ?? false) {
+      _value = widget.initialValue;
+      widget.notSavedChanges = null;
+    }
+    return FormField<String>(
+      initialValue: widget.initialValue,
+      validator: widget.validator,
+      builder: (FormFieldState<String> state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            InputDecorator(
+              decoration: InputDecoration(
+                enabledBorder: OutlineInputBorder(
+                  borderSide: widget.isEditing
+                      ? (state.hasError
+                          ? const BorderSide(color: Colors.red)
+                          : const BorderSide(color: Colors.black))
+                      : BorderSide(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(14.0),
+                ),
+                labelText: widget.labelText,
+                floatingLabelBehavior: FloatingLabelBehavior.auto,
+                floatingLabelStyle: state.hasError
+                    ? const TextStyle(color: Colors.red)
+                    : TextStyle(color: Colors.grey.shade600),
+                prefixIcon: const Icon(Icons.location_city),
+                filled: true,
+                fillColor:
+                    widget.isEditing ? Colors.white : Colors.grey.shade200,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: widget.nullState
+                        ? null
+                        : (widget.isEditing ? _value : widget.initialValue),
+                    isDense: true,
+                    onChanged: widget.isEditing
+                        ? (String? newValue) {
+                            setState(() {
+                              widget.nullState = false;
+                              _value = newValue;
+                              widget.onChanged?.call(newValue);
+                              state.didChange(newValue);
+                            });
+                          }
+                        : null,
+                    items: widget.items.map((String value) {
+                      return DropdownMenuItem<String>(
+                          value: value, child: Text(value));
+                    }).toList()),
+              ),
+            ),
+            if (state.hasError == true)
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top: 15, bottom: 2),
+                child: Text(
+                  state.errorText!,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).errorColor,
+                    height: 0.5,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
   }
 }

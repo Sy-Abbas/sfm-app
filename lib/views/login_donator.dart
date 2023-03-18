@@ -18,6 +18,7 @@ class _LoginViewDonatorState extends State<LoginViewDonator> {
   bool isObscure = true;
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _clicked = false;
 
   @override
   void initState() {
@@ -86,6 +87,9 @@ class _LoginViewDonatorState extends State<LoginViewDonator> {
                         body: Padding(
                           padding: const EdgeInsets.all(14.0),
                           child: Form(
+                            autovalidateMode: _clicked
+                                ? AutovalidateMode.onUserInteraction
+                                : AutovalidateMode.disabled,
                             key: _formKey,
                             child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -108,12 +112,12 @@ class _LoginViewDonatorState extends State<LoginViewDonator> {
                                   ),
                                   TextFormField(
                                     textInputAction: TextInputAction.next,
-                                    autovalidateMode:
-                                        AutovalidateMode.onUserInteraction,
                                     keyboardType: TextInputType.emailAddress,
                                     decoration: const InputDecoration(
-                                      hintText: "Email Address",
-                                      hintStyle: TextStyle(color: Colors.grey),
+                                      labelText: "Email",
+                                      floatingLabelBehavior:
+                                          FloatingLabelBehavior.auto,
+                                      prefixIcon: Icon(Icons.email),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(14.0)),
@@ -143,15 +147,14 @@ class _LoginViewDonatorState extends State<LoginViewDonator> {
                                   const SizedBox(height: 14),
                                   TextFormField(
                                     textInputAction: TextInputAction.next,
-                                    autovalidateMode:
-                                        AutovalidateMode.onUserInteraction,
                                     obscureText: isObscure,
                                     enableSuggestions: false,
                                     autocorrect: false,
                                     decoration: InputDecoration(
-                                      hintText: "Password",
-                                      hintStyle:
-                                          const TextStyle(color: Colors.grey),
+                                      labelText: "Password",
+                                      floatingLabelBehavior:
+                                          FloatingLabelBehavior.auto,
+                                      prefixIcon: const Icon(Icons.lock),
                                       border: const OutlineInputBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(14.0)),
@@ -199,15 +202,44 @@ class _LoginViewDonatorState extends State<LoginViewDonator> {
                                             MaterialStateProperty.all<Color>(
                                                 Colors.green)),
                                     onPressed: () async {
+                                      setState(() {
+                                        _clicked = true;
+                                      });
                                       FocusManager.instance.primaryFocus
                                           ?.unfocus();
                                       final email = _email.text;
                                       final password = _password.text;
                                       if (_formKey.currentState!.validate()) {
-                                        setState(() {
-                                          _isLoading =
-                                              true; // set isLoading state variable to true
-                                        });
+                                        showDialog(
+                                            barrierDismissible: false,
+                                            context: context,
+                                            builder: (_) {
+                                              return Dialog(
+                                                // The background color
+                                                backgroundColor: Colors.white,
+                                                child: Padding(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(vertical: 20),
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            14.0),
+                                                    child: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: const [
+                                                        CircularProgressIndicator(),
+                                                        SizedBox(
+                                                          width: 15,
+                                                        ),
+                                                        Text('Loading...')
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            });
+
                                         try {
                                           await FirebaseAuth.instance
                                               .signInWithEmailAndPassword(
@@ -239,6 +271,12 @@ class _LoginViewDonatorState extends State<LoginViewDonator> {
                                                         (route) => false);
                                               }
                                             } else {
+                                              Navigator.of(context).pop();
+
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(const SnackBar(
+                                                      content: Text(
+                                                          "Email Not Verified")));
                                               final shouldSend =
                                                   await verifyEmailDialog(
                                                       context);
@@ -248,6 +286,8 @@ class _LoginViewDonatorState extends State<LoginViewDonator> {
                                               }
                                             }
                                           } else {
+                                            Navigator.of(context).pop();
+
                                             ScaffoldMessenger.of(context)
                                                 .showSnackBar(const SnackBar(
                                                     content:
@@ -255,6 +295,8 @@ class _LoginViewDonatorState extends State<LoginViewDonator> {
                                           }
                                         } on FirebaseAuthException catch (e) {
                                           if (e.code == 'user-not-found') {
+                                            Navigator.of(context).pop();
+
                                             ScaffoldMessenger.of(context)
                                                 .showSnackBar(const SnackBar(
                                                     content: Text(
@@ -263,6 +305,8 @@ class _LoginViewDonatorState extends State<LoginViewDonator> {
                                             _password.clear();
                                           } else if (e.code ==
                                               'wrong-password') {
+                                            Navigator.of(context).pop();
+
                                             ScaffoldMessenger.of(context)
                                                 .showSnackBar(const SnackBar(
                                                     content: Text(

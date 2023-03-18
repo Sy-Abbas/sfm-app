@@ -1,10 +1,13 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:csc_picker/csc_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as devetools show log;
-
+import '../assets/country_cities.dart';
 import '../main.dart';
+
+List<String> statesList = [];
 
 class DetailsNGO extends StatefulWidget {
   const DetailsNGO({super.key});
@@ -19,9 +22,9 @@ class _DetailsNGOState extends State<DetailsNGO> {
   late final TextEditingController _address;
   final _formKey = GlobalKey<FormState>();
   String countryValue = "";
-  String stateValue = "";
-  bool _isLoading = false;
-
+  String cityValue = "";
+  bool _clicked = false;
+  bool nullState = false;
   @override
   void initState() {
     _ngoName = TextEditingController();
@@ -93,6 +96,9 @@ class _DetailsNGOState extends State<DetailsNGO> {
                         body: Padding(
                           padding: const EdgeInsets.all(14.0),
                           child: Form(
+                            autovalidateMode: _clicked
+                                ? AutovalidateMode.onUserInteraction
+                                : AutovalidateMode.disabled,
                             key: _formKey,
                             child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -103,7 +109,7 @@ class _DetailsNGOState extends State<DetailsNGO> {
                                             MaterialStateProperty.all<Color>(
                                                 const Color(0xFF05240E))),
                                     onPressed: () {},
-                                    child: const Text("Details NGO",
+                                    child: const Text("NGO Details",
                                         style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 25,
@@ -117,8 +123,10 @@ class _DetailsNGOState extends State<DetailsNGO> {
                                     keyboardType: TextInputType.text,
                                     textInputAction: TextInputAction.next,
                                     decoration: const InputDecoration(
-                                      hintText: "NGO Name",
-                                      hintStyle: TextStyle(color: Colors.grey),
+                                      labelText: "NGO Name",
+                                      floatingLabelBehavior:
+                                          FloatingLabelBehavior.auto,
+                                      prefixIcon: Icon(Icons.store),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(14.0)),
@@ -133,8 +141,6 @@ class _DetailsNGOState extends State<DetailsNGO> {
                                           horizontal: 20.0, vertical: 15.0),
                                     ),
                                     controller: _ngoName,
-                                    autovalidateMode:
-                                        AutovalidateMode.onUserInteraction,
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
                                         return "Please enter your ngo's name";
@@ -142,12 +148,14 @@ class _DetailsNGOState extends State<DetailsNGO> {
                                       return null;
                                     },
                                   ),
-                                  const SizedBox(height: 10),
+                                  const SizedBox(height: 14),
                                   TextFormField(
                                     keyboardType: TextInputType.number,
                                     decoration: const InputDecoration(
-                                      hintText: "NGO Contact Number",
-                                      hintStyle: TextStyle(color: Colors.grey),
+                                      labelText: "NGO Contact Number",
+                                      floatingLabelBehavior:
+                                          FloatingLabelBehavior.auto,
+                                      prefixIcon: Icon(Icons.phone),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(14.0)),
@@ -162,8 +170,6 @@ class _DetailsNGOState extends State<DetailsNGO> {
                                           horizontal: 20.0, vertical: 15.0),
                                     ),
                                     controller: _ngoNumber,
-                                    autovalidateMode:
-                                        AutovalidateMode.onUserInteraction,
                                     validator: (value) {
                                       String patttern =
                                           r'(^(?:[+0]9)?[0-9]{10,12}$)';
@@ -177,108 +183,63 @@ class _DetailsNGOState extends State<DetailsNGO> {
                                       return null;
                                     },
                                   ),
-                                  const SizedBox(height: 10),
-                                  FormField(
-                                    autovalidateMode:
-                                        AutovalidateMode.onUserInteraction,
-                                    validator: (value) {
-                                      if (value == null) {
-                                        return "Please select country and city";
-                                      }
-                                      return null;
-                                    },
-                                    builder: (formFieldState) {
-                                      late InputBorder shape;
-                                      if (formFieldState.hasError) {
-                                        shape = OutlineInputBorder(
-                                          borderSide: const BorderSide(
-                                              color: Colors.red),
-                                          borderRadius:
-                                              BorderRadius.circular(14.0),
-                                        );
-                                      } else {
-                                        shape = OutlineInputBorder(
-                                          borderSide: const BorderSide(
-                                              color: Colors.grey),
-                                          borderRadius:
-                                              BorderRadius.circular(14.0),
-                                        );
-                                      }
-                                      return Column(
-                                        children: [
-                                          CSCPicker(
-                                            flagState: CountryFlag.DISABLE,
-                                            onCountryChanged: (value) {
-                                              setState(() {
-                                                countryValue = value;
-                                              });
-                                            },
-                                            onCityChanged: (value) {},
-                                            onStateChanged: (value) {
-                                              if (value != null) {
-                                                formFieldState.didChange(value);
-                                                setState(() {
-                                                  stateValue = value;
-                                                });
-                                              }
-                                            },
-                                            stateDropdownLabel: "City",
-                                            showCities: false,
-                                            defaultCountry:
-                                                CscCountry.United_Arab_Emirates,
-                                            dropdownDecoration: BoxDecoration(
-                                              borderRadius:
-                                                  const BorderRadius.all(
-                                                      Radius.circular(14.0)),
-                                              border: Border.fromBorderSide(
-                                                  shape.borderSide),
-                                            ),
-                                            disabledDropdownDecoration:
-                                                BoxDecoration(
-                                              borderRadius:
-                                                  const BorderRadius.all(
-                                                      Radius.circular(14.0)),
-                                              border: Border.fromBorderSide(
-                                                  shape.borderSide),
-                                            ),
-                                            selectedItemStyle: const TextStyle(
-                                                color: Colors.black),
-                                            stateSearchPlaceholder:
-                                                "Search City",
-                                          ),
-                                          if (formFieldState.hasError)
-                                            Align(
-                                              alignment: Alignment.centerLeft,
-                                              child: Padding(
-                                                padding: EdgeInsets.only(
-                                                  left: MediaQuery.of(context)
-                                                          .size
-                                                          .width *
-                                                      0.0495,
-                                                  top: 5,
-                                                  bottom: 10,
-                                                ),
-                                                child: Text(
-                                                  formFieldState.errorText!,
-                                                  style: TextStyle(
-                                                    fontStyle: FontStyle.normal,
-                                                    fontSize: 13,
-                                                    color: Colors.red[700],
-                                                    height: 0.5,
-                                                  ),
-                                                  textAlign: TextAlign.left,
-                                                ),
-                                              ),
-                                            ),
-                                        ],
-                                      );
-                                    },
+                                  const SizedBox(height: 14),
+                                  Row(
+                                    children: [
+                                      Flexible(
+                                        child: DropdownFormFieldCountry(
+                                          notSavedChanges: null,
+                                          initialValue: null,
+                                          isEditing: true,
+                                          labelText: "Country",
+                                          items: countries,
+                                          validator: (value) {
+                                            if (value == null) {
+                                              return "Please select a country";
+                                            }
+                                            return null;
+                                          },
+                                          onChanged: (value) {
+                                            countryValue = value!;
+
+                                            setState(() {
+                                              nullState = true;
+                                              statesList =
+                                                  getStates(countryValue);
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Flexible(
+                                        child: DropdownFormFieldCity(
+                                          notSavedChanges: null,
+                                          nullState: nullState,
+                                          initialValue: null,
+                                          isEditing: true,
+                                          labelText: "City",
+                                          items: statesList,
+                                          validator: (value) {
+                                            if (value == null) {
+                                              return "Please select a city";
+                                            }
+                                            return null;
+                                          },
+                                          onChanged: (value) {
+                                            cityValue = value!;
+                                          },
+                                        ),
+                                      ),
+                                    ],
                                   ),
+                                  const SizedBox(height: 14),
                                   TextFormField(
                                     keyboardType: TextInputType.text,
                                     decoration: const InputDecoration(
-                                      hintText: "Address Line",
-                                      hintStyle: TextStyle(color: Colors.grey),
+                                      labelText: "Address Line",
+                                      floatingLabelBehavior:
+                                          FloatingLabelBehavior.auto,
+                                      prefixIcon: Icon(Icons.maps_home_work),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(14.0)),
@@ -293,8 +254,6 @@ class _DetailsNGOState extends State<DetailsNGO> {
                                           horizontal: 20.0, vertical: 15.0),
                                     ),
                                     controller: _address,
-                                    autovalidateMode:
-                                        AutovalidateMode.onUserInteraction,
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
                                         return "Please enter your ngo's address line";
@@ -312,12 +271,45 @@ class _DetailsNGOState extends State<DetailsNGO> {
                                             MaterialStateProperty.all<Color>(
                                                 Colors.green)),
                                     onPressed: () async {
+                                      setState(() {
+                                        _clicked = true;
+                                      });
                                       FocusManager.instance.primaryFocus
                                           ?.unfocus();
                                       if (_formKey.currentState!.validate()) {
-                                        setState(() {
-                                          _isLoading = true;
-                                        });
+                                        showDialog(
+                                            barrierDismissible: false,
+                                            context: context,
+                                            builder: (_) {
+                                              return Dialog(
+                                                // The background color
+                                                backgroundColor: Colors.white,
+                                                child: Padding(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(vertical: 20),
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            14.0),
+                                                    child: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: const [
+                                                        // The loading indicator
+                                                        CircularProgressIndicator(),
+                                                        SizedBox(
+                                                          width: 15,
+                                                        ),
+
+                                                        // Some text
+                                                        Text('Loading...')
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            });
+
                                         String userID = "";
                                         final user =
                                             FirebaseAuth.instance.currentUser;
@@ -333,34 +325,26 @@ class _DetailsNGOState extends State<DetailsNGO> {
                                             'NGO Contact Number':
                                                 _ngoNumber.text,
                                             'Country': countryValue,
-                                            'City': stateValue,
+                                            'City': cityValue,
                                             'Address Line': _address.text,
                                           });
-                                          // ignore: use_build_context_synchronously
                                           Navigator.of(context)
                                               .pushNamedAndRemoveUntil(
                                                   '/homengo/',
                                                   (route) => false);
                                         } on FirebaseAuthException catch (e) {
                                           if (e.code == 'not-found') {
-                                            // ignore: use_build_context_synchronously
+                                            Navigator.of(context).pop();
                                             ScaffoldMessenger.of(context)
                                                 .showSnackBar(const SnackBar(
                                                     content: Text(
                                                         "User not found")));
                                           }
-                                        } finally {
-                                          setState(() {
-                                            _isLoading = false;
-                                          });
-                                        }
+                                        } finally {}
                                       }
                                     },
-                                    child: _isLoading
-                                        ? const CircularProgressIndicator()
-                                        : const Text("Submit",
-                                            style:
-                                                TextStyle(color: Colors.white)),
+                                    child: const Text("Submit",
+                                        style: TextStyle(color: Colors.white)),
                                   ),
                                 ]),
                           ),
