@@ -1,15 +1,19 @@
 // ignore_for_file: use_build_context_synchronously
-
+import "dart:io";
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:sfm/assets/country_cities.dart';
-import 'package:sfm/views/home_page.dart';
+import 'package:sfm/views/home_ngo.dart';
+import '../assets/profile_pic.dart';
+import '../assets/storage_service.dart';
+import '../main.dart';
 import 'dart:developer' as devetools show log;
 
-import '../main.dart';
-
 final user = FirebaseAuth.instance.currentUser;
+final String userID = user!.uid;
 String cFullName = "";
 String cNumber = "";
 String cEmail = "";
@@ -19,12 +23,18 @@ String cNGOName = "";
 String cNGONumber = "";
 String cNGOAddress = "";
 String cCountry = "";
-
 String cCity = "";
-
 String countryValue = "";
 String cityValue = "";
 List<String> statesList = [];
+final imageHelper = ImageHelper();
+final Storage storage = Storage();
+String filePath = "";
+String fileName = "";
+ImageProvider<Object>? networkFile = const NetworkImage("");
+
+XFile? _imageFile;
+final ImagePicker _picker = ImagePicker();
 
 class GetDetailsNGO extends StatefulWidget {
   const GetDetailsNGO({super.key});
@@ -44,16 +54,67 @@ class _GetDetailsNGOState extends State<GetDetailsNGO> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: _getDetails,
-        builder: (((context, snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.done:
-              return ProfileNGO(cFullName, cNumber, cEmail, cPassword,
-                  cCPassword, cNGOName, cNGOAddress, cNGONumber);
-            default:
-              return const Scaffold();
-          }
-        })));
+      future: _getDetails,
+      builder: (context, snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.waiting:
+            return Stack(
+              children: [
+                const ProfileNGO(
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                ), // replace with your own widget
+                Container(
+                  color: Colors.black.withOpacity(0.5),
+                  child: Center(
+                      child: Dialog(
+                    // The background color
+                    backgroundColor: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Padding(
+                        padding: const EdgeInsets.all(14.0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            // The loading indicator
+                            CircularProgressIndicator(),
+                            SizedBox(
+                              width: 15,
+                            ),
+
+                            // Some text
+                            Text('Loading...')
+                          ],
+                        ),
+                      ),
+                    ),
+                  )),
+                ),
+              ],
+            );
+          case ConnectionState.done:
+            return ProfileNGO(
+              cFullName,
+              cNumber,
+              cEmail,
+              cPassword,
+              cCPassword,
+              cNGOName,
+              cNGOAddress,
+              cNGONumber,
+            ); // replace with your own widget
+          default:
+            return const Scaffold();
+        }
+      },
+    );
   }
 }
 
@@ -96,9 +157,9 @@ class _ProfileNGOState extends State<ProfileNGO> {
   bool nullState = false;
   bool clicked2 = false;
   bool? notSavedChanges;
-
   bool _showFirstForm = true;
 
+  File? _image;
   @override
   void initState() {
     _fullname = TextEditingController(text: widget.aFulltName);
@@ -172,7 +233,6 @@ class _ProfileNGOState extends State<ProfileNGO> {
                     child: Container(
                       height: MediaQuery.of(context).size.height * 0.72,
                       width: MediaQuery.of(context).size.width * 0.85,
-                      // color: const Color(0xFFDBE8D8),
                       color: Colors.white,
                       child: Scaffold(
                         backgroundColor: Colors.transparent,
@@ -183,7 +243,37 @@ class _ProfileNGOState extends State<ProfileNGO> {
                             children: [
                               SizedBox(
                                 height:
-                                    MediaQuery.of(context).size.height * 0.1,
+                                    MediaQuery.of(context).size.height * 0.072,
+                              ),
+                              // imageProfile(context),
+                              InkWell(
+                                onTap: () async {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    builder: (context) => bottomSheet(context),
+                                  );
+                                },
+                                child: Center(
+                                  child: FittedBox(
+                                    fit: BoxFit.contain,
+                                    child: CircleAvatar(
+                                      backgroundColor: Colors.grey[300],
+                                      radius: 42,
+                                      foregroundImage: filePath == ""
+                                          ? (_image != null
+                                              ? FileImage(_image!)
+                                              : null)
+                                          : networkFile,
+                                      child: const Text(
+                                        "SA",
+                                        style: TextStyle(fontSize: 30),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 14,
                               ),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -287,7 +377,7 @@ class _ProfileNGOState extends State<ProfileNGO> {
       key: formKey,
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         SizedBox(
-          height: MediaQuery.of(context).size.height * 0.072,
+          height: MediaQuery.of(context).size.height * 0.042,
         ),
         TextFormField(
           style: isEditing
@@ -603,7 +693,7 @@ class _ProfileNGOState extends State<ProfileNGO> {
       key: formKey2,
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         SizedBox(
-          height: MediaQuery.of(context).size.height * 0.072,
+          height: MediaQuery.of(context).size.height * 0.042,
         ),
         TextFormField(
           style: isEditing2
@@ -855,6 +945,99 @@ class _ProfileNGOState extends State<ProfileNGO> {
       ]),
     );
   }
+
+  Widget imageProfile(BuildContext context) {
+    return Center(
+      child: Stack(
+        children: <Widget>[
+          InkWell(
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                builder: (context) => bottomSheet(context),
+              );
+            },
+            child: CircleAvatar(
+              radius: 42,
+              backgroundImage: _imageFile == null
+                  ? const AssetImage("assets/images/user2.png")
+                  : FileImage(File(_imageFile!.path)) as ImageProvider<Object>?,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget bottomSheet(BuildContext context) {
+    return Container(
+      height: 100,
+      width: MediaQuery.of(context).size.width,
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      child: Column(children: <Widget>[
+        const Text(
+          "Choose Profile Photo",
+          style: TextStyle(fontSize: 20),
+        ),
+        const SizedBox(
+          height: 20,
+        ),
+        Row(
+          children: [
+            TextButton.icon(
+                onPressed: (() async {
+                  final files =
+                      await imageHelper.pickImage(source: ImageSource.camera);
+                  if (files.isNotEmpty) {
+                    final croppedFile = await imageHelper.crop(
+                        file: files.first, cropStyle: CropStyle.circle);
+                    if (croppedFile != null) {
+                      devetools.log(croppedFile.path);
+                      setState(() {
+                        _image = File(croppedFile.path);
+                        filePath = "";
+                      });
+                    }
+                    storage.uploadFile(
+                        croppedFile!.path, "$userID/userProfile.jpg");
+                  }
+                  Navigator.pop(context);
+                }),
+                icon: const Icon(Icons.camera),
+                label: const Text("Camera")),
+            TextButton.icon(
+                onPressed: (() async {
+                  final files = await imageHelper.pickImage();
+                  if (files.isNotEmpty) {
+                    final croppedFile = await imageHelper.crop(
+                        file: files.first, cropStyle: CropStyle.circle);
+                    if (croppedFile != null) {
+                      devetools.log(croppedFile.path);
+                      setState(() {
+                        _image = File(croppedFile.path);
+                        filePath = "";
+                      });
+                    }
+                    storage.uploadFile(
+                        croppedFile!.path, "$userID/userProfile.jpg");
+                  }
+                  Navigator.pop(context);
+                }),
+                icon: const Icon(Icons.image),
+                label: const Text("Gallery")),
+          ],
+        )
+      ]),
+    );
+  }
+
+  void takePhoto(ImageSource source) async {
+    final pickedfile = await _picker.pickImage(source: source);
+    setState(() {
+      _imageFile = pickedfile;
+    });
+    Navigator.pop(context);
+  }
 }
 
 Future<String> getDetails() async {
@@ -872,6 +1055,8 @@ Future<String> getDetails() async {
   statesList = getStates(cCountry);
   countryValue = cCountry;
   cityValue = cCity;
+  filePath = await storage.downloadURL("$userID/userProfile.jpg");
+  networkFile = NetworkImage(filePath);
   return "";
 }
 

@@ -42,6 +42,11 @@ dependencies:
   firebase_core: ^2.5.0
   fluttertoast: ^8.2.1
   csc_picker: ^0.2.7
+  image_picker: ^0.8.7
+  firebase_storage: ^11.0.16
+  file_picker: ^5.2.6
+  image_cropper: ^3.0.1
+  cached_network_image: ^3.2.3
 
 dev_dependencies:
   flutter_test:
@@ -86,6 +91,10 @@ flutter:
     - family: Roboto
       fonts:
         - asset: assets\fonts\Roboto-Regular.ttf
+    - family: RobotoBold
+      fonts:
+        - asset: assets\fonts\Roboto-Bold.ttf
+
   #   - family: Trajan Pro
   #     fonts:
   #       - asset: fonts/TrajanPro.ttf

@@ -2,6 +2,7 @@ import 'dart:developer' as devetools show log;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:sfm/views/details_donator.dart';
 import 'package:sfm/views/details_ngo.dart';
 import 'package:sfm/views/home_donator.dart';
