@@ -3586,11 +3586,15 @@ List<String> getStates(String country) {
     states = armeniaStates;
   } else if (country == "Austria") {
     states = austriaStates;
+  } else if (country == "Australia") {
+    states = australiaStates;
   } else if (country == "Azerbaijan") {
     states = azerbaijanStates;
   } else if (country == "Bahamas") {
     states = bahamasStates;
   } else if (country == "Bahrain") {
+    states = bahrainStates;
+  } else if (country == "Bangladesh") {
     states = bahrainStates;
   } else if (country == "Barbados") {
     states = barbadosStates;

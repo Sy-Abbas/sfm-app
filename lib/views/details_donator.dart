@@ -216,11 +216,8 @@ class _DetailsDonatorState extends State<DetailsDonator> {
                                       ),
                                       const SizedBox(width: 14),
                                       Flexible(
-                                        child: DropdownFormFieldCity(
-                                          notSavedChanges: null,
+                                        child: DropdownCity(
                                           nullState: nullState,
-                                          initialValue: null,
-                                          isEditing: true,
                                           labelText: "City",
                                           items: statesList,
                                           validator: (value) {
@@ -231,6 +228,7 @@ class _DetailsDonatorState extends State<DetailsDonator> {
                                           },
                                           onChanged: (value) {
                                             cityValue = value!;
+                                            nullState = false;
                                           },
                                         ),
                                       ),
@@ -386,5 +384,107 @@ class _DetailsDonatorState extends State<DetailsDonator> {
             ),
           ],
         ));
+  }
+}
+
+// ignore: must_be_immutable
+class DropdownCity extends StatefulWidget {
+  final String? labelText;
+  final List<String> items;
+  final Function(String?)? onChanged;
+  final String? Function(String?)? validator;
+  bool nullState;
+
+  DropdownCity({
+    Key? key,
+    this.labelText,
+    required this.items,
+    this.onChanged,
+    this.validator,
+    required this.nullState,
+  }) : super(key: key);
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _DropdownCityState createState() => _DropdownCityState();
+}
+
+class _DropdownCityState extends State<DropdownCity> {
+  String? _value;
+
+  @override
+  void initState() {
+    super.initState();
+    // if (widget.nullState == true) {
+    //   _value = null;
+    // }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.nullState == true) {
+      _value = null;
+    }
+
+    return FormField<String>(
+      validator: widget.validator,
+      builder: (FormFieldState<String> state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            InputDecorator(
+              decoration: InputDecoration(
+                enabledBorder: OutlineInputBorder(
+                  borderSide: (state.hasError
+                      ? const BorderSide(color: Colors.red)
+                      : const BorderSide(color: Colors.black)),
+                  borderRadius: BorderRadius.circular(14.0),
+                ),
+                labelText: widget.labelText,
+                floatingLabelBehavior: FloatingLabelBehavior.auto,
+                floatingLabelStyle: state.hasError
+                    ? const TextStyle(color: Colors.red)
+                    : TextStyle(color: Colors.grey.shade600),
+                prefixIcon: const Icon(Icons.location_city),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: (_value),
+                    isDense: true,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        widget.nullState = false;
+                        _value = newValue;
+                        widget.onChanged?.call(newValue);
+                        state.didChange(newValue);
+                      });
+                    },
+                    items: widget.items.map((String value) {
+                      return DropdownMenuItem<String>(
+                          value: value, child: Text(value));
+                    }).toList()),
+              ),
+            ),
+            if (state.hasError == true)
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top: 15, bottom: 2),
+                child: Text(
+                  state.errorText!,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).errorColor,
+                    height: 0.5,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
   }
 }

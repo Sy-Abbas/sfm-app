@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'dart:developer' as devetools show log;
 import '../assets/country_cities.dart';
 import '../main.dart';
+import 'details_donator.dart';
 
 List<String> statesList = [];
 
@@ -201,7 +202,7 @@ class _DetailsNGOState extends State<DetailsNGO> {
                                           },
                                           onChanged: (value) {
                                             countryValue = value!;
-
+                                            devetools.log("sdsadasd");
                                             setState(() {
                                               nullState = true;
                                               statesList =
@@ -212,11 +213,8 @@ class _DetailsNGOState extends State<DetailsNGO> {
                                       ),
                                       const SizedBox(width: 14),
                                       Flexible(
-                                        child: DropdownFormFieldCity(
-                                          notSavedChanges: null,
+                                        child: DropdownCity(
                                           nullState: nullState,
-                                          initialValue: null,
-                                          isEditing: true,
                                           labelText: "City",
                                           items: statesList,
                                           validator: (value) {
@@ -227,6 +225,7 @@ class _DetailsNGOState extends State<DetailsNGO> {
                                           },
                                           onChanged: (value) {
                                             cityValue = value!;
+                                            nullState = false;
                                           },
                                         ),
                                       ),

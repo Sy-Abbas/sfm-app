@@ -2,7 +2,6 @@ import 'dart:developer' as devetools show log;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:sfm/views/details_donator.dart';
 import 'package:sfm/views/details_ngo.dart';
 import 'package:sfm/views/home_donator.dart';
@@ -10,21 +9,21 @@ import 'package:sfm/views/home_ngo.dart';
 import 'package:sfm/views/home_page.dart';
 import 'package:sfm/views/login_donator.dart';
 import 'package:sfm/views/login_ngo.dart';
-import 'package:sfm/views/profile_ngo_one.dart';
+import 'package:sfm/views/profile_donator.dart';
+import 'package:sfm/views/profile_ngo.dart';
 import 'package:sfm/views/register_donator.dart';
 import 'package:sfm/views/register_ngo.dart';
 import 'firebase_options.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-
   runApp(MaterialApp(
       debugShowCheckedModeBanner: false,
       title: "Surplus Food Management",
       theme: ThemeData(primarySwatch: Colors.green),
       home: const Initialize(),
       routes: {
-        '/homepage/': (context) => const HomePage(),
+        '/main/': (context) => const Initialize(),
+        '/homepage/': (context) => const Check(),
         '/logindonator/': ((context) => const LoginViewDonator()),
         '/loginngo/': ((context) => const LoginViewNGO()),
         '/registerdonator/': ((context) => const RegisterViewDonator()),
@@ -34,6 +33,7 @@ void main() {
         '/detailsngo/': ((context) => const DetailsNGO()),
         '/detailsdonator/': ((context) => const DetailsDonator()),
         '/profilengo/': ((context) => const GetDetailsNGO()),
+        '/profiledonator/': (context) => const GetDetailsDonator(),
       }));
 }
 
@@ -42,6 +42,8 @@ class Initialize extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    WidgetsFlutterBinding.ensureInitialized();
+
     return FutureBuilder(
       future: Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
@@ -140,14 +142,14 @@ Future<bool> detailsEntered(String uid, String userT, String userIDs) async {
   }
 }
 
-Future<bool> confirmChangesDialog(BuildContext context) {
+Future<bool> confirmChangesDialog(BuildContext context, String add) {
   return showDialog<bool>(
       barrierDismissible: false,
       context: context,
       builder: ((context) {
         return AlertDialog(
           title: const Text("Confirm Changes"),
-          content: const Text("Are you sure you want to make these changes?"),
+          content: Text("Are you sure you want to make these changes? $add"),
           actions: [
             TextButton(
               onPressed: (() {
@@ -323,11 +325,13 @@ class _DropdownFormFieldCityState extends State<DropdownFormFieldCity> {
   @override
   Widget build(BuildContext context) {
     if (widget.nullState == true) {
+      // devetools.log(_value.toString());
       devetools.log("message");
       _value = null;
       widget.initialValue = null;
     }
     if (widget.notSavedChanges ?? false) {
+      devetools.log("medsdsdsdsssage");
       _value = widget.initialValue;
       widget.notSavedChanges = null;
     }

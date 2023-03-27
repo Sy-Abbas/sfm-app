@@ -1,19 +1,16 @@
 // ignore_for_file: use_build_context_synchronously, depend_on_referenced_packages, no_leading_underscores_for_local_identifiers
 
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as devetools show log;
 import 'package:intl/intl.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:sfm/assets/storage_service.dart';
 
 import '../main.dart';
 
-User? user = FirebaseAuth.instance.currentUser;
 final Storage storage = Storage();
 String userCountry = "";
 String userCity = "";
@@ -30,17 +27,16 @@ class HomeNGO extends StatefulWidget {
 }
 
 class _HomeNGOState extends State<HomeNGO> {
-  late Future<String> getData;
   final _foodItem = TextEditingController();
   final _cuisine = TextEditingController();
   final _numberOfPeople = TextEditingController();
   final _area = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _clicked = false;
+  User? user = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
-    getData = _getData();
     super.initState();
   }
 
@@ -53,8 +49,8 @@ class _HomeNGOState extends State<HomeNGO> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: getData,
+    return StreamBuilder(
+        stream: getDataStream(),
         builder: (context, snapshot) {
           return Container(
             decoration: const BoxDecoration(
@@ -108,11 +104,9 @@ class _HomeNGOState extends State<HomeNGO> {
                                 await FirebaseAuth.instance.signOut();
                                 await FirebaseAuth.instance
                                     .signOut(); // clear cached data
-                                await Navigator.of(context)
-                                    .pushNamedAndRemoveUntil(
-                                  '/loginngo/',
-                                  (route) => false,
-                                );
+
+                                Navigator.pushReplacementNamed(
+                                    context, "/loginngo/");
                               }
                               break;
                             case MenuAction.profile:
@@ -300,27 +294,35 @@ class _HomeNGOState extends State<HomeNGO> {
                                         if (snapshot.hasData) {
                                           List<List<String>> data =
                                               snapshot.data!;
-                                          int numberOfRequest = data.length - 1;
-                                          return Column(
-                                            children: [
-                                              ListView.builder(
-                                                  physics:
-                                                      const NeverScrollableScrollPhysics(),
-                                                  shrinkWrap: true,
-                                                  itemCount: numberOfRequest,
-                                                  itemBuilder:
-                                                      (context, index) {
-                                                    return _requestIltem(
-                                                      context,
-                                                      data[index + 1][1],
-                                                      data[index + 1][2],
-                                                      data[index + 1][0],
-                                                    );
-                                                  })
-                                            ],
-                                          );
+
+                                          if (data.length > 1) {
+                                            int numberOfRequest =
+                                                data.length - 1;
+                                            return Column(
+                                              children: [
+                                                ListView.builder(
+                                                    physics:
+                                                        const NeverScrollableScrollPhysics(),
+                                                    shrinkWrap: true,
+                                                    itemCount: numberOfRequest,
+                                                    itemBuilder:
+                                                        (context, index) {
+                                                      return _requestIltem(
+                                                        context,
+                                                        data[index + 1][1],
+                                                        data[index + 1][2],
+                                                        data[index + 1][0],
+                                                      );
+                                                    })
+                                              ],
+                                            );
+                                          } else {
+                                            return const Center(
+                                                child: SizedBox());
+                                          }
                                         } else {
-                                          return Container();
+                                          return const Center(
+                                              child: SizedBox());
                                         }
                                       }),
                                 )
@@ -471,6 +473,9 @@ class _HomeNGOState extends State<HomeNGO> {
           actions: [
             ElevatedButton(
               onPressed: () {
+                setState(() {
+                  _clicked = false;
+                });
                 _foodItem.text = "";
                 _cuisine.text = "";
                 _numberOfPeople.text = "";
@@ -550,6 +555,9 @@ class _HomeNGOState extends State<HomeNGO> {
                     }
                   } finally {
                     Navigator.pop(context);
+                    setState(() {
+                      _clicked = false;
+                    });
                   }
                 }
               },
@@ -663,17 +671,15 @@ Widget _foodListingItem(BuildContext context, String lineOne, String lineTwo) {
               ),
               Column(
                 children: [
-                  ButtonTheme(
-                    child: ElevatedButton(
-                        style: ButtonStyle(
-                            backgroundColor:
-                                MaterialStateProperty.all<Color>(Colors.green)),
-                        onPressed: (() {}),
-                        child: const Text(
-                          "Chat",
-                          style: TextStyle(fontSize: 14, color: Colors.white),
-                        )),
-                  ),
+                  ElevatedButton(
+                      style: ButtonStyle(
+                          backgroundColor:
+                              MaterialStateProperty.all<Color>(Colors.green)),
+                      onPressed: (() {}),
+                      child: const Text(
+                        "Chat",
+                        style: TextStyle(fontSize: 14, color: Colors.white),
+                      )),
                 ],
               )
             ],
@@ -718,6 +724,7 @@ Widget _requestIltem(
                         flex: 0,
                         child: GestureDetector(
                           onTap: () async {
+                            User? user = FirebaseAuth.instance.currentUser;
                             final _foodItem = TextEditingController();
                             final _cuisine = TextEditingController();
                             final _numberOfPeople = TextEditingController();
@@ -969,6 +976,8 @@ Widget _requestIltem(
                                                 );
                                               });
                                           try {
+                                            User? user = FirebaseAuth
+                                                .instance.currentUser;
                                             FirebaseDatabase database =
                                                 FirebaseDatabase.instance;
 
@@ -1041,6 +1050,7 @@ Widget _requestIltem(
                         flex: 0,
                         child: GestureDetector(
                           onTap: () async {
+                            User? user = FirebaseAuth.instance.currentUser;
                             final userid = user!.uid;
 
                             bool cancel = await showCancelConfirmation(context);
@@ -1081,6 +1091,7 @@ String getFormattedDate() {
 }
 
 Stream<List<List<String>>> _getRequestDetails() {
+  User? user = FirebaseAuth.instance.currentUser;
   final userUID = user?.uid ?? "";
   DatabaseReference ref =
       FirebaseDatabase.instance.ref("Requests/$userCountry/$userCity/$userUID");
@@ -1157,11 +1168,15 @@ Stream<List<List<String>>> _getRequestDetails() {
   return controller.stream;
 }
 
-Future<String> _getData() async {
+Stream<void> getDataStream() async* {
+  User? user = FirebaseAuth.instance.currentUser;
   String docID = await findDocID(user?.uid ?? "None", "NGOs");
-  final data =
-      await FirebaseFirestore.instance.collection("NGOs").doc(docID).get();
-  userCountry = data["Country"];
-  userCity = data["City"];
-  return "";
+  yield* FirebaseFirestore.instance
+      .collection("NGOs")
+      .doc(docID)
+      .snapshots()
+      .map((snapshot) {
+    userCountry = snapshot["Country"];
+    userCity = snapshot["City"];
+  });
 }

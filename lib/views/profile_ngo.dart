@@ -2,6 +2,7 @@
 import "dart:io";
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
@@ -12,8 +13,6 @@ import '../assets/storage_service.dart';
 import '../main.dart';
 import 'dart:developer' as devetools show log;
 
-final user = FirebaseAuth.instance.currentUser;
-final String userID = user!.uid;
 String cFullName = "";
 String cNumber = "";
 String cEmail = "";
@@ -612,7 +611,7 @@ class _ProfileNGOState extends State<ProfileNGO> {
               });
               FocusManager.instance.primaryFocus?.unfocus();
               if (formKey.currentState!.validate()) {
-                final shouldSave = await confirmChangesDialog(context);
+                final shouldSave = await confirmChangesDialog(context, "");
                 showDialog(
                     barrierDismissible: false,
                     context: context,
@@ -857,7 +856,8 @@ class _ProfileNGOState extends State<ProfileNGO> {
               });
               FocusManager.instance.primaryFocus?.unfocus();
               if (formKey2.currentState!.validate()) {
-                final shouldSave = await confirmChangesDialog(context);
+                final shouldSave = await confirmChangesDialog(context,
+                    "(Note: Changing city will remove all your current requests)");
                 showDialog(
                     barrierDismissible: false,
                     context: context,
@@ -889,14 +889,19 @@ class _ProfileNGOState extends State<ProfileNGO> {
                 if (shouldSave) {
                   notSavedChanges = false;
                   final user = FirebaseAuth.instance.currentUser;
-                  final userDocID =
-                      await findDocID(user?.uid ?? "None", "NGOs");
+                  final userid = user!.uid;
+                  final userDocID = await findDocID(user.uid, "NGOs");
                   try {
                     if (countryValue == '') {
                       countryValue = cCountry;
                     }
                     if (cityValue == '') {
                       cityValue = cCity;
+                    }
+                    if (cityValue != cCity) {
+                      DatabaseReference ref = FirebaseDatabase.instance
+                          .ref("Requests/$cCountry/$cCity/$userid/");
+                      await ref.remove();
                     }
                     await FirebaseFirestore.instance
                         .collection('NGOs')
@@ -986,6 +991,9 @@ class _ProfileNGOState extends State<ProfileNGO> {
           children: [
             TextButton.icon(
                 onPressed: (() async {
+                  final user = FirebaseAuth.instance.currentUser;
+                  final String userID = user!.uid;
+
                   final files =
                       await imageHelper.pickImage(source: ImageSource.camera);
                   if (files.isNotEmpty) {
@@ -1007,6 +1015,9 @@ class _ProfileNGOState extends State<ProfileNGO> {
                 label: const Text("Camera")),
             TextButton.icon(
                 onPressed: (() async {
+                  final user = FirebaseAuth.instance.currentUser;
+                  final String userID = user!.uid;
+
                   final files = await imageHelper.pickImage();
                   if (files.isNotEmpty) {
                     final croppedFile = await imageHelper.crop(
@@ -1041,7 +1052,10 @@ class _ProfileNGOState extends State<ProfileNGO> {
 }
 
 Future<String> getDetails() async {
-  String docID = await findDocID(user?.uid ?? "None", "NGOs");
+  final user = FirebaseAuth.instance.currentUser;
+  final String userID = user!.uid;
+
+  String docID = await findDocID(user.uid, "NGOs");
   final data =
       await FirebaseFirestore.instance.collection("NGOs").doc(docID).get();
   cFullName = data["Full Name"];
@@ -1055,8 +1069,12 @@ Future<String> getDetails() async {
   statesList = getStates(cCountry);
   countryValue = cCountry;
   cityValue = cCity;
-  filePath = await storage.downloadURL("$userID/userProfile.jpg");
-  networkFile = NetworkImage(filePath);
+  try {
+    filePath = await storage.downloadURL("$userID/userProfile.jpg");
+    networkFile = NetworkImage(filePath);
+  } catch (error) {
+    devetools.log(error.toString());
+  }
   return "";
 }
 

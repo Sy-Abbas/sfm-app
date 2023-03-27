@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../main.dart';
 
+final usesr = FirebaseAuth.instance.currentUser;
+
 class LoginViewNGO extends StatefulWidget {
   const LoginViewNGO({super.key});
 
@@ -17,7 +19,6 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
   late final TextEditingController _password;
   bool isObscure = true;
   final _formKey = GlobalKey<FormState>();
-  bool _isLoading = false;
   bool _clicked = false;
 
   @override

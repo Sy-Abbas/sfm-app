@@ -5,10 +5,10 @@ import 'package:sfm/views/home_donator.dart';
 import 'package:sfm/views/home_ngo.dart';
 import 'package:sfm/views/login_donator.dart';
 import 'package:sfm/views/login_ngo.dart';
+import 'dart:developer' as devetools show log;
 
 import '../main.dart';
 
-final user = FirebaseAuth.instance.currentUser;
 var userType = "None";
 var userDocID = "None";
 bool isDe = false;
@@ -22,6 +22,7 @@ class Check extends StatefulWidget {
 
 class _CheckState extends State<Check> {
   late Future<String> _getUserType;
+  User? user = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
@@ -273,11 +274,13 @@ class _HomePageState extends State<HomePage> {
 }
 
 Future<String> doneGetting() async {
+  User? user = FirebaseAuth.instance.currentUser;
   userType = await getUserType(user?.uid ?? "None");
   return "Done";
 }
 
 Future<String> checkingDetailed(String uT) async {
+  User? user = FirebaseAuth.instance.currentUser;
   userDocID = await findDocID(user?.uid ?? "None", uT);
   isDe = await detailsEntered(user?.uid ?? "None", uT, userDocID);
   return "Done";
