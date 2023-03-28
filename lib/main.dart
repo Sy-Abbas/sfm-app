@@ -24,6 +24,7 @@ void main() {
       routes: {
         '/main/': (context) => const Initialize(),
         '/homepage/': (context) => const Check(),
+        '/homepage2/': (context) => const HomePage(),
         '/logindonator/': ((context) => const LoginViewDonator()),
         '/loginngo/': ((context) => const LoginViewNGO()),
         '/registerdonator/': ((context) => const RegisterViewDonator()),
@@ -52,7 +53,7 @@ class Initialize extends StatelessWidget {
         FocusManager.instance.primaryFocus?.unfocus();
         switch (snapshot.connectionState) {
           case ConnectionState.done:
-            return const Check();
+            return Check();
           default:
             return const Scaffold();
         }

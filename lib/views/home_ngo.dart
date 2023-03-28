@@ -160,46 +160,46 @@ class _HomeNGOState extends State<HomeNGO> {
                         SizedBox(
                           height: MediaQuery.of(context).size.height * 0.02,
                         ),
-                        Row(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(5),
-                              child: Container(
-                                height:
-                                    MediaQuery.of(context).size.height * 0.040,
-                                width: MediaQuery.of(context).size.width * 0.72,
-                                color: const Color(0xFFDBE8D8),
-                                child: const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Text(
-                                    "Search",
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontFamily: "Roboto",
-                                        color: Color(0xff05240E)),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(5),
-                              child: Container(
-                                height:
-                                    MediaQuery.of(context).size.height * 0.040,
-                                width: MediaQuery.of(context).size.width * 0.1,
-                                color: Colors.green,
-                                child: IconButton(
-                                  onPressed: (() {}),
-                                  icon: const Icon(Icons.search),
-                                  color: const Color(0xFFDBE8D8),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.05,
-                        ),
+                        // Row(
+                        //   children: [
+                        //     ClipRRect(
+                        //       borderRadius: BorderRadius.circular(5),
+                        //       child: Container(
+                        //         height:
+                        //             MediaQuery.of(context).size.height * 0.040,
+                        //         width: MediaQuery.of(context).size.width * 0.72,
+                        //         color: const Color(0xFFDBE8D8),
+                        //         child: const Padding(
+                        //           padding: EdgeInsets.all(8.0),
+                        //           child: Text(
+                        //             "Search",
+                        //             style: TextStyle(
+                        //                 fontSize: 14,
+                        //                 fontFamily: "Roboto",
+                        //                 color: Color(0xff05240E)),
+                        //           ),
+                        //         ),
+                        //       ),
+                        //     ),
+                        //     ClipRRect(
+                        //       borderRadius: BorderRadius.circular(5),
+                        //       child: Container(
+                        //         height:
+                        //             MediaQuery.of(context).size.height * 0.040,
+                        //         width: MediaQuery.of(context).size.width * 0.1,
+                        //         color: Colors.green,
+                        //         child: IconButton(
+                        //           onPressed: (() {}),
+                        //           icon: const Icon(Icons.search),
+                        //           color: const Color(0xFFDBE8D8),
+                        //         ),
+                        //       ),
+                        //     ),
+                        //   ],
+                        // ),
+                        // SizedBox(
+                        //   height: MediaQuery.of(context).size.height * 0.05,
+                        // ),
                         Row(
                           children: [
                             const Text(

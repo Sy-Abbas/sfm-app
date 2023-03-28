@@ -490,7 +490,8 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                       onPressed: (() {
                                         Navigator.of(context)
                                             .pushNamedAndRemoveUntil(
-                                                '/homepage/', (route) => false);
+                                                '/homepage2/',
+                                                (route) => false);
                                       }),
                                       child: const Text("Change User",
                                           style:

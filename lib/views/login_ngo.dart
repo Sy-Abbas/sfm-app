@@ -358,7 +358,8 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
                                       onPressed: (() {
                                         Navigator.of(context)
                                             .pushNamedAndRemoveUntil(
-                                                '/homepage/', (route) => false);
+                                                '/homepage2/',
+                                                (route) => false);
                                       }),
                                       child: const Text("Change User",
                                           style:

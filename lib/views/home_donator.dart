@@ -1,14 +1,12 @@
 // ignore_for_file: use_build_context_synchronously, depend_on_referenced_packages, no_leading_underscores_for_local_identifiers
 
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as devetools show log;
 import 'package:intl/intl.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:sfm/assets/storage_service.dart';
 
 import '../main.dart';
@@ -36,9 +34,8 @@ class _HomeDonatorsState extends State<HomeDonators> {
   final _formKey = GlobalKey<FormState>();
   bool _clicked = false;
   bool showYourCity = true;
-  bool reset = false;
+
   String selectedCity = userCity;
-  List<List<String>> cData = [];
 
   @override
   void initState() {
@@ -167,46 +164,46 @@ class _HomeDonatorsState extends State<HomeDonators> {
                         SizedBox(
                           height: MediaQuery.of(context).size.height * 0.02,
                         ),
-                        Row(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(5),
-                              child: Container(
-                                height:
-                                    MediaQuery.of(context).size.height * 0.040,
-                                width: MediaQuery.of(context).size.width * 0.72,
-                                color: const Color(0xFFDBE8D8),
-                                child: const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Text(
-                                    "Search",
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontFamily: "Roboto",
-                                        color: Color(0xff05240E)),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(5),
-                              child: Container(
-                                height:
-                                    MediaQuery.of(context).size.height * 0.040,
-                                width: MediaQuery.of(context).size.width * 0.1,
-                                color: Colors.green,
-                                child: IconButton(
-                                  onPressed: (() {}),
-                                  icon: const Icon(Icons.search),
-                                  color: const Color(0xFFDBE8D8),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.05,
-                        ),
+                        // Row(
+                        //   children: [
+                        //     ClipRRect(
+                        //       borderRadius: BorderRadius.circular(5),
+                        //       child: Container(
+                        //         height:
+                        //             MediaQuery.of(context).size.height * 0.040,
+                        //         width: MediaQuery.of(context).size.width * 0.72,
+                        //         color: const Color(0xFFDBE8D8),
+                        //         child: const Padding(
+                        //           padding: EdgeInsets.all(8.0),
+                        //           child: Text(
+                        //             "Search",
+                        //             style: TextStyle(
+                        //                 fontSize: 14,
+                        //                 fontFamily: "Roboto",
+                        //                 color: Color(0xff05240E)),
+                        //           ),
+                        //         ),
+                        //       ),
+                        //     ),
+                        //     ClipRRect(
+                        //       borderRadius: BorderRadius.circular(5),
+                        //       child: Container(
+                        //         height:
+                        //             MediaQuery.of(context).size.height * 0.040,
+                        //         width: MediaQuery.of(context).size.width * 0.1,
+                        //         color: Colors.green,
+                        //         child: IconButton(
+                        //           onPressed: (() {}),
+                        //           icon: const Icon(Icons.search),
+                        //           color: const Color(0xFFDBE8D8),
+                        //         ),
+                        //       ),
+                        //     ),
+                        //   ],
+                        // ),
+                        // SizedBox(
+                        //   height: MediaQuery.of(context).size.height * 0.05,
+                        // ),
 
                         StreamBuilder<Map<String, List<List<String>>>>(
                             stream: _getRequestDetails(),
@@ -220,6 +217,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                     cities.add(key);
                                   },
                                 );
+
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -240,30 +238,24 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                                       ? const Color(0xff05240E)
                                                       : Colors.green,
                                                   selectedCity == cities[index],
-                                                  () async {
+                                                  () {
                                                   setState(() {
-                                                    reset = true;
                                                     selectedCity =
                                                         cities[index];
                                                     showYourCity = false;
                                                   });
-                                                  await sendShowData(
-                                                      data[userCity]);
                                                 })
                                               : _cities(
                                                   cities[index],
                                                   "Roboto",
                                                   Colors.green,
                                                   selectedCity == cities[index],
-                                                  () async {
+                                                  () {
                                                   setState(() {
-                                                    reset = true;
                                                     selectedCity =
                                                         cities[index];
                                                     showYourCity = false;
                                                   });
-                                                  await sendShowData(
-                                                      data[cities[index]]);
                                                 });
                                         },
                                       ),
@@ -304,7 +296,40 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                               ),
                                             ),
                                           )
-                                        : const SizedBox()
+                                        : const SizedBox(),
+                                    showYourCity
+                                        ? const SizedBox()
+                                        : Padding(
+                                            padding: const EdgeInsets.only(
+                                                right: 14.0),
+                                            child: SingleChildScrollView(
+                                              child: Column(
+                                                children: [
+                                                  ListView.builder(
+                                                      physics:
+                                                          const NeverScrollableScrollPhysics(),
+                                                      shrinkWrap: true,
+                                                      itemCount:
+                                                          data[selectedCity]
+                                                              .length,
+                                                      itemBuilder:
+                                                          (context, index) {
+                                                        return index == 0
+                                                            ? const SizedBox()
+                                                            : (_requestIltem(
+                                                                context,
+                                                                data[selectedCity]
+                                                                    [index][2],
+                                                                data[selectedCity]
+                                                                    [index][3],
+                                                                data[selectedCity]
+                                                                    [index][1],
+                                                              ));
+                                                      })
+                                                ],
+                                              ),
+                                            ),
+                                          )
                                   ],
                                 );
                               } else {
@@ -313,60 +338,19 @@ class _HomeDonatorsState extends State<HomeDonators> {
                               }
                             }),
 
-                        showYourCity
-                            ? const SizedBox()
-                            : reset
-                                ? const Center(
-                                    child: CircularProgressIndicator(),
-                                  )
-                                : SingleChildScrollView(
-                                    child: StreamBuilder<List<List<String>>>(
-                                        stream: _getShowData(),
-                                        builder: (context, snapshot) {
-                                          if (snapshot.hasData) {
-                                            List<List<String>> data =
-                                                snapshot.data!;
-                                            devetools.log(data.toString());
-                                            return Column(
-                                              children: [
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          right: 14.0),
-                                                  child: Column(
-                                                    children: [
-                                                      ListView.builder(
-                                                          physics:
-                                                              const NeverScrollableScrollPhysics(),
-                                                          shrinkWrap: true,
-                                                          itemCount:
-                                                              data.length,
-                                                          itemBuilder:
-                                                              (context, index) {
-                                                            return index == 0
-                                                                ? const SizedBox()
-                                                                : (_requestIltem(
-                                                                    context,
-                                                                    data[index]
-                                                                        [2],
-                                                                    data[index]
-                                                                        [3],
-                                                                    data[index]
-                                                                        [1],
-                                                                  ));
-                                                          })
-                                                    ],
-                                                  ),
-                                                )
-                                              ],
-                                            );
-                                          } else {
-                                            return const SizedBox();
-                                          }
-                                        }),
-                                  ),
                         SizedBox(
                           height: MediaQuery.of(context).size.height * 0.025,
+                        ),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _foodListingItem(context, "KFC - Red Hot Twister",
+                                  "3-4 people, Al Nahda"),
+                              _foodListingItem(context, "Pak Darbar - Biryani",
+                                  "2-3 people, Al Nahda"),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -637,37 +621,6 @@ class _HomeDonatorsState extends State<HomeDonators> {
     );
   }
 
-  Future<String> sendShowData(List<List<String>>? data) async {
-    if (data != null) {
-      FirebaseDatabase database = FirebaseDatabase.instance;
-      await database.ref().child("Show").remove();
-
-      data.removeAt(0);
-      for (List<String> a in data) {
-        await database.ref().child("Show").push().set(a);
-      }
-      setState(() {
-        reset = false;
-      });
-    }
-
-    return "";
-  }
-
-  Future<String> sendShowDataOnce(List<List<String>>? data) async {
-    if (data != null) {
-      FirebaseDatabase database = FirebaseDatabase.instance;
-      await database.ref().child("Show").remove();
-
-      data.removeAt(0);
-      for (List<String> a in data) {
-        await database.ref().child("Show").push().set(a);
-      }
-    }
-
-    return "";
-  }
-
   Stream<Map<String, List<List<String>>>> _getRequestDetails() {
     Map<String, List<List<String>>> myMap = {};
 
@@ -719,7 +672,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
     });
     ref.onChildChanged.listen((event) {
       final data = event.snapshot.value as Map;
-      final key = event.snapshot.key as String;
+      final key = event.snapshot.key;
       myMap.remove(key);
       List<List<String>> cityData = [[]];
       data.forEach((key, value) {
@@ -743,14 +696,14 @@ class _HomeDonatorsState extends State<HomeDonators> {
           }
         });
       });
-      myMap[key] = cityData;
+      myMap[key!] = cityData;
       List<List<String>> userCityValues = myMap.remove(userCity) ?? [[]];
       myMap = {userCity: userCityValues, ...myMap};
 
       controller.add(myMap);
     });
     ref.onChildRemoved.listen((event) {
-      final key = event.snapshot.key as String;
+      final key = event.snapshot.key;
       myMap.remove(key);
       List<List<String>> userCityValues = myMap.remove(userCity) ?? [[]];
       myMap = {userCity: userCityValues, ...myMap};
@@ -966,48 +919,4 @@ Stream<void> getDataStream() async* {
     userCountry = snapshot["Country"];
     userCity = snapshot["City"];
   });
-}
-
-Stream<List<List<String>>> _getShowData() {
-  DatabaseReference ref = FirebaseDatabase.instance.ref("Show");
-  StreamController<List<List<String>>> controller =
-      StreamController.broadcast();
-  List<List<String>> mainData = [
-    [""]
-  ];
-
-  ref.once().then((event) {
-    if (event.snapshot.value != null) {
-      final data = event.snapshot.value as Map;
-
-      data.forEach((key, value) {
-        List<String> secondData = [value[0], value[1], value[2], value[3]];
-        mainData.add(secondData);
-      });
-
-      controller.add(mainData);
-    }
-  });
-
-  ref.onChildChanged.listen((event) {
-    final changes = (event.snapshot.value as List<Object?>)
-        .map((item) => item.toString())
-        .toList();
-
-    final uid = changes[0];
-    int index = 0;
-    for (int i = 0; i < mainData.length; i++) {
-      final tempList = mainData[i];
-      if (tempList.contains(uid)) {
-        index = i;
-      }
-    }
-    mainData.removeAt(index);
-    mainData.add(changes);
-    controller.add(mainData);
-  });
-
-  ref.onChildRemoved.listen((event) {});
-
-  return controller.stream;
 }
