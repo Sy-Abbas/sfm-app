@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously, depend_on_referenced_packages, no_leading_underscores_for_local_identifiers
 
 import 'dart:async';
+import 'dart:ffi';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -8,12 +9,20 @@ import 'package:flutter/material.dart';
 import 'dart:developer' as devetools show log;
 import 'package:intl/intl.dart';
 import 'package:sfm/assets/storage_service.dart';
+import 'package:sfm/views/single_chat.dart';
 
 import '../main.dart';
 
 final Storage storage = Storage();
+String userEmail = "";
+String userName = "";
 String userCountry = "";
 String userCity = "";
+String ngoName = "";
+String ngoAddress = "";
+String filePath = "";
+String fileName = "";
+ImageProvider<Object>? networkFile = const NetworkImage("");
 
 enum MenuAction { logout, profile }
 
@@ -30,14 +39,23 @@ class _HomeNGOState extends State<HomeNGO> {
   final _foodItem = TextEditingController();
   final _cuisine = TextEditingController();
   final _numberOfPeople = TextEditingController();
-  final _area = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _clicked = false;
   User? user = FirebaseAuth.instance.currentUser;
+  bool showYourCity = true;
+  String selectedData = userCity;
+  bool _isLoading = true;
+  late Future<String> _getDetails;
 
   @override
   void initState() {
+    _getDetails = getPics();
     super.initState();
+    Future.delayed(const Duration(seconds: 5), () {
+      setState(() {
+        _isLoading = false;
+      });
+    });
   }
 
   @override
@@ -49,292 +67,455 @@ class _HomeNGOState extends State<HomeNGO> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-        stream: getDataStream(),
+    return FutureBuilder(
+        future: _getDetails,
         builder: (context, snapshot) {
-          return Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Scaffold(
-                backgroundColor: Colors.transparent,
-                appBar: AppBar(
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  automaticallyImplyLeading: false,
-                  title: Row(
-                    children: [
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: const BoxDecoration(
-                            image: DecorationImage(
-                          image: AssetImage("assets/logo.png"),
-                          fit: BoxFit.fitWidth,
-                        )),
-                      ),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                      const Text(
-                        "Surplus Food Management",
-                        style: TextStyle(
-                            fontSize: 20,
-                            fontFamily: "Roboto",
-                            color: Color(0xff05240E)),
-                        textAlign: TextAlign.center,
-                      )
-                    ],
-                  ),
-                  actions: [
-                    PopupMenuButton<MenuAction>(
-                        icon: const Icon(
-                          Icons.menu,
-                          color: Color(0xFF05240E),
-                        ),
-                        // color: const Color(0xFFDBE8D8),
-                        onSelected: (value) async {
-                          switch (value) {
-                            case MenuAction.logout:
-                              final shouldLogout =
-                                  await showLogOutDialog(context);
-                              if (shouldLogout) {
-                                await FirebaseAuth.instance.signOut();
-                                await FirebaseAuth.instance
-                                    .signOut(); // clear cached data
-
-                                Navigator.pushReplacementNamed(
-                                    context, "/loginngo/");
-                              }
-                              break;
-                            case MenuAction.profile:
-                              await Navigator.of(context)
-                                  .pushNamedAndRemoveUntil(
-                                '/profilengo/',
-                                (route) => true,
-                              );
-                              break;
-                          }
-                        },
-                        itemBuilder: ((context) {
-                          return const [
-                            PopupMenuItem<MenuAction>(
-                              value: MenuAction.profile,
-                              child: Text(
-                                "Profile",
-                                style: TextStyle(color: Color(0xFF05240E)),
-                              ),
-                            ),
-                            PopupMenuItem<MenuAction>(
-                              value: MenuAction.logout,
-                              child: Text(
-                                "Log Out",
-                                style: TextStyle(color: Color(0xFF05240E)),
-                              ),
-                            )
-                          ];
-                        }))
-                  ],
-                ),
-                body: Padding(
-                  padding: const EdgeInsets.only(top: 25, left: 14),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: const [
-                            Text(
-                              "SFM - NGO Homepage",
-                              style: TextStyle(
-                                  fontSize: 30,
-                                  fontFamily: "Roboto",
-                                  color: Color(0xff05240E)),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                        // const TestPicture(),
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.02,
-                        ),
-                        // Row(
-                        //   children: [
-                        //     ClipRRect(
-                        //       borderRadius: BorderRadius.circular(5),
-                        //       child: Container(
-                        //         height:
-                        //             MediaQuery.of(context).size.height * 0.040,
-                        //         width: MediaQuery.of(context).size.width * 0.72,
-                        //         color: const Color(0xFFDBE8D8),
-                        //         child: const Padding(
-                        //           padding: EdgeInsets.all(8.0),
-                        //           child: Text(
-                        //             "Search",
-                        //             style: TextStyle(
-                        //                 fontSize: 14,
-                        //                 fontFamily: "Roboto",
-                        //                 color: Color(0xff05240E)),
-                        //           ),
-                        //         ),
-                        //       ),
-                        //     ),
-                        //     ClipRRect(
-                        //       borderRadius: BorderRadius.circular(5),
-                        //       child: Container(
-                        //         height:
-                        //             MediaQuery.of(context).size.height * 0.040,
-                        //         width: MediaQuery.of(context).size.width * 0.1,
-                        //         color: Colors.green,
-                        //         child: IconButton(
-                        //           onPressed: (() {}),
-                        //           icon: const Icon(Icons.search),
-                        //           color: const Color(0xFFDBE8D8),
-                        //         ),
-                        //       ),
-                        //     ),
-                        //   ],
-                        // ),
-                        // SizedBox(
-                        //   height: MediaQuery.of(context).size.height * 0.05,
-                        // ),
-                        Row(
-                          children: [
-                            const Text(
-                              "Recent",
-                              style: TextStyle(
-                                  fontSize: 17,
-                                  fontFamily: "RobotoBold",
-                                  color: Color(0xff05240E)),
-                            ),
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.040,
-                            ),
-                            const Text(
-                              "Fast Food",
-                              style: TextStyle(
-                                  fontSize: 17,
-                                  fontFamily: "Roboto",
-                                  color: Colors.green),
-                            ),
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.040,
-                            ),
-                            const Text(
-                              "Pakistani",
-                              style: TextStyle(
-                                  fontSize: 17,
-                                  fontFamily: "Roboto",
-                                  color: Colors.green),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.025,
-                        ),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
+          if (snapshot.connectionState == ConnectionState.done) {
+            return StreamBuilder(
+                stream: getDataStream(),
+                builder: (context, snapshot) {
+                  if (ngoName != '') {
+                    return Scaffold(
+                      backgroundColor: Colors.white,
+                      appBar: AppBar(
+                        iconTheme: const IconThemeData(color: Colors.green),
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        automaticallyImplyLeading: false,
+                        title: Padding(
+                          padding: const EdgeInsets.all(8.0),
                           child: Row(
                             children: [
-                              _foodListingItem(context, "KFC - Red Hot Twister",
-                                  "3-4 people, Al Nahda"),
-                              _foodListingItem(context, "Pak Darbar - Biryani",
-                                  "2-3 people, Al Nahda"),
+                              Container(
+                                width: 50,
+                                height: 50,
+                                decoration: const BoxDecoration(
+                                    image: DecorationImage(
+                                  image: AssetImage("assets/logo.png"),
+                                  fit: BoxFit.fitWidth,
+                                )),
+                              ),
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              Text(
+                                "Surplus Food Management",
+                                style: TextStyle(
+                                    fontSize:
+                                        MediaQuery.of(context).size.width *
+                                            0.046,
+                                    fontFamily: "Roboto",
+                                    color: const Color(0xff05240E)),
+                                textAlign: TextAlign.center,
+                              )
                             ],
                           ),
                         ),
-                        Padding(
-                            padding: const EdgeInsets.only(right: 14.0),
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Text(
-                                      "Requests",
+                      ),
+                      endDrawer: Drawer(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              myHeaderDrawer(),
+                              myDrawerList(),
+                            ],
+                          ),
+                        ),
+                      ),
+                      body: Padding(
+                        padding: const EdgeInsets.only(
+                            top: 25, left: 22, right: 8, bottom: 8),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      "SFM - $ngoName NGO",
                                       style: TextStyle(
-                                          fontSize: 25,
+                                          fontSize: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.072,
                                           fontFamily: "Roboto",
-                                          color: Color(0xff05240E)),
+                                          color: const Color(0xff05240E)),
+                                      // textAlign: TextAlign.center,
                                     ),
-                                    PopupMenuButton<MenuRequest>(
-                                        icon: const Icon(
-                                          Icons.more_horiz,
-                                          color: Colors.green,
-                                        ),
-                                        // color: const Color(0xFFDBE8D8),
-                                        onSelected: (value) async {
-                                          switch (value) {
-                                            case MenuRequest.add:
-                                              _showDialog();
-                                              break;
-                                          }
-                                        },
-                                        itemBuilder: ((context) {
-                                          return const [
-                                            PopupMenuItem<MenuRequest>(
-                                              value: MenuRequest.add,
-                                              child: Text(
-                                                "Add Request",
-                                                style: TextStyle(
-                                                    color: Color(0xFF05240E)),
-                                              ),
-                                            ),
-                                          ];
-                                        }))
-                                  ],
-                                ),
-                                SingleChildScrollView(
-                                  child: StreamBuilder<List<List<String>>>(
-                                      stream: _getRequestDetails(),
-                                      builder: (context, snapshot) {
-                                        if (snapshot.hasData) {
-                                          List<List<String>> data =
-                                              snapshot.data!;
+                                  ),
+                                ],
+                              ),
+                              // const TestPicture(),
+                              SizedBox(
+                                height:
+                                    MediaQuery.of(context).size.height * 0.02,
+                              ),
 
-                                          if (data.length > 1) {
-                                            int numberOfRequest =
-                                                data.length - 1;
-                                            return Column(
-                                              children: [
-                                                ListView.builder(
-                                                    physics:
-                                                        const NeverScrollableScrollPhysics(),
-                                                    shrinkWrap: true,
-                                                    itemCount: numberOfRequest,
-                                                    itemBuilder:
-                                                        (context, index) {
-                                                      return _requestIltem(
-                                                        context,
-                                                        data[index + 1][1],
-                                                        data[index + 1][2],
-                                                        data[index + 1][0],
-                                                      );
-                                                    })
-                                              ],
-                                            );
-                                          } else {
-                                            return const Center(
-                                                child: SizedBox());
+                              StreamBuilder<Map<String, List<List<String>>>>(
+                                  stream: _getListing(),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData) {
+                                      final data = snapshot.data as Map;
+                                      Map<String, List<List<String>>>
+                                          cuisineData = {};
+
+                                      data.forEach((key, value) {
+                                        final d = value as List<List<String>>;
+                                        for (List<String> x in d) {
+                                          if (x.length > 1) {
+                                            if (cuisineData.containsKey(x[0])) {
+                                              final cuisineList =
+                                                  cuisineData[x[0]]
+                                                      as List<List<String>>;
+                                              cuisineList.add(x);
+                                              cuisineData[x[0]] = cuisineList;
+                                            } else {
+                                              List<List<String>> newList = [[]];
+                                              newList.add(x);
+                                              cuisineData[x[0]] = newList;
+                                            }
                                           }
-                                        } else {
-                                          return const Center(
-                                              child: SizedBox());
                                         }
-                                      }),
-                                )
-                              ],
-                            ))
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
+                                      });
+
+                                      List<String> cuisine = ["Nearby"];
+                                      cuisineData.forEach(
+                                        (key, value) {
+                                          cuisine.add(key);
+                                        },
+                                      );
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          SizedBox(
+                                            height: 25,
+                                            child: ListView.builder(
+                                              scrollDirection: Axis.horizontal,
+                                              shrinkWrap: true,
+                                              itemCount: cuisine.length,
+                                              itemBuilder: (context, index) {
+                                                return index == 0
+                                                    ? _cities(
+                                                        cuisine[0],
+                                                        showYourCity
+                                                            ? "RobotoBold"
+                                                            : "Roboto",
+                                                        showYourCity
+                                                            ? const Color(
+                                                                0xff05240E)
+                                                            : Colors.green,
+                                                        selectedData ==
+                                                            cuisine[index], () {
+                                                        setState(() {
+                                                          selectedData =
+                                                              cuisine[index];
+                                                          showYourCity = true;
+                                                        });
+                                                      })
+                                                    : _cities(
+                                                        cuisine[index],
+                                                        "Roboto",
+                                                        Colors.green,
+                                                        selectedData ==
+                                                            cuisine[index], () {
+                                                        setState(() {
+                                                          selectedData =
+                                                              cuisine[index];
+                                                          showYourCity = false;
+                                                        });
+                                                      });
+                                              },
+                                            ),
+                                          ),
+                                          SizedBox(
+                                            height: MediaQuery.of(context)
+                                                    .size
+                                                    .height *
+                                                0.025,
+                                          ),
+                                          showYourCity
+                                              ? Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          right: 14.0),
+                                                  child: SingleChildScrollView(
+                                                    child: Column(
+                                                      children: [
+                                                        data[userCity].length ==
+                                                                1
+                                                            ? Center(
+                                                                child: Column(
+                                                                  children: const [
+                                                                    Text(
+                                                                      "No food listings near you.",
+                                                                      style:
+                                                                          TextStyle(
+                                                                        fontSize:
+                                                                            14,
+                                                                        fontWeight:
+                                                                            FontWeight.bold,
+                                                                        color: Colors
+                                                                            .grey,
+                                                                      ),
+                                                                    ),
+                                                                    SizedBox(
+                                                                      height:
+                                                                          10,
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              )
+                                                            : SizedBox(
+                                                                height: MediaQuery.of(
+                                                                            context)
+                                                                        .size
+                                                                        .height *
+                                                                    0.39,
+                                                                child: ListView
+                                                                    .builder(
+                                                                        scrollDirection:
+                                                                            Axis
+                                                                                .horizontal,
+                                                                        shrinkWrap:
+                                                                            true,
+                                                                        itemCount:
+                                                                            data[userCity]
+                                                                                .length,
+                                                                        itemBuilder:
+                                                                            (context,
+                                                                                index) {
+                                                                          return index == 0
+                                                                              ? const SizedBox()
+                                                                              : (_foodListingItem(
+                                                                                  context,
+                                                                                  data[userCity][index][1],
+                                                                                  data[userCity][index][6],
+                                                                                  data[userCity][index][3],
+                                                                                  data[userCity][index][4],
+                                                                                  data[userCity][index][7],
+                                                                                ));
+                                                                        }),
+                                                              )
+                                                      ],
+                                                    ),
+                                                  ),
+                                                )
+                                              : Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          right: 14.0),
+                                                  child: SingleChildScrollView(
+                                                    child: Column(
+                                                      children: [
+                                                        SizedBox(
+                                                          height: MediaQuery.of(
+                                                                      context)
+                                                                  .size
+                                                                  .height *
+                                                              0.39,
+                                                          child: cuisineData[selectedData] !=
+                                                                  null
+                                                              ? ListView
+                                                                  .builder(
+                                                                      scrollDirection:
+                                                                          Axis
+                                                                              .horizontal,
+                                                                      shrinkWrap:
+                                                                          true,
+                                                                      itemCount:
+                                                                          cuisineData[selectedData]!
+                                                                              .length,
+                                                                      itemBuilder:
+                                                                          (context,
+                                                                              index) {
+                                                                        return index ==
+                                                                                0
+                                                                            ? const SizedBox()
+                                                                            : cuisineData[selectedData] != null
+                                                                                ? (_foodListingItem(
+                                                                                    context,
+                                                                                    cuisineData[selectedData]![index][1],
+                                                                                    cuisineData[selectedData]![index][2],
+                                                                                    cuisineData[selectedData]![index][3],
+                                                                                    cuisineData[selectedData]![index][4],
+                                                                                    cuisineData[selectedData]![index][7],
+                                                                                  ))
+                                                                                : SizedBox();
+                                                                      })
+                                                              : const SizedBox(),
+                                                        )
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                        ],
+                                      );
+                                    } else {
+                                      return Center(
+                                        child: _isLoading
+                                            ? const CircularProgressIndicator()
+                                            : Column(
+                                                children: [
+                                                  SizedBox(
+                                                    height:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .height *
+                                                            0.025,
+                                                  ),
+                                                  const Text(
+                                                    "No food listing found",
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(
+                                                    height: 10,
+                                                  ),
+                                                ],
+                                              ),
+                                      );
+                                    }
+                                  }),
+
+                              Padding(
+                                  padding: const EdgeInsets.only(right: 14.0),
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            "My Requests",
+                                            style: TextStyle(
+                                                fontSize: MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.06,
+                                                fontFamily: "Roboto",
+                                                color: const Color(0xff05240E)),
+                                          ),
+                                          IconButton(
+                                              onPressed: _showDialog,
+                                              icon: const Icon(
+                                                Icons.add,
+                                                color: Colors.green,
+                                              ))
+                                        ],
+                                      ),
+                                      SingleChildScrollView(
+                                        child: StreamBuilder<
+                                                List<List<String>>>(
+                                            stream: _getRequestDetails(),
+                                            builder: (context, snapshot) {
+                                              if (snapshot.hasData) {
+                                                List<List<String>> data =
+                                                    snapshot.data!;
+                                                if (data.length > 1) {
+                                                  int numberOfRequest =
+                                                      data.length - 1;
+                                                  return Column(
+                                                    children: [
+                                                      ListView.builder(
+                                                          physics:
+                                                              const NeverScrollableScrollPhysics(),
+                                                          shrinkWrap: true,
+                                                          itemCount:
+                                                              numberOfRequest,
+                                                          itemBuilder:
+                                                              (context, index) {
+                                                            return _requestIltem(
+                                                              context,
+                                                              data[index + 1]
+                                                                  [1],
+                                                              data[index + 1]
+                                                                  [2],
+                                                              data[index + 1]
+                                                                  [0],
+                                                            );
+                                                          })
+                                                    ],
+                                                  );
+                                                } else {
+                                                  return Center(
+                                                    child: Column(
+                                                      children: [
+                                                        SizedBox(
+                                                          height: MediaQuery.of(
+                                                                      context)
+                                                                  .size
+                                                                  .height *
+                                                              0.025,
+                                                        ),
+                                                        const Text(
+                                                          "No food request made. Make some requests",
+                                                          style: TextStyle(
+                                                            fontSize: 14,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: Colors.grey,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 10,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                }
+                                              } else {
+                                                return Center(
+                                                  child: _isLoading
+                                                      ? const CircularProgressIndicator()
+                                                      : Column(
+                                                          children: [
+                                                            SizedBox(
+                                                              height: MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .height *
+                                                                  0.025,
+                                                            ),
+                                                            const Text(
+                                                              "No food request made. Make some requests",
+                                                              style: TextStyle(
+                                                                fontSize: 14,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                color:
+                                                                    Colors.grey,
+                                                              ),
+                                                            ),
+                                                            const SizedBox(
+                                                              height: 10,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                );
+                                              }
+                                            }),
+                                      )
+                                    ],
+                                  ))
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  } else {
+                    return const Scaffold();
+                  }
+                });
+          } else {
+            return const Scaffold();
+          }
         });
   }
 
@@ -345,128 +526,108 @@ class _HomeNGOState extends State<HomeNGO> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Enter Details'),
-          content: Container(
+          content: SizedBox(
             width: MediaQuery.of(context).size.width * 0.72,
             child: Form(
               key: _formKey,
               autovalidateMode: _clicked
                   ? AutovalidateMode.onUserInteraction
                   : AutovalidateMode.disabled,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: _foodItem,
-                    textInputAction: TextInputAction.next,
-                    keyboardType: TextInputType.text,
-                    decoration: const InputDecoration(
-                      labelText: "Food Item",
-                      floatingLabelBehavior: FloatingLabelBehavior.auto,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(14.0)),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: _foodItem,
+                      textInputAction: TextInputAction.next,
+                      keyboardType: TextInputType.text,
+                      decoration: const InputDecoration(
+                        labelText: "Food Item",
+                        floatingLabelBehavior: FloatingLabelBehavior.auto,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(14.0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(14.0)),
+                          borderSide:
+                              BorderSide(color: Colors.green, width: 2.0),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                            horizontal: 20.0, vertical: 15.0),
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(14.0)),
-                        borderSide: BorderSide(color: Colors.green, width: 2.0),
-                      ),
-                      contentPadding: EdgeInsets.symmetric(
-                          horizontal: 20.0, vertical: 15.0),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Please enter the food item";
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _cuisine,
-                    textInputAction: TextInputAction.next,
-                    keyboardType: TextInputType.text,
-                    decoration: const InputDecoration(
-                      labelText: "Cuisine",
-                      floatingLabelBehavior: FloatingLabelBehavior.auto,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(14.0)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(14.0)),
-                        borderSide: BorderSide(color: Colors.green, width: 2.0),
-                      ),
-                      contentPadding: EdgeInsets.symmetric(
-                          horizontal: 20.0, vertical: 15.0),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Please enter the cuisine";
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _numberOfPeople,
-                    textInputAction: TextInputAction.next,
-                    keyboardType: TextInputType.text,
-                    decoration: const InputDecoration(
-                      labelText: "Number of people",
-                      floatingLabelBehavior: FloatingLabelBehavior.auto,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(14.0)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(14.0)),
-                        borderSide: BorderSide(color: Colors.green, width: 2.0),
-                      ),
-                      contentPadding: EdgeInsets.symmetric(
-                          horizontal: 20.0, vertical: 15.0),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Please enter the number of people";
-                      }
-                      final pattern = RegExp(r'^(\d+|\d+-\d+)$');
-                      if (!pattern.hasMatch(value)) {
-                        return "Invalid! Enter a number or range (e.g. 2 or 2-4)";
-                      }
-                      final parts = value.split('-');
-                      if (parts.length > 1) {
-                        final start = int.tryParse(parts[0]);
-                        final end = int.tryParse(parts[1]);
-                        if (start == null || end == null || start >= end) {
-                          return "Invalid! Enter a valid range (e.g. 2-4)";
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Please enter the food item";
                         }
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _area,
-                    textInputAction: TextInputAction.next,
-                    keyboardType: TextInputType.text,
-                    decoration: const InputDecoration(
-                      labelText: "Area",
-                      floatingLabelBehavior: FloatingLabelBehavior.auto,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(14.0)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(14.0)),
-                        borderSide: BorderSide(color: Colors.green, width: 2.0),
-                      ),
-                      contentPadding: EdgeInsets.symmetric(
-                          horizontal: 20.0, vertical: 15.0),
+                        return null;
+                      },
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Please enter the area";
-                      }
-                      return null;
-                    },
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _cuisine,
+                      textInputAction: TextInputAction.next,
+                      keyboardType: TextInputType.text,
+                      decoration: const InputDecoration(
+                        labelText: "Cuisine",
+                        floatingLabelBehavior: FloatingLabelBehavior.auto,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(14.0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(14.0)),
+                          borderSide:
+                              BorderSide(color: Colors.green, width: 2.0),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                            horizontal: 20.0, vertical: 15.0),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Please enter the cuisine";
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _numberOfPeople,
+                      textInputAction: TextInputAction.next,
+                      keyboardType: TextInputType.text,
+                      decoration: const InputDecoration(
+                        labelText: "Number of people",
+                        floatingLabelBehavior: FloatingLabelBehavior.auto,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(14.0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(14.0)),
+                          borderSide:
+                              BorderSide(color: Colors.green, width: 2.0),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                            horizontal: 20.0, vertical: 15.0),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Please enter the number of people";
+                        }
+                        final pattern = RegExp(r'^(\d+|\d+-\d+)$');
+                        if (!pattern.hasMatch(value)) {
+                          return "Invalid! Enter a number or range (e.g. 2 or 2-4)";
+                        }
+                        final parts = value.split('-');
+                        if (parts.length > 1) {
+                          final start = int.tryParse(parts[0]);
+                          final end = int.tryParse(parts[1]);
+                          if (start == null || end == null || start >= end) {
+                            return "Invalid! Enter a valid range (e.g. 2-4)";
+                          }
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -479,7 +640,6 @@ class _HomeNGOState extends State<HomeNGO> {
                 _foodItem.text = "";
                 _cuisine.text = "";
                 _numberOfPeople.text = "";
-                _area.text = "";
                 Navigator.pop(context);
               },
               child: const Text('Cancel'),
@@ -493,7 +653,7 @@ class _HomeNGOState extends State<HomeNGO> {
                 final foodItem = _foodItem.text;
                 final cuisine = _cuisine.text;
                 final numberPeople = _numberOfPeople.text;
-                final area = _area.text;
+
                 if (_formKey.currentState!.validate()) {
                   showDialog(
                       barrierDismissible: false,
@@ -527,11 +687,13 @@ class _HomeNGOState extends State<HomeNGO> {
                     FirebaseDatabase database = FirebaseDatabase.instance;
 
                     Map<String, String> requestData = {
-                      'Food Item': foodItem,
-                      'Cuisine': cuisine,
-                      'Number of people': numberPeople,
-                      'Area': area,
+                      'Full Name': userName.trim(),
+                      'Food Item': foodItem.trim(),
+                      'Cuisine': cuisine.trim(),
+                      'Number of people': numberPeople.trim(),
+                      'Area': ngoAddress.trim(),
                     };
+
                     final String date = getFormattedDate();
                     database
                         .ref()
@@ -544,7 +706,6 @@ class _HomeNGOState extends State<HomeNGO> {
                     _foodItem.text = "";
                     _cuisine.text = "";
                     _numberOfPeople.text = "";
-                    _area.text = "";
                     Navigator.of(context).pop();
                   } on FirebaseAuthException catch (e) {
                     if (e.code == 'user-not-found') {
@@ -566,6 +727,153 @@ class _HomeNGOState extends State<HomeNGO> {
           ],
         );
       },
+    );
+  }
+
+  Widget myHeaderDrawer() {
+    return Container(
+      color: Colors.green,
+      width: double.infinity,
+      height: 200,
+      padding: const EdgeInsets.only(top: 20),
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        const SizedBox(
+          height: 14,
+        ),
+        CircleAvatar(
+          backgroundColor: Colors.grey[300],
+          radius: 42,
+          foregroundImage: filePath == ""
+              ? const AssetImage("assets/images/user2.png")
+              : networkFile,
+        ),
+        const SizedBox(
+          height: 7,
+        ),
+        Text(
+          userName,
+          style: const TextStyle(color: Colors.white, fontSize: 24),
+        ),
+        Text(
+          userEmail,
+          style: TextStyle(color: Colors.grey.shade200, fontSize: 12),
+        ),
+      ]),
+    );
+  }
+
+  Widget myDrawerList() {
+    return Container(
+      padding: const EdgeInsets.only(
+        top: 15,
+      ),
+      child: Column(
+        children: [
+          menuItem("Dashboard", Icons.dashboard_outlined, () {
+            Navigator.of(context).pop();
+          }),
+          menuItem("Recent Chats", Icons.chat_outlined, () {}),
+          menuItem("Notifications", Icons.notifications_outlined, () {}),
+          const Divider(
+            color: Colors.black,
+          ),
+          menuItem("Privacy Policy", Icons.dashboard_outlined, () {}),
+          menuItem("Send Feedback", Icons.dashboard_outlined, () {}),
+          const Divider(
+            color: Colors.black,
+          ),
+          menuItem("Profile", Icons.person_outlined, () async {
+            Navigator.of(context).pop();
+
+            await Navigator.of(context).pushNamedAndRemoveUntil(
+              '/profilengo/',
+              (route) => true,
+            );
+          }),
+          menuItem("Logout", Icons.dashboard_outlined, () async {
+            final shouldLogout = await showLogOutDialog(context);
+            if (shouldLogout) {
+              userCountry = "";
+              userCity = "";
+              ngoName = "";
+              ngoAddress = "";
+              userName = "";
+              userEmail = "";
+
+              await FirebaseAuth.instance.signOut();
+              await FirebaseAuth.instance.signOut(); // clear cached data
+
+              await Navigator.of(context).pushNamedAndRemoveUntil(
+                '/loginngo/',
+                (route) => false,
+              );
+              Navigator.of(context).pop();
+            }
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget menuItem(String title, IconData icon, VoidCallback onTap) {
+    return Material(
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Expanded(
+                  child: Icon(
+                icon,
+                size: 20,
+                color: Colors.black,
+              )),
+              Expanded(
+                  flex: 3,
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                    ),
+                  ))
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _cities(
+    String data,
+    String fontFamily,
+    Color color,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            GestureDetector(
+              onTap: onTap,
+              child: Text(
+                data,
+                style: TextStyle(
+                  fontSize: 17,
+                  fontFamily: isSelected ? "RobotoBold" : fontFamily,
+                  color: isSelected ? const Color(0xff05240E) : color,
+                ),
+              ),
+            ),
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.040,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -620,7 +928,14 @@ Future<bool> showCancelConfirmation(BuildContext context) {
       })).then((value) => value ?? false);
 }
 
-Widget _foodListingItem(BuildContext context, String lineOne, String lineTwo) {
+Widget _foodListingItem(
+  BuildContext context,
+  String lineOne,
+  String lineTwo,
+  String userID,
+  String orderNumber,
+  String fullName,
+) {
   return Row(
     children: [
       SizedBox(
@@ -675,7 +990,16 @@ Widget _foodListingItem(BuildContext context, String lineOne, String lineTwo) {
                       style: ButtonStyle(
                           backgroundColor:
                               MaterialStateProperty.all<Color>(Colors.green)),
-                      onPressed: (() {}),
+                      onPressed: (() {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => GetPictures(
+                                      otherUID: userID,
+                                      fullName: fullName,
+                                      orderNumber: orderNumber,
+                                    )));
+                      }),
                       child: const Text(
                         "Chat",
                         style: TextStyle(fontSize: 14, color: Colors.white),
@@ -728,7 +1052,6 @@ Widget _requestIltem(
                             final _foodItem = TextEditingController();
                             final _cuisine = TextEditingController();
                             final _numberOfPeople = TextEditingController();
-                            final _area = TextEditingController();
                             final _formKey = GlobalKey<FormState>();
                             bool _clicked = false;
 
@@ -742,7 +1065,6 @@ Widget _requestIltem(
 
                             DatabaseEvent event = await ref.once();
                             final requestData = event.snapshot.value as Map;
-                            _area.text = requestData["Area"];
                             _cuisine.text = requestData["Cuisine"];
                             _foodItem.text = requestData["Food Item"];
                             _numberOfPeople.text =
@@ -761,162 +1083,146 @@ Widget _requestIltem(
                                       autovalidateMode: _clicked
                                           ? AutovalidateMode.onUserInteraction
                                           : AutovalidateMode.disabled,
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          TextFormField(
-                                            controller: _foodItem,
-                                            textInputAction:
-                                                TextInputAction.next,
-                                            keyboardType: TextInputType.text,
-                                            decoration: const InputDecoration(
-                                              labelText: "Food Item",
-                                              floatingLabelBehavior:
-                                                  FloatingLabelBehavior.auto,
-                                              border: OutlineInputBorder(
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(14.0)),
+                                      child: SingleChildScrollView(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            TextFormField(
+                                              controller: _foodItem,
+                                              textInputAction:
+                                                  TextInputAction.next,
+                                              keyboardType: TextInputType.text,
+                                              decoration: const InputDecoration(
+                                                labelText: "Food Item",
+                                                floatingLabelBehavior:
+                                                    FloatingLabelBehavior.auto,
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(
+                                                              14.0)),
+                                                ),
+                                                focusedBorder:
+                                                    OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(
+                                                              14.0)),
+                                                  borderSide: BorderSide(
+                                                      color: Colors.green,
+                                                      width: 2.0),
+                                                ),
+                                                contentPadding:
+                                                    EdgeInsets.symmetric(
+                                                        horizontal: 20.0,
+                                                        vertical: 15.0),
                                               ),
-                                              focusedBorder: OutlineInputBorder(
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(14.0)),
-                                                borderSide: BorderSide(
-                                                    color: Colors.green,
-                                                    width: 2.0),
-                                              ),
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                      horizontal: 20.0,
-                                                      vertical: 15.0),
-                                            ),
-                                            validator: (value) {
-                                              if (value == null ||
-                                                  value.isEmpty) {
-                                                return "Please enter the food item";
-                                              }
-                                              return null;
-                                            },
-                                          ),
-                                          const SizedBox(height: 12),
-                                          TextFormField(
-                                            controller: _cuisine,
-                                            textInputAction:
-                                                TextInputAction.next,
-                                            keyboardType: TextInputType.text,
-                                            decoration: const InputDecoration(
-                                              labelText: "Cuisine",
-                                              floatingLabelBehavior:
-                                                  FloatingLabelBehavior.auto,
-                                              border: OutlineInputBorder(
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(14.0)),
-                                              ),
-                                              focusedBorder: OutlineInputBorder(
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(14.0)),
-                                                borderSide: BorderSide(
-                                                    color: Colors.green,
-                                                    width: 2.0),
-                                              ),
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                      horizontal: 20.0,
-                                                      vertical: 15.0),
-                                            ),
-                                            validator: (value) {
-                                              if (value == null ||
-                                                  value.isEmpty) {
-                                                return "Please enter the cuisine";
-                                              }
-                                              return null;
-                                            },
-                                          ),
-                                          const SizedBox(height: 12),
-                                          TextFormField(
-                                            controller: _numberOfPeople,
-                                            textInputAction:
-                                                TextInputAction.next,
-                                            keyboardType: TextInputType.text,
-                                            decoration: const InputDecoration(
-                                              labelText: "Number of people",
-                                              floatingLabelBehavior:
-                                                  FloatingLabelBehavior.auto,
-                                              border: OutlineInputBorder(
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(14.0)),
-                                              ),
-                                              focusedBorder: OutlineInputBorder(
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(14.0)),
-                                                borderSide: BorderSide(
-                                                    color: Colors.green,
-                                                    width: 2.0),
-                                              ),
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                      horizontal: 20.0,
-                                                      vertical: 15.0),
-                                            ),
-                                            validator: (value) {
-                                              if (value == null ||
-                                                  value.isEmpty) {
-                                                return "Please enter the number of people";
-                                              }
-                                              final pattern =
-                                                  RegExp(r'^(\d+|\d+-\d+)$');
-                                              if (!pattern.hasMatch(value)) {
-                                                return "Invalid! Enter a number or range (e.g. 2 or 2-4)";
-                                              }
-                                              final parts = value.split('-');
-                                              if (parts.length > 1) {
-                                                final start =
-                                                    int.tryParse(parts[0]);
-                                                final end =
-                                                    int.tryParse(parts[1]);
-                                                if (start == null ||
-                                                    end == null ||
-                                                    start >= end) {
-                                                  return "Invalid! Enter a valid range (e.g. 2-4)";
+                                              validator: (value) {
+                                                if (value == null ||
+                                                    value.isEmpty) {
+                                                  return "Please enter the food item";
                                                 }
-                                              }
-                                              return null;
-                                            },
-                                          ),
-                                          const SizedBox(height: 12),
-                                          TextFormField(
-                                            controller: _area,
-                                            textInputAction:
-                                                TextInputAction.next,
-                                            keyboardType: TextInputType.text,
-                                            decoration: const InputDecoration(
-                                              labelText: "Area",
-                                              floatingLabelBehavior:
-                                                  FloatingLabelBehavior.auto,
-                                              border: OutlineInputBorder(
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(14.0)),
-                                              ),
-                                              focusedBorder: OutlineInputBorder(
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(14.0)),
-                                                borderSide: BorderSide(
-                                                    color: Colors.green,
-                                                    width: 2.0),
-                                              ),
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                      horizontal: 20.0,
-                                                      vertical: 15.0),
+                                                return null;
+                                              },
                                             ),
-                                            validator: (value) {
-                                              if (value == null ||
-                                                  value.isEmpty) {
-                                                return "Please enter the area";
-                                              }
-                                              return null;
-                                            },
-                                          ),
-                                        ],
+                                            const SizedBox(height: 12),
+                                            TextFormField(
+                                              controller: _cuisine,
+                                              textInputAction:
+                                                  TextInputAction.next,
+                                              keyboardType: TextInputType.text,
+                                              decoration: const InputDecoration(
+                                                labelText: "Cuisine",
+                                                floatingLabelBehavior:
+                                                    FloatingLabelBehavior.auto,
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(
+                                                              14.0)),
+                                                ),
+                                                focusedBorder:
+                                                    OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(
+                                                              14.0)),
+                                                  borderSide: BorderSide(
+                                                      color: Colors.green,
+                                                      width: 2.0),
+                                                ),
+                                                contentPadding:
+                                                    EdgeInsets.symmetric(
+                                                        horizontal: 20.0,
+                                                        vertical: 15.0),
+                                              ),
+                                              validator: (value) {
+                                                if (value == null ||
+                                                    value.isEmpty) {
+                                                  return "Please enter the cuisine";
+                                                }
+                                                return null;
+                                              },
+                                            ),
+                                            const SizedBox(height: 12),
+                                            TextFormField(
+                                              controller: _numberOfPeople,
+                                              textInputAction:
+                                                  TextInputAction.next,
+                                              keyboardType: TextInputType.text,
+                                              decoration: const InputDecoration(
+                                                labelText: "Number of people",
+                                                floatingLabelBehavior:
+                                                    FloatingLabelBehavior.auto,
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(
+                                                              14.0)),
+                                                ),
+                                                focusedBorder:
+                                                    OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(
+                                                              14.0)),
+                                                  borderSide: BorderSide(
+                                                      color: Colors.green,
+                                                      width: 2.0),
+                                                ),
+                                                contentPadding:
+                                                    EdgeInsets.symmetric(
+                                                        horizontal: 20.0,
+                                                        vertical: 15.0),
+                                              ),
+                                              validator: (value) {
+                                                if (value == null ||
+                                                    value.isEmpty) {
+                                                  return "Please enter the number of people";
+                                                }
+                                                final pattern =
+                                                    RegExp(r'^(\d+|\d+-\d+)$');
+                                                if (!pattern.hasMatch(value)) {
+                                                  return "Invalid! Enter a number or range (e.g. 2 or 2-4)";
+                                                }
+                                                final parts = value.split('-');
+                                                if (parts.length > 1) {
+                                                  final start =
+                                                      int.tryParse(parts[0]);
+                                                  final end =
+                                                      int.tryParse(parts[1]);
+                                                  if (start == null ||
+                                                      end == null ||
+                                                      start >= end) {
+                                                    return "Invalid! Enter a valid range (e.g. 2-4)";
+                                                  }
+                                                }
+                                                return null;
+                                              },
+                                            ),
+                                            const SizedBox(height: 12),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -926,7 +1232,6 @@ Widget _requestIltem(
                                         _foodItem.text = "";
                                         _cuisine.text = "";
                                         _numberOfPeople.text = "";
-                                        _area.text = "";
                                         Navigator.pop(context);
                                       },
                                       child: const Text('Cancel'),
@@ -940,7 +1245,6 @@ Widget _requestIltem(
                                         final cuisine = _cuisine.text;
                                         final numberPeople =
                                             _numberOfPeople.text;
-                                        final area = _area.text;
                                         if (_formKey.currentState!.validate()) {
                                           showDialog(
                                               barrierDismissible: false,
@@ -982,10 +1286,10 @@ Widget _requestIltem(
                                                 FirebaseDatabase.instance;
 
                                             Map<String, String> requestData = {
-                                              'Food Item': foodItem,
-                                              'Cuisine': cuisine,
-                                              'Number of people': numberPeople,
-                                              'Area': area,
+                                              'Food Item': foodItem.trim(),
+                                              'Cuisine': cuisine.trim(),
+                                              'Number of people':
+                                                  numberPeople.trim(),
                                             };
                                             database
                                                 .ref()
@@ -998,7 +1302,6 @@ Widget _requestIltem(
                                             _foodItem.text = "";
                                             _cuisine.text = "";
                                             _numberOfPeople.text = "";
-                                            _area.text = "";
                                             Navigator.of(context).pop();
                                           } on FirebaseAuthException catch (e) {
                                             if (e.code == 'user-not-found') {
@@ -1086,7 +1389,7 @@ Widget _requestIltem(
 
 String getFormattedDate() {
   final now = DateTime.now();
-  final formatter = DateFormat('dd-MM-yyyy HH:mm:ss');
+  final formatter = DateFormat('dd-MM-yyyy HH:mm:ss:SSS');
   return formatter.format(now);
 }
 
@@ -1108,19 +1411,17 @@ Stream<List<List<String>>> _getRequestDetails() {
       data.forEach((key, value) {
         String lineOne;
         String lineTwo;
-        String area;
         String cuisine;
         String foodItem;
         String numberOfPeople;
         List<String> secondData;
 
         final data2 = value as Map;
-        area = data2["Area"];
         cuisine = data2["Cuisine"];
         foodItem = data2["Food Item"];
         numberOfPeople = data2["Number of people"];
         lineOne = "$foodItem - $cuisine";
-        lineTwo = "$numberOfPeople people, $area";
+        lineTwo = "$numberOfPeople people";
         secondData = [key, lineOne, lineTwo];
         mainData.add(secondData);
       });
@@ -1134,18 +1435,16 @@ Stream<List<List<String>>> _getRequestDetails() {
 
     String lineOne;
     String lineTwo;
-    String area;
     String cuisine;
     String foodItem;
     String numberOfPeople;
     List<String> secondData;
 
-    area = data["Area"];
     cuisine = data["Cuisine"];
     foodItem = data["Food Item"];
     numberOfPeople = data["Number of people"];
     lineOne = "$foodItem - $cuisine";
-    lineTwo = "$numberOfPeople people, $area";
+    lineTwo = "$numberOfPeople people";
     secondData = [event.snapshot.key ?? "", lineOne, lineTwo];
 
     int index = mainData.indexWhere((data) => data[0] == event.snapshot.key);
@@ -1178,5 +1477,188 @@ Stream<void> getDataStream() async* {
       .map((snapshot) {
     userCountry = snapshot["Country"];
     userCity = snapshot["City"];
+    ngoName = snapshot["NGO Name"];
+    ngoAddress = snapshot["Address Line"];
+    userName = snapshot["Full Name"];
+    userEmail = snapshot["Email"];
   });
+}
+
+Stream<Map<String, List<List<String>>>> _getListing() {
+  Map<String, List<List<String>>> myMap = {};
+
+  DatabaseReference ref = FirebaseDatabase.instance.ref("Orders/$userCountry");
+
+  StreamController<Map<String, List<List<String>>>> controller =
+      StreamController.broadcast();
+
+  ref.once().then((event) {
+    if (event.snapshot.value != null) {
+      final data = event.snapshot.value as Map;
+
+      data.forEach((key, value) {
+        List<List<String>> cityData = [[]];
+        final cityKey = key;
+        final users = value as Map;
+
+        users.forEach((key, value) {
+          List<String> reqData = [];
+          final userID = key;
+          final userOrder = value as Map;
+
+          userOrder.forEach((key, value) {
+            final orderTime = key;
+
+            final requestData = value as Map;
+            String fullName = requestData["Full Name"];
+            String beforeDate = requestData["Best Before"];
+            String storeName = requestData["Store Name"];
+            String area = requestData["Area"];
+            String cuisine = requestData["Cuisine"];
+            String foodItem = requestData["Food Item"];
+            String numberOfPeople = requestData["Number of people"];
+            String lineOne = "$storeName - $foodItem";
+            String lineTwo = "$numberOfPeople people, $cityKey";
+            String lineThree = "$numberOfPeople people, $area";
+
+            reqData = [
+              cuisine,
+              lineOne,
+              lineTwo,
+              userID,
+              orderTime,
+              beforeDate,
+              lineThree,
+              fullName,
+            ];
+            if (reqData.isNotEmpty) {
+              cityData.add(reqData);
+            }
+          });
+        });
+
+        myMap[cityKey] = cityData;
+      });
+
+      List<List<String>> userCityValues = myMap.remove(userCity) ?? [[]];
+      myMap = {userCity: userCityValues, ...myMap};
+
+      controller.add(myMap);
+    }
+  });
+  ref.onChildChanged.listen((event) {
+    final data = event.snapshot.value as Map;
+    final keyCity = event.snapshot.key;
+    myMap.remove(keyCity);
+    List<List<String>> cityData = [[]];
+    data.forEach((key, value) {
+      List<String> reqData = [];
+      final userID = key;
+      final userOrder = value as Map;
+
+      userOrder.forEach((key, value) {
+        final orderTime = key;
+
+        final requestData = value as Map;
+        String fullName = requestData["Full Name"];
+
+        String beforeDate = requestData["Best Before"];
+        String storeName = requestData["Store Name"];
+        String area = requestData["Area"];
+        String cuisine = requestData["Cuisine"];
+        String foodItem = requestData["Food Item"];
+        String numberOfPeople = requestData["Number of people"];
+        String lineOne = "$storeName - $foodItem";
+        String lineTwo = "$numberOfPeople people, $keyCity";
+        String lineThree = "$numberOfPeople people, $area";
+
+        reqData = [
+          cuisine,
+          lineOne,
+          lineTwo,
+          userID,
+          orderTime,
+          beforeDate,
+          lineThree,
+          fullName
+        ];
+        if (reqData.isNotEmpty) {
+          cityData.add(reqData);
+        }
+      });
+    });
+    myMap[keyCity!] = cityData;
+    List<List<String>> userCityValues = myMap.remove(userCity) ?? [[]];
+    myMap = {userCity: userCityValues, ...myMap};
+
+    controller.add(myMap);
+  });
+  ref.onChildAdded.listen((event) {
+    // devetools.log(event.snapshot.value.toString());
+    final data = event.snapshot.value as Map;
+    final keyCity = event.snapshot.key;
+    myMap.remove(keyCity);
+    List<List<String>> cityData = [[]];
+    data.forEach((key, value) {
+      List<String> reqData = [];
+      final userID = key;
+      final userOrder = value as Map;
+
+      userOrder.forEach((key, value) {
+        final orderTime = key;
+
+        final requestData = value as Map;
+        String fullName = requestData["Full Name"];
+
+        String beforeDate = requestData["Best Before"];
+        String storeName = requestData["Store Name"];
+        String area = requestData["Area"];
+        String cuisine = requestData["Cuisine"];
+        String foodItem = requestData["Food Item"];
+        String numberOfPeople = requestData["Number of people"];
+        String lineOne = "$storeName - $foodItem";
+        String lineTwo = "$numberOfPeople people, $keyCity";
+        String lineThree = "$numberOfPeople people, $area";
+
+        reqData = [
+          cuisine,
+          lineOne,
+          lineTwo,
+          userID,
+          orderTime,
+          beforeDate,
+          lineThree,
+          fullName
+        ];
+        if (reqData.isNotEmpty) {
+          cityData.add(reqData);
+        }
+      });
+    });
+    myMap[keyCity!] = cityData;
+    List<List<String>> userCityValues = myMap.remove(userCity) ?? [[]];
+    myMap = {userCity: userCityValues, ...myMap};
+
+    controller.add(myMap);
+  });
+  ref.onChildRemoved.listen((event) {
+    final key = event.snapshot.key;
+    myMap.remove(key);
+    List<List<String>> userCityValues = myMap.remove(userCity) ?? [[]];
+    myMap = {userCity: userCityValues, ...myMap};
+    controller.add(myMap);
+  });
+
+  return controller.stream;
+}
+
+Future<String> getPics() async {
+  final user = FirebaseAuth.instance.currentUser;
+  final String userID = user!.uid;
+  try {
+    filePath = await storage.downloadURL("$userID/userProfile.jpg");
+    networkFile = NetworkImage(filePath);
+    // ignore: empty_catches
+  } catch (error) {}
+  return "";
 }

@@ -101,251 +101,271 @@ class _DetailsNGOState extends State<DetailsNGO> {
                                 ? AutovalidateMode.onUserInteraction
                                 : AutovalidateMode.disabled,
                             key: _formKey,
-                            child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  TextButton(
-                                    style: ButtonStyle(
-                                        backgroundColor:
-                                            MaterialStateProperty.all<Color>(
-                                                const Color(0xFF05240E))),
-                                    onPressed: () {},
-                                    child: const Text("NGO Details",
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 25,
-                                            fontFamily: "Roboto")),
-                                  ),
-                                  SizedBox(
-                                    height: MediaQuery.of(context).size.height *
-                                        0.072,
-                                  ),
-                                  TextFormField(
-                                    keyboardType: TextInputType.text,
-                                    textInputAction: TextInputAction.next,
-                                    decoration: const InputDecoration(
-                                      labelText: "NGO Name",
-                                      floatingLabelBehavior:
-                                          FloatingLabelBehavior.auto,
-                                      prefixIcon: Icon(Icons.store),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(14.0)),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(14.0)),
-                                        borderSide: BorderSide(
-                                            color: Colors.green, width: 2.0),
-                                      ),
-                                      contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 20.0, vertical: 15.0),
-                                    ),
-                                    controller: _ngoName,
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return "Please enter your ngo's name";
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: 14),
-                                  TextFormField(
-                                    keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(
-                                      labelText: "NGO Contact Number",
-                                      floatingLabelBehavior:
-                                          FloatingLabelBehavior.auto,
-                                      prefixIcon: Icon(Icons.phone),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(14.0)),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(14.0)),
-                                        borderSide: BorderSide(
-                                            color: Colors.green, width: 2.0),
-                                      ),
-                                      contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 20.0, vertical: 15.0),
-                                    ),
-                                    controller: _ngoNumber,
-                                    validator: (value) {
-                                      String patttern =
-                                          r'(^(?:[+0]9)?[0-9]{10,12}$)';
-                                      RegExp regExp = RegExp(patttern);
-                                      if (value == null || value.isEmpty) {
-                                        return "Please enter your ngo's contact number";
-                                      } else if (!regExp.hasMatch(value)) {
-                                        return 'Please enter valid contact number';
-                                      }
-
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: 14),
-                                  Row(
+                            child: Center(
+                              child: SingleChildScrollView(
+                                child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Flexible(
-                                        child: DropdownFormFieldCountry(
-                                          notSavedChanges: null,
-                                          initialValue: null,
-                                          isEditing: true,
-                                          labelText: "Country",
-                                          items: countries,
-                                          validator: (value) {
-                                            if (value == null) {
-                                              return "Please select a country";
-                                            }
-                                            return null;
-                                          },
-                                          onChanged: (value) {
-                                            countryValue = value!;
-                                            devetools.log("sdsadasd");
-                                            setState(() {
-                                              nullState = true;
-                                              statesList =
-                                                  getStates(countryValue);
-                                            });
-                                          },
+                                      TextButton(
+                                        style: ButtonStyle(
+                                            backgroundColor:
+                                                MaterialStateProperty.all<
+                                                        Color>(
+                                                    const Color(0xFF05240E))),
+                                        onPressed: () {},
+                                        child: Text("NGO Details",
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.06,
+                                                fontFamily: "Roboto")),
+                                      ),
+                                      SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.042,
+                                      ),
+                                      TextFormField(
+                                        keyboardType: TextInputType.text,
+                                        textInputAction: TextInputAction.next,
+                                        decoration: const InputDecoration(
+                                          labelText: "NGO Name",
+                                          floatingLabelBehavior:
+                                              FloatingLabelBehavior.auto,
+                                          prefixIcon: Icon(Icons.store),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(14.0)),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(14.0)),
+                                            borderSide: BorderSide(
+                                                color: Colors.green,
+                                                width: 2.0),
+                                          ),
+                                          contentPadding: EdgeInsets.symmetric(
+                                              horizontal: 20.0, vertical: 15.0),
                                         ),
-                                      ),
-                                      const SizedBox(width: 14),
-                                      Flexible(
-                                        child: DropdownCity(
-                                          nullState: nullState,
-                                          labelText: "City",
-                                          items: statesList,
-                                          validator: (value) {
-                                            if (value == null) {
-                                              return "Please select a city";
-                                            }
-                                            return null;
-                                          },
-                                          onChanged: (value) {
-                                            cityValue = value!;
-                                            nullState = false;
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 14),
-                                  TextFormField(
-                                    keyboardType: TextInputType.text,
-                                    decoration: const InputDecoration(
-                                      labelText: "Address Line",
-                                      floatingLabelBehavior:
-                                          FloatingLabelBehavior.auto,
-                                      prefixIcon: Icon(Icons.maps_home_work),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(14.0)),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(14.0)),
-                                        borderSide: BorderSide(
-                                            color: Colors.green, width: 2.0),
-                                      ),
-                                      contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 20.0, vertical: 15.0),
-                                    ),
-                                    controller: _address,
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return "Please enter your ngo's address line";
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  SizedBox(
-                                    height: MediaQuery.of(context).size.height *
-                                        0.05,
-                                  ),
-                                  TextButton(
-                                    style: ButtonStyle(
-                                        backgroundColor:
-                                            MaterialStateProperty.all<Color>(
-                                                Colors.green)),
-                                    onPressed: () async {
-                                      setState(() {
-                                        _clicked = true;
-                                      });
-                                      FocusManager.instance.primaryFocus
-                                          ?.unfocus();
-                                      if (_formKey.currentState!.validate()) {
-                                        showDialog(
-                                            barrierDismissible: false,
-                                            context: context,
-                                            builder: (_) {
-                                              return Dialog(
-                                                // The background color
-                                                backgroundColor: Colors.white,
-                                                child: Padding(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(vertical: 20),
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            14.0),
-                                                    child: Row(
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      children: const [
-                                                        // The loading indicator
-                                                        CircularProgressIndicator(),
-                                                        SizedBox(
-                                                          width: 15,
-                                                        ),
-
-                                                        // Some text
-                                                        Text('Loading...')
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              );
-                                            });
-
-                                        String userID = "";
-                                        final user =
-                                            FirebaseAuth.instance.currentUser;
-                                        userID = await findDocID(
-                                            user?.uid ?? "None", "NGOs");
-
-                                        try {
-                                          await FirebaseFirestore.instance
-                                              .collection('NGOs')
-                                              .doc(userID)
-                                              .update({
-                                            'NGO Name': _ngoName.text,
-                                            'NGO Contact Number':
-                                                _ngoNumber.text,
-                                            'Country': countryValue,
-                                            'City': cityValue,
-                                            'Address Line': _address.text,
-                                          });
-                                          Navigator.of(context)
-                                              .pushNamedAndRemoveUntil(
-                                                  '/homengo/',
-                                                  (route) => false);
-                                        } on FirebaseAuthException catch (e) {
-                                          if (e.code == 'not-found') {
-                                            Navigator.of(context).pop();
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(const SnackBar(
-                                                    content: Text(
-                                                        "User not found")));
+                                        controller: _ngoName,
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return "Please enter your ngo's name";
                                           }
-                                        } finally {}
-                                      }
-                                    },
-                                    child: const Text("Submit",
-                                        style: TextStyle(color: Colors.white)),
-                                  ),
-                                ]),
+                                          return null;
+                                        },
+                                      ),
+                                      const SizedBox(height: 14),
+                                      TextFormField(
+                                        keyboardType: TextInputType.number,
+                                        decoration: const InputDecoration(
+                                          labelText: "NGO Contact Number",
+                                          floatingLabelBehavior:
+                                              FloatingLabelBehavior.auto,
+                                          prefixIcon: Icon(Icons.phone),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(14.0)),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(14.0)),
+                                            borderSide: BorderSide(
+                                                color: Colors.green,
+                                                width: 2.0),
+                                          ),
+                                          contentPadding: EdgeInsets.symmetric(
+                                              horizontal: 20.0, vertical: 15.0),
+                                        ),
+                                        controller: _ngoNumber,
+                                        validator: (value) {
+                                          String patttern =
+                                              r'(^(?:[+0]9)?[0-9]{10,12}$)';
+                                          RegExp regExp = RegExp(patttern);
+                                          if (value == null || value.isEmpty) {
+                                            return "Please enter your ngo's contact number";
+                                          } else if (!regExp.hasMatch(value)) {
+                                            return 'Please enter valid contact number';
+                                          }
+
+                                          return null;
+                                        },
+                                      ),
+                                      const SizedBox(height: 14),
+                                      Row(
+                                        children: [
+                                          Flexible(
+                                            child: DropdownFormFieldCountry(
+                                              notSavedChanges: null,
+                                              initialValue: null,
+                                              isEditing: true,
+                                              labelText: "Country",
+                                              items: countries,
+                                              validator: (value) {
+                                                if (value == null) {
+                                                  return "Please select a country";
+                                                }
+                                                return null;
+                                              },
+                                              onChanged: (value) {
+                                                countryValue = value!;
+                                                devetools.log("sdsadasd");
+                                                setState(() {
+                                                  nullState = true;
+                                                  statesList =
+                                                      getStates(countryValue);
+                                                });
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(width: 14),
+                                          Flexible(
+                                            child: DropdownCity(
+                                              nullState: nullState,
+                                              labelText: "City",
+                                              items: statesList,
+                                              validator: (value) {
+                                                if (value == null) {
+                                                  return "Please select a city";
+                                                }
+                                                return null;
+                                              },
+                                              onChanged: (value) {
+                                                cityValue = value!;
+                                                nullState = false;
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 14),
+                                      TextFormField(
+                                        keyboardType: TextInputType.text,
+                                        decoration: const InputDecoration(
+                                          labelText: "Address Line",
+                                          floatingLabelBehavior:
+                                              FloatingLabelBehavior.auto,
+                                          prefixIcon:
+                                              Icon(Icons.maps_home_work),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(14.0)),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(14.0)),
+                                            borderSide: BorderSide(
+                                                color: Colors.green,
+                                                width: 2.0),
+                                          ),
+                                          contentPadding: EdgeInsets.symmetric(
+                                              horizontal: 20.0, vertical: 15.0),
+                                        ),
+                                        controller: _address,
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return "Please enter your ngo's address line";
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.02,
+                                      ),
+                                      TextButton(
+                                        style: ButtonStyle(
+                                            backgroundColor:
+                                                MaterialStateProperty.all<
+                                                    Color>(Colors.green)),
+                                        onPressed: () async {
+                                          setState(() {
+                                            _clicked = true;
+                                          });
+                                          FocusManager.instance.primaryFocus
+                                              ?.unfocus();
+                                          if (_formKey.currentState!
+                                              .validate()) {
+                                            showDialog(
+                                                barrierDismissible: false,
+                                                context: context,
+                                                builder: (_) {
+                                                  return Dialog(
+                                                    // The background color
+                                                    backgroundColor:
+                                                        Colors.white,
+                                                    child: Padding(
+                                                      padding: const EdgeInsets
+                                                              .symmetric(
+                                                          vertical: 20),
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(14.0),
+                                                        child: Row(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: const [
+                                                            // The loading indicator
+                                                            CircularProgressIndicator(),
+                                                            SizedBox(
+                                                              width: 15,
+                                                            ),
+
+                                                            // Some text
+                                                            Text('Loading...')
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  );
+                                                });
+
+                                            String userID = "";
+                                            final user = FirebaseAuth
+                                                .instance.currentUser;
+                                            userID = await findDocID(
+                                                user?.uid ?? "None", "NGOs");
+
+                                            try {
+                                              await FirebaseFirestore.instance
+                                                  .collection('NGOs')
+                                                  .doc(userID)
+                                                  .update({
+                                                'NGO Name':
+                                                    _ngoName.text.trim(),
+                                                'NGO Contact Number':
+                                                    _ngoNumber.text.trim(),
+                                                'Country': countryValue.trim(),
+                                                'City': cityValue.trim(),
+                                                'Address Line':
+                                                    _address.text.trim(),
+                                              });
+                                              Navigator.of(context)
+                                                  .pushNamedAndRemoveUntil(
+                                                      '/homengo/',
+                                                      (route) => false);
+                                            } on FirebaseAuthException catch (e) {
+                                              if (e.code == 'not-found') {
+                                                Navigator.of(context).pop();
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(const SnackBar(
+                                                        content: Text(
+                                                            "User not found")));
+                                              }
+                                            } finally {}
+                                          }
+                                        },
+                                        child: const Text("Submit",
+                                            style:
+                                                TextStyle(color: Colors.white)),
+                                      ),
+                                    ]),
+                              ),
+                            ),
                           ),
                         ),
                       ),

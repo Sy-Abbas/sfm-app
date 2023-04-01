@@ -13,6 +13,7 @@ import 'package:sfm/views/profile_donator.dart';
 import 'package:sfm/views/profile_ngo.dart';
 import 'package:sfm/views/register_donator.dart';
 import 'package:sfm/views/register_ngo.dart';
+import 'package:sfm/views/single_chat.dart';
 import 'firebase_options.dart';
 
 void main() {
@@ -53,7 +54,7 @@ class Initialize extends StatelessWidget {
         FocusManager.instance.primaryFocus?.unfocus();
         switch (snapshot.connectionState) {
           case ConnectionState.done:
-            return Check();
+            return const Check();
           default:
             return const Scaffold();
         }
@@ -200,11 +201,15 @@ class DropdownFormFieldCountry extends StatefulWidget {
 
 class _DropdownFormFieldCountryState extends State<DropdownFormFieldCountry> {
   String? _value;
+  bool isEmptys = true;
 
   @override
   void initState() {
     super.initState();
     _value = widget.initialValue;
+    if (widget.initialValue != null) {
+      isEmptys = false;
+    }
   }
 
   @override
@@ -221,6 +226,7 @@ class _DropdownFormFieldCountryState extends State<DropdownFormFieldCountry> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             InputDecorator(
+              isEmpty: isEmptys,
               decoration: InputDecoration(
                 enabledBorder: OutlineInputBorder(
                   borderSide: widget.isEditing
@@ -232,13 +238,16 @@ class _DropdownFormFieldCountryState extends State<DropdownFormFieldCountry> {
                 ),
                 labelText: widget.labelText,
                 floatingLabelBehavior: FloatingLabelBehavior.auto,
-                floatingLabelStyle: state.hasError
-                    ? const TextStyle(color: Colors.red)
-                    : TextStyle(color: Colors.grey.shade600),
+                floatingLabelStyle: widget.isEditing
+                    ? state.hasError
+                        ? const TextStyle(color: Colors.red)
+                        : TextStyle(color: Colors.grey.shade600)
+                    : TextStyle(color: Colors.grey.shade500),
                 prefixIcon: widget.icon ?? const Icon(Icons.map),
                 filled: true,
-                fillColor:
-                    widget.isEditing ? Colors.white : Colors.grey.shade200,
+                fillColor: widget.isEditing
+                    ? Colors.transparent
+                    : Colors.grey.shade200,
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
               ),
@@ -250,6 +259,7 @@ class _DropdownFormFieldCountryState extends State<DropdownFormFieldCountry> {
                     onChanged: widget.isEditing
                         ? (String? newValue) {
                             setState(() {
+                              isEmptys = false;
                               _value = newValue;
                               widget.onChanged?.call(newValue);
                               state.didChange(newValue);
@@ -309,11 +319,10 @@ class DropdownFormFieldCity extends StatefulWidget {
 
 class _DropdownFormFieldCityState extends State<DropdownFormFieldCity> {
   String? _value;
-  late bool _s;
+  bool isEmptys = true;
 
   @override
   void initState() {
-    _s = false;
     super.initState();
     if (widget.nullState == true) {
       _value = null;
@@ -321,15 +330,18 @@ class _DropdownFormFieldCityState extends State<DropdownFormFieldCity> {
     } else {
       _value = widget.initialValue;
     }
+    if (widget.initialValue != null) {
+      isEmptys = false;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     if (widget.nullState == true) {
-      // devetools.log(_value.toString());
       devetools.log("message");
       _value = null;
       widget.initialValue = null;
+      isEmptys = true;
     }
     if (widget.notSavedChanges ?? false) {
       devetools.log("medsdsdsdsssage");
@@ -344,6 +356,7 @@ class _DropdownFormFieldCityState extends State<DropdownFormFieldCity> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             InputDecorator(
+              isEmpty: isEmptys,
               decoration: InputDecoration(
                 enabledBorder: OutlineInputBorder(
                   borderSide: widget.isEditing
@@ -355,13 +368,16 @@ class _DropdownFormFieldCityState extends State<DropdownFormFieldCity> {
                 ),
                 labelText: widget.labelText,
                 floatingLabelBehavior: FloatingLabelBehavior.auto,
-                floatingLabelStyle: state.hasError
-                    ? const TextStyle(color: Colors.red)
-                    : TextStyle(color: Colors.grey.shade600),
+                floatingLabelStyle: widget.isEditing
+                    ? state.hasError
+                        ? const TextStyle(color: Colors.red)
+                        : TextStyle(color: Colors.grey.shade600)
+                    : TextStyle(color: Colors.grey.shade500),
                 prefixIcon: const Icon(Icons.location_city),
                 filled: true,
-                fillColor:
-                    widget.isEditing ? Colors.white : Colors.grey.shade200,
+                fillColor: widget.isEditing
+                    ? Colors.transparent
+                    : Colors.grey.shade200,
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
               ),
@@ -375,6 +391,7 @@ class _DropdownFormFieldCityState extends State<DropdownFormFieldCity> {
                     onChanged: widget.isEditing
                         ? (String? newValue) {
                             setState(() {
+                              isEmptys = false;
                               widget.nullState = false;
                               _value = newValue;
                               widget.onChanged?.call(newValue);
@@ -390,7 +407,10 @@ class _DropdownFormFieldCityState extends State<DropdownFormFieldCity> {
             ),
             if (state.hasError == true)
               Padding(
-                padding: const EdgeInsets.only(left: 20, top: 15, bottom: 2),
+                padding: const EdgeInsets.only(
+                  left: 20,
+                  top: 15,
+                ),
                 child: Text(
                   state.errorText!,
                   style: TextStyle(

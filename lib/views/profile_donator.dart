@@ -2,10 +2,12 @@
 import "dart:io";
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sfm/assets/country_cities.dart';
+import 'package:sfm/views/home_donator.dart';
 import '../assets/profile_pic.dart';
 import '../assets/storage_service.dart';
 import '../main.dart';
@@ -243,101 +245,114 @@ class _ProfileDonatorState extends State<ProfileDonator> {
                         resizeToAvoidBottomInset: false,
                         body: Padding(
                           padding: const EdgeInsets.all(14.0),
-                          child: Column(
-                            children: [
-                              SizedBox(
-                                height:
-                                    MediaQuery.of(context).size.height * 0.072,
-                              ),
-                              // imageProfile(context),
-                              InkWell(
-                                onTap: () async {
-                                  showModalBottomSheet(
-                                    context: context,
-                                    builder: (context) => bottomSheet(context),
-                                  );
-                                },
-                                child: Center(
-                                  child: FittedBox(
-                                    fit: BoxFit.contain,
-                                    child: CircleAvatar(
-                                      backgroundColor: Colors.grey[300],
-                                      radius: 42,
-                                      foregroundImage: filePath == ""
-                                          ? (_image != null
-                                              ? FileImage(_image!)
-                                              : null)
-                                          : networkFile,
-                                      child: const Text(
-                                        "SA",
-                                        style: TextStyle(fontSize: 30),
+                          child: Center(
+                            child: SingleChildScrollView(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  // SizedBox(
+                                  //   height:
+                                  //       MediaQuery.of(context).size.height * 0.072,
+                                  // ),
+                                  InkWell(
+                                    onTap: () async {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        builder: (context) =>
+                                            bottomSheet(context),
+                                      );
+                                    },
+                                    child: Center(
+                                      child: FittedBox(
+                                        fit: BoxFit.contain,
+                                        child: CircleAvatar(
+                                          backgroundColor: Colors.grey[300],
+                                          radius: 42,
+                                          foregroundImage: filePath == ""
+                                              ? (_image != null
+                                                  ? FileImage(_image!)
+                                                  : const AssetImage(
+                                                          "assets/images/user2.png")
+                                                      as ImageProvider<Object>?)
+                                              : networkFile,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 14,
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  TextButton(
-                                    style: ButtonStyle(
-                                        backgroundColor: _showFirstForm
-                                            ? MaterialStateProperty.all<Color>(
-                                                const Color(0xFF05240E))
-                                            : MaterialStateProperty.all<Color>(
-                                                const Color(0xFF138034))),
-                                    onPressed: () {
-                                      setState(() {
-                                        _showFirstForm = true;
-                                        isEditing2 = false;
-                                        _storeName.text = cStoreName;
-                                        _storeNumber.text = cStoreNumber;
-                                        _address.text = cStoreAddress;
-                                        statesList = getStates(cCountry);
-                                        nullState = false;
-                                      });
-                                    },
-                                    child: const Text("User Details",
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 20,
-                                            fontFamily: "Roboto")),
-                                  ),
                                   const SizedBox(
-                                    width: 24,
+                                    height: 14,
                                   ),
-                                  TextButton(
-                                    style: ButtonStyle(
-                                        backgroundColor: _showFirstForm
-                                            ? MaterialStateProperty.all<Color>(
-                                                const Color(0xFF138034))
-                                            : MaterialStateProperty.all<Color>(
-                                                const Color(0xFF05240E))),
-                                    onPressed: () {
-                                      setState(() {
-                                        _showFirstForm = false;
-                                        isEditing = false;
-                                        isEditingEP = false;
-                                        _fullname.text = cFullName;
-                                        _number.text = cNumber;
-                                        _email.text = cEmail;
-                                      });
-                                    },
-                                    child: const Text("Store Details",
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 20,
-                                            fontFamily: "Roboto")),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      TextButton(
+                                        style: ButtonStyle(
+                                            backgroundColor: _showFirstForm
+                                                ? MaterialStateProperty.all<
+                                                        Color>(
+                                                    const Color(0xFF05240E))
+                                                : MaterialStateProperty.all<
+                                                        Color>(
+                                                    const Color(0xFF138034))),
+                                        onPressed: () {
+                                          setState(() {
+                                            _showFirstForm = true;
+                                            isEditing2 = false;
+                                            _storeName.text = cStoreName;
+                                            _storeNumber.text = cStoreNumber;
+                                            _address.text = cStoreAddress;
+                                            statesList = getStates(cCountry);
+                                            nullState = false;
+                                          });
+                                        },
+                                        child: Text("User Details",
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.05,
+                                                fontFamily: "Roboto")),
+                                      ),
+                                      const SizedBox(
+                                        width: 24,
+                                      ),
+                                      TextButton(
+                                        style: ButtonStyle(
+                                            backgroundColor: _showFirstForm
+                                                ? MaterialStateProperty.all<
+                                                        Color>(
+                                                    const Color(0xFF138034))
+                                                : MaterialStateProperty.all<
+                                                        Color>(
+                                                    const Color(0xFF05240E))),
+                                        onPressed: () {
+                                          setState(() {
+                                            _showFirstForm = false;
+                                            isEditing = false;
+                                            isEditingEP = false;
+                                            _fullname.text = cFullName;
+                                            _number.text = cNumber;
+                                            _email.text = cEmail;
+                                          });
+                                        },
+                                        child: Text("Store Details",
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.05,
+                                                fontFamily: "Roboto")),
+                                      ),
+                                    ],
                                   ),
+                                  _showFirstForm
+                                      ? _buildUserForm()
+                                      : _buildDonatorForm(),
                                 ],
                               ),
-                              _showFirstForm
-                                  ? _buildUserForm()
-                                  : _buildDonatorForm(),
-                            ],
+                            ),
                           ),
                         ),
                       ),
@@ -381,7 +396,7 @@ class _ProfileDonatorState extends State<ProfileDonator> {
       key: formKey,
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         SizedBox(
-          height: MediaQuery.of(context).size.height * 0.042,
+          height: MediaQuery.of(context).size.height * 0.025,
         ),
         TextFormField(
           style: isEditing
@@ -414,7 +429,7 @@ class _ProfileDonatorState extends State<ProfileDonator> {
             return null;
           },
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         TextFormField(
           style: isEditing
               ? const TextStyle(color: Colors.black)
@@ -451,7 +466,7 @@ class _ProfileDonatorState extends State<ProfileDonator> {
             return null;
           },
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         TextFormField(
           style: isEditingEP
               ? const TextStyle(color: Colors.black)
@@ -488,119 +503,9 @@ class _ProfileDonatorState extends State<ProfileDonator> {
             return null;
           },
         ),
-        const SizedBox(height: 14),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Flexible(
-              child: TextFormField(
-                style: isEditingEP
-                    ? const TextStyle(color: Colors.black)
-                    : const TextStyle(color: Colors.grey),
-                enabled: isEditingEP,
-                onFieldSubmitted: (v) {
-                  FocusScope.of(context).requestFocus(focus);
-                },
-                obscureText: isObscure,
-                enableSuggestions: false,
-                autocorrect: false,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: isEditingEP ? Colors.white : Colors.grey.shade200,
-                  labelText: "Password",
-                  floatingLabelBehavior: FloatingLabelBehavior.auto,
-                  prefixIcon: const Icon(Icons.lock),
-                  border: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(14.0)),
-                  ),
-                  focusedBorder: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(14.0)),
-                    borderSide: BorderSide(color: Colors.green, width: 2.0),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20.0, vertical: 15.0),
-                  suffixIcon: IconButton(
-                    color: isEditingEP ? Colors.green : Colors.grey,
-                    onPressed: () {
-                      setState(
-                        () {
-                          isObscure = !isObscure;
-                        },
-                      );
-                    },
-                    icon: Icon(
-                        !isObscure ? Icons.visibility : Icons.visibility_off),
-                  ),
-                ),
-                controller: _password,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please enter your password";
-                  } else if (value.length < 8) {
-                    return "Length of password's characters must be 8 or greater";
-                  }
-                  return null;
-                },
-              ),
-            ),
-            const SizedBox(
-              width: 5,
-            ),
-            Flexible(
-              child: TextFormField(
-                style: isEditingEP
-                    ? const TextStyle(color: Colors.black)
-                    : const TextStyle(color: Colors.grey),
-                enabled: isEditingEP,
-                focusNode: focus,
-                obscureText: isObscureC,
-                enableSuggestions: false,
-                autocorrect: false,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: isEditingEP ? Colors.white : Colors.grey.shade200,
-                  labelText: "Confirm Password",
-                  floatingLabelBehavior: FloatingLabelBehavior.auto,
-                  prefixIcon: const Icon(Icons.lock),
-                  border: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(14.0)),
-                  ),
-                  focusedBorder: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(14.0)),
-                    borderSide: BorderSide(color: Colors.green, width: 2.0),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 15.0, vertical: 15.0),
-                  suffixIcon: IconButton(
-                    color: isEditingEP ? Colors.green : Colors.grey,
-                    onPressed: () {
-                      setState(
-                        () {
-                          isObscureC = !isObscureC;
-                        },
-                      );
-                    },
-                    icon: Icon(
-                        !isObscureC ? Icons.visibility : Icons.visibility_off),
-                  ),
-                ),
-                controller: _cpassword,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please enter your password";
-                  } else if (value.length < 8) {
-                    return "Length of password's characters must be 8 or greater";
-                  } else if (value != _password.text) {
-                    return "Password don't match";
-                  }
-                  return null;
-                },
-              ),
-            ),
-          ],
-        ),
+        const SizedBox(height: 12),
         SizedBox(
-          height: MediaQuery.of(context).size.height * 0.05,
+          height: MediaQuery.of(context).size.height * 0.02,
         ),
         TextButton(
           style: ButtonStyle(
@@ -654,8 +559,8 @@ class _ProfileDonatorState extends State<ProfileDonator> {
                         .collection('Donators')
                         .doc(userDocID)
                         .update({
-                      'Full Name': _fullname.text,
-                      'Contact Number': _number.text,
+                      'Full Name': _fullname.text.trim(),
+                      'Contact Number': _number.text.trim(),
                     });
                   } on FirebaseAuthException catch (e) {
                     if (e.code == 'not-found') {
@@ -697,7 +602,7 @@ class _ProfileDonatorState extends State<ProfileDonator> {
       key: formKey2,
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         SizedBox(
-          height: MediaQuery.of(context).size.height * 0.042,
+          height: MediaQuery.of(context).size.height * 0.025,
         ),
         TextFormField(
           style: isEditing2
@@ -729,7 +634,7 @@ class _ProfileDonatorState extends State<ProfileDonator> {
             return null;
           },
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         TextFormField(
           style: isEditing2
               ? const TextStyle(color: Colors.black)
@@ -764,55 +669,47 @@ class _ProfileDonatorState extends State<ProfileDonator> {
             return null;
           },
         ),
-        const SizedBox(height: 14),
-        Row(
-          children: [
-            Flexible(
-              child: DropdownFormFieldCountry(
-                notSavedChanges: notSavedChanges,
-                initialValue: cCountry,
-                isEditing: isEditing2,
-                labelText: "Country",
-                items: countries,
-                validator: (value) {
-                  if (value == null) {
-                    return "Please select a country";
-                  }
-                  return null;
-                },
-                onChanged: (value) {
-                  countryValue = value!;
+        const SizedBox(height: 12),
+        DropdownFormFieldCountry(
+          notSavedChanges: notSavedChanges,
+          initialValue: cCountry,
+          isEditing: isEditing2,
+          labelText: "Country",
+          items: countries,
+          validator: (value) {
+            if (value == null) {
+              return "Please select a country";
+            }
+            return null;
+          },
+          onChanged: (value) {
+            countryValue = value!;
 
-                  setState(() {
-                    nullState = true;
-                    statesList = getStates(countryValue);
-                  });
-                },
-              ),
-            ),
-            const SizedBox(width: 14),
-            Flexible(
-              child: DropdownFormFieldCity(
-                notSavedChanges: notSavedChanges,
-                nullState: nullState,
-                initialValue: nullState ? null : cCity,
-                isEditing: isEditing2,
-                labelText: "City",
-                items: statesList,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please select a city";
-                  }
-                  return null;
-                },
-                onChanged: (value) {
-                  cityValue = value!;
-                },
-              ),
-            ),
-          ],
+            setState(() {
+              nullState = true;
+              statesList = getStates(countryValue);
+            });
+          },
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
+        DropdownFormFieldCity(
+          notSavedChanges: notSavedChanges,
+          nullState: nullState,
+          initialValue: nullState ? null : cCity,
+          isEditing: isEditing2,
+          labelText: "City",
+          items: statesList,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return "Please select a city";
+            }
+            return null;
+          },
+          onChanged: (value) {
+            cityValue = value!;
+          },
+        ),
+        const SizedBox(height: 12),
         TextFormField(
           style: isEditing2
               ? const TextStyle(color: Colors.black)
@@ -844,7 +741,7 @@ class _ProfileDonatorState extends State<ProfileDonator> {
           },
         ),
         SizedBox(
-          height: MediaQuery.of(context).size.height * 0.05,
+          height: MediaQuery.of(context).size.height * 0.02,
         ),
         TextButton(
           style: ButtonStyle(
@@ -862,7 +759,7 @@ class _ProfileDonatorState extends State<ProfileDonator> {
               FocusManager.instance.primaryFocus?.unfocus();
               if (formKey2.currentState!.validate()) {
                 final shouldSave = await confirmChangesDialog(context,
-                    "(Note: Changing city will remove all your current requests)");
+                    "(Note: Changing city will remove all your current food listings)");
                 showDialog(
                     barrierDismissible: false,
                     context: context,
@@ -892,10 +789,10 @@ class _ProfileDonatorState extends State<ProfileDonator> {
                       );
                     });
                 if (shouldSave) {
-                  notSavedChanges = false;
                   final user = FirebaseAuth.instance.currentUser;
-                  final userDocID =
-                      await findDocID(user?.uid ?? "None", "Donators");
+                  final userid = user!.uid;
+                  notSavedChanges = false;
+                  final userDocID = await findDocID(user.uid, "Donators");
                   try {
                     if (countryValue == '') {
                       countryValue = cCountry;
@@ -903,15 +800,55 @@ class _ProfileDonatorState extends State<ProfileDonator> {
                     if (cityValue == '') {
                       cityValue = cCity;
                     }
+                    if (cityValue != cCity) {
+                      DatabaseReference ref = FirebaseDatabase.instance
+                          .ref("Orders/$cCountry/$cCity/$userid/");
+                      await ref.remove();
+                    }
+
+                    if (_storeName.text != cStoreName) {
+                      List<String> orders = [];
+                      DatabaseReference ref = FirebaseDatabase.instance
+                          .ref("Orders/$cCountry/$cCity/$userid/");
+                      DatabaseEvent event = await ref.once();
+                      if (event.snapshot.value != null) {
+                        final data = event.snapshot.value as Map;
+                        data.forEach((key, value) {
+                          orders.add(key);
+                        });
+                      }
+                      for (String x in orders) {
+                        DatabaseReference refs = FirebaseDatabase.instance
+                            .ref("Orders/$cCountry/$cCity/$userid/$x");
+                        await refs.update({"Store Name": _storeName.text});
+                      }
+                    }
+                    if (_address.text != cStoreAddress) {
+                      List<String> orders = [];
+                      DatabaseReference ref = FirebaseDatabase.instance
+                          .ref("Orders/$cCountry/$cCity/$userid/");
+                      DatabaseEvent event = await ref.once();
+                      if (event.snapshot.value != null) {
+                        final data = event.snapshot.value as Map;
+                        data.forEach((key, value) {
+                          orders.add(key);
+                        });
+                      }
+                      for (String x in orders) {
+                        DatabaseReference refs = FirebaseDatabase.instance
+                            .ref("Orders/$cCountry/$cCity/$userid/$x");
+                        await refs.update({"Area": _address.text});
+                      }
+                    }
                     await FirebaseFirestore.instance
                         .collection('Donators')
                         .doc(userDocID)
                         .update({
-                      'Store Name': _storeName.text,
-                      'Store Contact Number': _storeNumber.text,
-                      'Country': countryValue,
-                      'City': cityValue,
-                      'Address Line': _address.text,
+                      'Store Name': _storeName.text.trim(),
+                      'Store Contact Number': _storeNumber.text.trim(),
+                      'Country': countryValue.trim(),
+                      'City': cityValue.trim(),
+                      'Address Line': _address.text.trim(),
                     });
                   } on FirebaseAuthException catch (e) {
                     if (e.code == 'not-found') {

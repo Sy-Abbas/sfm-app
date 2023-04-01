@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sfm/assets/country_cities.dart';
-import 'package:sfm/views/home_ngo.dart';
+import 'package:sfm/views/login_donator.dart';
 import '../assets/profile_pic.dart';
 import '../assets/storage_service.dart';
 import '../main.dart';
@@ -32,9 +32,6 @@ String filePath = "";
 String fileName = "";
 ImageProvider<Object>? networkFile = const NetworkImage("");
 
-XFile? _imageFile;
-final ImagePicker _picker = ImagePicker();
-
 class GetDetailsNGO extends StatefulWidget {
   const GetDetailsNGO({super.key});
 
@@ -44,6 +41,7 @@ class GetDetailsNGO extends StatefulWidget {
 
 class _GetDetailsNGOState extends State<GetDetailsNGO> {
   late Future<String> _getDetails;
+
   @override
   void initState() {
     _getDetails = getDetails();
@@ -157,7 +155,10 @@ class _ProfileNGOState extends State<ProfileNGO> {
   bool clicked2 = false;
   bool? notSavedChanges;
   bool _showFirstForm = true;
+  late final TextEditingController _resetEmail;
+  final _formKeyReset = GlobalKey<FormState>();
 
+  bool _clickedReset = false;
   File? _image;
   @override
   void initState() {
@@ -238,101 +239,110 @@ class _ProfileNGOState extends State<ProfileNGO> {
                         resizeToAvoidBottomInset: false,
                         body: Padding(
                           padding: const EdgeInsets.all(14.0),
-                          child: Column(
-                            children: [
-                              SizedBox(
-                                height:
-                                    MediaQuery.of(context).size.height * 0.072,
-                              ),
-                              // imageProfile(context),
-                              InkWell(
-                                onTap: () async {
-                                  showModalBottomSheet(
-                                    context: context,
-                                    builder: (context) => bottomSheet(context),
-                                  );
-                                },
-                                child: Center(
-                                  child: FittedBox(
-                                    fit: BoxFit.contain,
-                                    child: CircleAvatar(
-                                      backgroundColor: Colors.grey[300],
-                                      radius: 42,
-                                      foregroundImage: filePath == ""
-                                          ? (_image != null
-                                              ? FileImage(_image!)
-                                              : null)
-                                          : networkFile,
-                                      child: const Text(
-                                        "SA",
-                                        style: TextStyle(fontSize: 30),
+                          child: Center(
+                            child: SingleChildScrollView(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  InkWell(
+                                    onTap: () async {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        builder: (context) =>
+                                            bottomSheet(context),
+                                      );
+                                    },
+                                    child: Center(
+                                      child: FittedBox(
+                                        fit: BoxFit.contain,
+                                        child: CircleAvatar(
+                                          backgroundColor: Colors.grey[300],
+                                          radius: 42,
+                                          foregroundImage: filePath == ""
+                                              ? (_image != null
+                                                  ? FileImage(_image!)
+                                                  : const AssetImage(
+                                                          "assets/images/user2.png")
+                                                      as ImageProvider<Object>?)
+                                              : networkFile,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 14,
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  TextButton(
-                                    style: ButtonStyle(
-                                        backgroundColor: _showFirstForm
-                                            ? MaterialStateProperty.all<Color>(
-                                                const Color(0xFF05240E))
-                                            : MaterialStateProperty.all<Color>(
-                                                const Color(0xFF138034))),
-                                    onPressed: () {
-                                      setState(() {
-                                        _showFirstForm = true;
-                                        isEditing2 = false;
-                                        _ngoName.text = cNGOName;
-                                        _ngoNumber.text = cNGONumber;
-                                        _address.text = cNGOAddress;
-                                        statesList = getStates(cCountry);
-                                        nullState = false;
-                                      });
-                                    },
-                                    child: const Text("User Details",
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 20,
-                                            fontFamily: "Roboto")),
-                                  ),
                                   const SizedBox(
-                                    width: 24,
+                                    height: 14,
                                   ),
-                                  TextButton(
-                                    style: ButtonStyle(
-                                        backgroundColor: _showFirstForm
-                                            ? MaterialStateProperty.all<Color>(
-                                                const Color(0xFF138034))
-                                            : MaterialStateProperty.all<Color>(
-                                                const Color(0xFF05240E))),
-                                    onPressed: () {
-                                      setState(() {
-                                        _showFirstForm = false;
-                                        isEditing = false;
-                                        isEditingEP = false;
-                                        _fullname.text = cFullName;
-                                        _number.text = cNumber;
-                                        _email.text = cEmail;
-                                      });
-                                    },
-                                    child: const Text("NGO Details",
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 20,
-                                            fontFamily: "Roboto")),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      TextButton(
+                                        style: ButtonStyle(
+                                            backgroundColor: _showFirstForm
+                                                ? MaterialStateProperty.all<
+                                                        Color>(
+                                                    const Color(0xFF05240E))
+                                                : MaterialStateProperty.all<
+                                                        Color>(
+                                                    const Color(0xFF138034))),
+                                        onPressed: () {
+                                          setState(() {
+                                            _showFirstForm = true;
+                                            isEditing2 = false;
+                                            _ngoName.text = cNGOName;
+                                            _ngoNumber.text = cNGONumber;
+                                            _address.text = cNGOAddress;
+                                            statesList = getStates(cCountry);
+                                            nullState = false;
+                                          });
+                                        },
+                                        child: Text("User Details",
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.05,
+                                                fontFamily: "Roboto")),
+                                      ),
+                                      const SizedBox(
+                                        width: 24,
+                                      ),
+                                      TextButton(
+                                        style: ButtonStyle(
+                                            backgroundColor: _showFirstForm
+                                                ? MaterialStateProperty.all<
+                                                        Color>(
+                                                    const Color(0xFF138034))
+                                                : MaterialStateProperty.all<
+                                                        Color>(
+                                                    const Color(0xFF05240E))),
+                                        onPressed: () {
+                                          setState(() {
+                                            _showFirstForm = false;
+                                            isEditing = false;
+                                            isEditingEP = false;
+                                            _fullname.text = cFullName;
+                                            _number.text = cNumber;
+                                            _email.text = cEmail;
+                                          });
+                                        },
+                                        child: Text("NGO Details",
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.05,
+                                                fontFamily: "Roboto")),
+                                      ),
+                                    ],
                                   ),
+                                  _showFirstForm
+                                      ? _buildUserForm()
+                                      : _buildNGOForm(),
                                 ],
                               ),
-                              _showFirstForm
-                                  ? _buildUserForm()
-                                  : _buildNGOForm(),
-                            ],
+                            ),
                           ),
                         ),
                       ),
@@ -376,7 +386,7 @@ class _ProfileNGOState extends State<ProfileNGO> {
       key: formKey,
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         SizedBox(
-          height: MediaQuery.of(context).size.height * 0.042,
+          height: MediaQuery.of(context).size.height * 0.025,
         ),
         TextFormField(
           style: isEditing
@@ -409,7 +419,7 @@ class _ProfileNGOState extends State<ProfileNGO> {
             return null;
           },
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         TextFormField(
           style: isEditing
               ? const TextStyle(color: Colors.black)
@@ -446,7 +456,7 @@ class _ProfileNGOState extends State<ProfileNGO> {
             return null;
           },
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         TextFormField(
           style: isEditingEP
               ? const TextStyle(color: Colors.black)
@@ -483,119 +493,8 @@ class _ProfileNGOState extends State<ProfileNGO> {
             return null;
           },
         ),
-        const SizedBox(height: 14),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Flexible(
-              child: TextFormField(
-                style: isEditingEP
-                    ? const TextStyle(color: Colors.black)
-                    : const TextStyle(color: Colors.grey),
-                enabled: isEditingEP,
-                onFieldSubmitted: (v) {
-                  FocusScope.of(context).requestFocus(focus);
-                },
-                obscureText: isObscure,
-                enableSuggestions: false,
-                autocorrect: false,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: isEditingEP ? Colors.white : Colors.grey.shade200,
-                  labelText: "Password",
-                  floatingLabelBehavior: FloatingLabelBehavior.auto,
-                  prefixIcon: const Icon(Icons.lock),
-                  border: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(14.0)),
-                  ),
-                  focusedBorder: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(14.0)),
-                    borderSide: BorderSide(color: Colors.green, width: 2.0),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20.0, vertical: 15.0),
-                  suffixIcon: IconButton(
-                    color: isEditingEP ? Colors.green : Colors.grey,
-                    onPressed: () {
-                      setState(
-                        () {
-                          isObscure = !isObscure;
-                        },
-                      );
-                    },
-                    icon: Icon(
-                        !isObscure ? Icons.visibility : Icons.visibility_off),
-                  ),
-                ),
-                controller: _password,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please enter your password";
-                  } else if (value.length < 8) {
-                    return "Length of password's characters must be 8 or greater";
-                  }
-                  return null;
-                },
-              ),
-            ),
-            const SizedBox(
-              width: 5,
-            ),
-            Flexible(
-              child: TextFormField(
-                style: isEditingEP
-                    ? const TextStyle(color: Colors.black)
-                    : const TextStyle(color: Colors.grey),
-                enabled: isEditingEP,
-                focusNode: focus,
-                obscureText: isObscureC,
-                enableSuggestions: false,
-                autocorrect: false,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: isEditingEP ? Colors.white : Colors.grey.shade200,
-                  labelText: "Confirm Password",
-                  floatingLabelBehavior: FloatingLabelBehavior.auto,
-                  prefixIcon: const Icon(Icons.lock),
-                  border: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(14.0)),
-                  ),
-                  focusedBorder: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(14.0)),
-                    borderSide: BorderSide(color: Colors.green, width: 2.0),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 15.0, vertical: 15.0),
-                  suffixIcon: IconButton(
-                    color: isEditingEP ? Colors.green : Colors.grey,
-                    onPressed: () {
-                      setState(
-                        () {
-                          isObscureC = !isObscureC;
-                        },
-                      );
-                    },
-                    icon: Icon(
-                        !isObscureC ? Icons.visibility : Icons.visibility_off),
-                  ),
-                ),
-                controller: _cpassword,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please enter your password";
-                  } else if (value.length < 8) {
-                    return "Length of password's characters must be 8 or greater";
-                  } else if (value != _password.text) {
-                    return "Password don't match";
-                  }
-                  return null;
-                },
-              ),
-            ),
-          ],
-        ),
         SizedBox(
-          height: MediaQuery.of(context).size.height * 0.05,
+          height: MediaQuery.of(context).size.height * 0.02,
         ),
         TextButton(
           style: ButtonStyle(
@@ -649,8 +548,8 @@ class _ProfileNGOState extends State<ProfileNGO> {
                         .collection('NGOs')
                         .doc(userDocID)
                         .update({
-                      'Full Name': _fullname.text,
-                      'Contact Number': _number.text,
+                      'Full Name': _fullname.text.trim(),
+                      'Contact Number': _number.text.trim(),
                     });
                   } on FirebaseAuthException catch (e) {
                     if (e.code == 'not-found') {
@@ -692,7 +591,7 @@ class _ProfileNGOState extends State<ProfileNGO> {
       key: formKey2,
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         SizedBox(
-          height: MediaQuery.of(context).size.height * 0.042,
+          height: MediaQuery.of(context).size.height * 0.025,
         ),
         TextFormField(
           style: isEditing2
@@ -724,7 +623,7 @@ class _ProfileNGOState extends State<ProfileNGO> {
             return null;
           },
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         TextFormField(
           style: isEditing2
               ? const TextStyle(color: Colors.black)
@@ -759,55 +658,47 @@ class _ProfileNGOState extends State<ProfileNGO> {
             return null;
           },
         ),
-        const SizedBox(height: 14),
-        Row(
-          children: [
-            Flexible(
-              child: DropdownFormFieldCountry(
-                notSavedChanges: notSavedChanges,
-                initialValue: cCountry,
-                isEditing: isEditing2,
-                labelText: "Country",
-                items: countries,
-                validator: (value) {
-                  if (value == null) {
-                    return "Please select a country";
-                  }
-                  return null;
-                },
-                onChanged: (value) {
-                  countryValue = value!;
+        const SizedBox(height: 12),
+        DropdownFormFieldCountry(
+          notSavedChanges: notSavedChanges,
+          initialValue: cCountry,
+          isEditing: isEditing2,
+          labelText: "Country",
+          items: countries,
+          validator: (value) {
+            if (value == null) {
+              return "Please select a country";
+            }
+            return null;
+          },
+          onChanged: (value) {
+            countryValue = value!;
 
-                  setState(() {
-                    nullState = true;
-                    statesList = getStates(countryValue);
-                  });
-                },
-              ),
-            ),
-            const SizedBox(width: 14),
-            Flexible(
-              child: DropdownFormFieldCity(
-                notSavedChanges: notSavedChanges,
-                nullState: nullState,
-                initialValue: nullState ? null : cCity,
-                isEditing: isEditing2,
-                labelText: "City",
-                items: statesList,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please select a city";
-                  }
-                  return null;
-                },
-                onChanged: (value) {
-                  cityValue = value!;
-                },
-              ),
-            ),
-          ],
+            setState(() {
+              nullState = true;
+              statesList = getStates(countryValue);
+            });
+          },
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
+        DropdownFormFieldCity(
+          notSavedChanges: notSavedChanges,
+          nullState: nullState,
+          initialValue: nullState ? null : cCity,
+          isEditing: isEditing2,
+          labelText: "City",
+          items: statesList,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return "Please select a city";
+            }
+            return null;
+          },
+          onChanged: (value) {
+            cityValue = value!;
+          },
+        ),
+        const SizedBox(height: 12),
         TextFormField(
           style: isEditing2
               ? const TextStyle(color: Colors.black)
@@ -839,7 +730,7 @@ class _ProfileNGOState extends State<ProfileNGO> {
           },
         ),
         SizedBox(
-          height: MediaQuery.of(context).size.height * 0.05,
+          height: MediaQuery.of(context).size.height * 0.02,
         ),
         TextButton(
           style: ButtonStyle(
@@ -907,11 +798,11 @@ class _ProfileNGOState extends State<ProfileNGO> {
                         .collection('NGOs')
                         .doc(userDocID)
                         .update({
-                      'NGO Name': _ngoName.text,
-                      'NGO Contact Number': _ngoNumber.text,
-                      'Country': countryValue,
-                      'City': cityValue,
-                      'Address Line': _address.text,
+                      'NGO Name': _ngoName.text.trim(),
+                      'NGO Contact Number': _ngoNumber.text.trim(),
+                      'Country': countryValue.trim(),
+                      'City': cityValue.trim(),
+                      'Address Line': _address.text.trim(),
                     });
                   } on FirebaseAuthException catch (e) {
                     if (e.code == 'not-found') {
@@ -948,29 +839,6 @@ class _ProfileNGOState extends State<ProfileNGO> {
               style: const TextStyle(color: Colors.white)),
         ),
       ]),
-    );
-  }
-
-  Widget imageProfile(BuildContext context) {
-    return Center(
-      child: Stack(
-        children: <Widget>[
-          InkWell(
-            onTap: () {
-              showModalBottomSheet(
-                context: context,
-                builder: (context) => bottomSheet(context),
-              );
-            },
-            child: CircleAvatar(
-              radius: 42,
-              backgroundImage: _imageFile == null
-                  ? const AssetImage("assets/images/user2.png")
-                  : FileImage(File(_imageFile!.path)) as ImageProvider<Object>?,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1042,12 +910,105 @@ class _ProfileNGOState extends State<ProfileNGO> {
     );
   }
 
-  void takePhoto(ImageSource source) async {
-    final pickedfile = await _picker.pickImage(source: source);
-    setState(() {
-      _imageFile = pickedfile;
-    });
-    Navigator.pop(context);
+  Widget resetPassword() {
+    return GestureDetector(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text("Reset Password"),
+              content: Form(
+                key: _formKeyReset,
+                autovalidateMode: _clickedReset
+                    ? AutovalidateMode.onUserInteraction
+                    : AutovalidateMode.disabled,
+                child: TextFormField(
+                  textInputAction: TextInputAction.next,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    labelText: "Email",
+                    floatingLabelBehavior: FloatingLabelBehavior.auto,
+                    prefixIcon: Icon(Icons.email),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(14.0)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(14.0)),
+                      borderSide: BorderSide(color: Colors.green, width: 2.0),
+                    ),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+                  ),
+                  controller: _resetEmail,
+                  validator: (value) {
+                    String pattern =
+                        r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
+                    RegExp regex = RegExp(pattern);
+                    if (value == null || value.isEmpty) {
+                      return "Please enter your email address";
+                    } else if (!regex.hasMatch(value)) {
+                      return 'Please enter a valid email';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              actions: [
+                ElevatedButton(
+                  child: const Text("Cancel"),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _resetEmail.text = "";
+                  },
+                ),
+                ElevatedButton(
+                  child: const Text("Reset"),
+                  onPressed: () async {
+                    setState(() {
+                      _clickedReset = true;
+                    });
+                    FocusManager.instance.primaryFocus?.unfocus();
+                    if (_formKeyReset.currentState!.validate()) {
+                      try {
+                        final userType =
+                            await getUserTypeReset(_resetEmail.text);
+                        if (userType == "NGOs") {
+                          await FirebaseAuth.instance
+                              .sendPasswordResetEmail(email: _resetEmail.text);
+                          Navigator.of(context).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text("Reset Email Sent")));
+                          _resetEmail.text = "";
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Invalid User")));
+                        }
+                      } on FirebaseAuthException catch (e) {
+                        if (e.code == 'user-not-found') {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("User not found")));
+                        }
+                      }
+                    }
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+      child: SizedBox(
+        height: 33,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Text("Forgot Password?", style: TextStyle(color: Colors.green)),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -1072,9 +1033,8 @@ Future<String> getDetails() async {
   try {
     filePath = await storage.downloadURL("$userID/userProfile.jpg");
     networkFile = NetworkImage(filePath);
-  } catch (error) {
-    devetools.log(error.toString());
-  }
+    // ignore: empty_catches
+  } catch (error) {}
   return "";
 }
 
