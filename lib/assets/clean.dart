@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class DropdownFormField extends StatefulWidget {
@@ -24,14 +23,12 @@ class DropdownFormField extends StatefulWidget {
 }
 
 class _DropdownFormFieldState extends State<DropdownFormField> {
-  String? _value;
   late TextEditingController _searchController;
   late List<String> _filteredItems;
 
   @override
   void initState() {
     super.initState();
-    _value = widget.initialValue;
     _searchController = TextEditingController();
     _filteredItems = widget.items;
   }
@@ -81,7 +78,7 @@ class _DropdownFormFieldState extends State<DropdownFormField> {
                             .toList();
                       });
                     },
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       hintText: 'Search...',
                       border: InputBorder.none,
                     ),

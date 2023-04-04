@@ -4,6 +4,7 @@ import 'dart:developer' as develtools show log;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import '../main.dart';
 
 class RegisterViewDonator extends StatefulWidget {
@@ -24,10 +25,14 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
   bool isObscureC = true;
   get devetools => null;
   final focus = FocusNode();
-  bool _isLoading = false;
   bool _clicked = false;
+  bool _agree = false;
+  FToast? fToast;
+
   @override
   void initState() {
+    fToast = FToast();
+    fToast!.init(context);
     _fullname = TextEditingController();
     _number = TextEditingController();
     _email = TextEditingController();
@@ -47,6 +52,30 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
     super.dispose();
   }
 
+  showToast(String message) {
+    Widget toast = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25.0),
+        color: Colors.grey.shade900,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            message,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ],
+      ),
+    );
+    fToast!.showToast(
+      child: toast,
+      gravity: ToastGravity.BOTTOM,
+      toastDuration: const Duration(seconds: 2),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -57,7 +86,7 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.02,
+              height: MediaQuery.of(context).size.height * 0.035,
             ),
             Padding(
               padding: const EdgeInsets.all(14.0),
@@ -92,7 +121,7 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(42),
                     child: Container(
-                      height: MediaQuery.of(context).size.height * 0.72,
+                      height: MediaQuery.of(context).size.height * 0.76,
                       width: MediaQuery.of(context).size.width * 0.85,
                       color: Colors.white,
                       child: Scaffold(
@@ -341,6 +370,45 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                           return null;
                                         },
                                       ),
+                                      Row(
+                                        children: <Widget>[
+                                          Theme(
+                                            data: ThemeData(
+                                                unselectedWidgetColor:
+                                                    _clicked && !_agree
+                                                        ? Colors.red.shade400
+                                                        : Colors.green),
+                                            child: Checkbox(
+                                                value: _agree,
+                                                onChanged: (value) {
+                                                  setState(() {
+                                                    _agree = value!;
+                                                  });
+                                                },
+                                                activeColor: Colors.green),
+                                          ),
+                                          Text(
+                                            'I agree to the ',
+                                            style: TextStyle(
+                                                color: _clicked && !_agree
+                                                    ? Colors.red.shade600
+                                                    : Colors.black),
+                                          ),
+                                          GestureDetector(
+                                            onTap: _showTermsAndConditions,
+                                            child: Text(
+                                              'Terms & Conditions',
+                                              style: TextStyle(
+                                                color: _clicked && !_agree
+                                                    ? Colors.red.shade600
+                                                    : Colors.green,
+                                                decoration:
+                                                    TextDecoration.underline,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                       SizedBox(
                                         height:
                                             MediaQuery.of(context).size.height *
@@ -361,101 +429,104 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                           final password = _password.text;
                                           if (_formKey.currentState!
                                               .validate()) {
-                                            showDialog(
-                                                barrierDismissible: false,
-                                                context: context,
-                                                builder: (_) {
-                                                  return Dialog(
-                                                    // The background color
-                                                    backgroundColor:
-                                                        Colors.white,
-                                                    child: Padding(
-                                                      padding: const EdgeInsets
-                                                              .symmetric(
-                                                          vertical: 20),
+                                            if (_agree) {
+                                              showDialog(
+                                                  barrierDismissible: false,
+                                                  context: context,
+                                                  builder: (_) {
+                                                    return Dialog(
+                                                      // The background color
+                                                      backgroundColor:
+                                                          Colors.white,
                                                       child: Padding(
                                                         padding:
                                                             const EdgeInsets
-                                                                .all(14.0),
-                                                        child: Row(
-                                                          mainAxisSize:
-                                                              MainAxisSize.min,
-                                                          children: const [
-                                                            // The loading indicator
-                                                            CircularProgressIndicator(),
-                                                            SizedBox(
-                                                              width: 15,
-                                                            ),
+                                                                    .symmetric(
+                                                                vertical: 20),
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(14.0),
+                                                          child: Row(
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .min,
+                                                            children: const [
+                                                              // The loading indicator
+                                                              CircularProgressIndicator(),
+                                                              SizedBox(
+                                                                width: 15,
+                                                              ),
 
-                                                            // Some text
-                                                            Text('Loading...')
-                                                          ],
+                                                              // Some text
+                                                              Text('Loading...')
+                                                            ],
+                                                          ),
                                                         ),
                                                       ),
-                                                    ),
-                                                  );
+                                                    );
+                                                  });
+
+                                              try {
+                                                await FirebaseAuth.instance
+                                                    .createUserWithEmailAndPassword(
+                                                        email: email,
+                                                        password: password);
+                                                final user = FirebaseAuth
+                                                    .instance.currentUser;
+                                                final userUID = user?.uid;
+                                                develtools
+                                                    .log(userUID.toString());
+
+                                                // Making Types of user
+                                                CollectionReference fsUsers =
+                                                    FirebaseFirestore.instance
+                                                        .collection('Donators');
+                                                await fsUsers.add({
+                                                  'uid': userUID,
+                                                  'Full Name':
+                                                      _fullname.text.trim(),
+                                                  'Contact Number':
+                                                      _number.text.trim(),
+                                                  'Email': email.trim(),
+                                                  'Address Line': "",
+                                                  'City': "",
+                                                  'Country': "",
+                                                  'Store Contact Number': "",
+                                                  'Store Name': "",
                                                 });
+                                                // ignore: unused_local_variable
+                                                final shouldSend =
+                                                    await verifyEmailDialog(
+                                                        context);
 
-                                            try {
-                                              await FirebaseAuth.instance
-                                                  .createUserWithEmailAndPassword(
-                                                      email: email,
-                                                      password: password);
-                                              final user = FirebaseAuth
-                                                  .instance.currentUser;
-                                              final userUID = user?.uid;
-                                              develtools
-                                                  .log(userUID.toString());
+                                                await user
+                                                    ?.sendEmailVerification();
+                                                Navigator.of(context)
+                                                    .pushNamedAndRemoveUntil(
+                                                  '/logindonator/',
+                                                  (route) => false,
+                                                );
+                                              } on FirebaseAuthException catch (e) {
+                                                if (e.code ==
+                                                    'email-already-in-use') {
+                                                  showToast(
+                                                      "Email already in use");
+                                                  _email.clear();
+                                                } else if (e.code ==
+                                                    'invalid-email') {
+                                                  showToast("Invalid user");
+                                                  _email.clear();
+                                                }
+                                                Navigator.of(context).pop();
+                                              } finally {}
 
-                                              // Making Types of user
-                                              CollectionReference fsUsers =
-                                                  FirebaseFirestore.instance
-                                                      .collection('Donators');
-                                              await fsUsers.add({
-                                                'uid': userUID,
-                                                'Full Name':
-                                                    _fullname.text.trim(),
-                                                'Contact Number':
-                                                    _number.text.trim(),
-                                                'Email': email.trim(),
-                                                'Address Line': "",
-                                                'City': "",
-                                                'Country': "",
-                                                'Store Contact Number': "",
-                                                'Store Name': "",
-                                              });
-                                              // ignore: unused_local_variable
-                                              final shouldSend =
-                                                  await verifyEmailDialog(
-                                                      context);
+                                              // Navigator.of(context).pop();
 
-                                              await user
-                                                  ?.sendEmailVerification();
-                                              Navigator.of(context)
-                                                  .pushNamedAndRemoveUntil(
-                                                '/logindonator/',
-                                                (route) => false,
-                                              );
-                                            } on FirebaseAuthException catch (e) {
-                                              if (e.code ==
-                                                  'email-already-in-use') {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(const SnackBar(
-                                                        content: Text(
-                                                            "Email already in use")));
-                                                _email.clear();
-                                              } else if (e.code ==
-                                                  'invalid-email') {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(const SnackBar(
-                                                        content: Text(
-                                                            "Invalid Email")));
-                                                _email.clear();
-                                              }
-                                              Navigator.of(context).pop();
-                                            } finally {}
-
-                                            // Navigator.of(context).pop();
+                                            } else {
+                                              showToast(
+                                                  "You can't register unless you agree to the terms and conditions.");
+                                            }
                                           }
                                         },
                                         child: const Text("Register",
@@ -546,5 +617,36 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
             ),
           ],
         ));
+  }
+
+  void _showTermsAndConditions() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Terms & Conditions',
+            style: TextStyle(fontFamily: "RobotoBold"),
+          ),
+          content: const SingleChildScrollView(
+            child: Text(
+              'By downloading or using the app, these terms will automatically apply to you – you should make sure therefore that you read them carefully before using the app. You’re not allowed to copy or modify the app, any part of the app, or our trademarks in any way. You’re not allowed to attempt to extract the source code of the app, and you also shouldn’t try to translate the app into other languages or make derivative versions. The app itself, and all the trademarks, copyright, database rights, and other intellectual property rights related to it, still belong to Syed Abbas Hussain.\n\nSyed Abbas Hussain is committed to ensuring that the app is as useful and efficient as possible. For that reason, we reserve the right to make changes to the app or to charge for its services, at any time and for any reason. We will never charge you for the app or its services without making it very clear to you exactly what you’re paying for.\n\nThe Surplus Food Management app stores and processes personal data that you have provided to us, to provide my Service. It’s your responsibility to keep your phone and access to the app secure. We therefore recommend that you do not jailbreak or root your phone, which is the process of removing software restrictions and limitations imposed by the official operating system of your device. It could make your phone vulnerable to malware/viruses/malicious programs, compromise your phone’s security features and it could mean that the Surplus Food Management app won’t work properly or at all.',
+              style: TextStyle(
+                fontFamily: 'Roboto',
+                fontSize: 16.0,
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Close'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }

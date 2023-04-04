@@ -1,11 +1,9 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:csc_picker/csc_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'dart:developer' as devetools show log;
-
+import 'package:fluttertoast/fluttertoast.dart';
 import '../assets/country_cities.dart';
 import '../main.dart';
 
@@ -25,12 +23,13 @@ class _DetailsDonatorState extends State<DetailsDonator> {
   final _formKey = GlobalKey<FormState>();
   String countryValue = "";
   String cityValue = "";
-  bool _isLoading = false;
   bool _clicked = false;
   bool nullState = false;
 
   @override
   void initState() {
+    fToast = FToast();
+    fToast!.init(context);
     _ngoName = TextEditingController();
     _ngoNumber = TextEditingController();
     _address = TextEditingController();
@@ -45,6 +44,33 @@ class _DetailsDonatorState extends State<DetailsDonator> {
     _address.dispose();
 
     super.dispose();
+  }
+
+  FToast? fToast;
+
+  showToast(String message) {
+    Widget toast = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25.0),
+        color: Colors.grey.shade900,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            message,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ],
+      ),
+    );
+
+    fToast!.showToast(
+      child: toast,
+      gravity: ToastGravity.BOTTOM,
+      toastDuration: const Duration(seconds: 2),
+    );
   }
 
   @override
@@ -346,10 +372,7 @@ class _DetailsDonatorState extends State<DetailsDonator> {
                                             } on FirebaseAuthException catch (e) {
                                               if (e.code == 'not-found') {
                                                 Navigator.of(context).pop();
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(const SnackBar(
-                                                        content: Text(
-                                                            "User not found")));
+                                                showToast("User not foud");
                                               }
                                             } finally {}
                                           }

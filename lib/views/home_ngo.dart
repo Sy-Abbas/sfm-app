@@ -1,16 +1,17 @@
 // ignore_for_file: use_build_context_synchronously, depend_on_referenced_packages, no_leading_underscores_for_local_identifiers
 
 import 'dart:async';
-import 'dart:ffi';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'dart:developer' as devetools show log;
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:sfm/assets/storage_service.dart';
+import 'package:sfm/views/privacy_policy.dart';
+import 'package:sfm/views/recent.chats.dart';
 import 'package:sfm/views/single_chat.dart';
-
 import '../main.dart';
 
 final Storage storage = Storage();
@@ -46,12 +47,16 @@ class _HomeNGOState extends State<HomeNGO> {
   String selectedData = userCity;
   bool _isLoading = true;
   late Future<String> _getDetails;
+  Timer? _timer;
+  FToast? fToast;
 
   @override
   void initState() {
+    fToast = FToast();
+    fToast!.init(context);
     _getDetails = getPics();
     super.initState();
-    Future.delayed(const Duration(seconds: 5), () {
+    _timer = Timer(const Duration(seconds: 5), () {
       setState(() {
         _isLoading = false;
       });
@@ -60,9 +65,36 @@ class _HomeNGOState extends State<HomeNGO> {
 
   @override
   void dispose() {
+    _timer?.cancel();
     _foodItem.dispose();
     _cuisine.dispose();
+    _numberOfPeople.dispose();
     super.dispose();
+  }
+
+  showToast(String message) {
+    Widget toast = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25.0),
+        color: Colors.grey.shade900,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            message,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ],
+      ),
+    );
+
+    fToast!.showToast(
+      child: toast,
+      gravity: ToastGravity.BOTTOM,
+      toastDuration: const Duration(seconds: 2),
+    );
   }
 
   @override
@@ -133,12 +165,12 @@ class _HomeNGOState extends State<HomeNGO> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      "SFM - $ngoName NGO",
+                                      "My Dashboard - NGO",
                                       style: TextStyle(
                                           fontSize: MediaQuery.of(context)
                                                   .size
                                                   .width *
-                                              0.072,
+                                              0.066,
                                           fontFamily: "Roboto",
                                           color: const Color(0xff05240E)),
                                       // textAlign: TextAlign.center,
@@ -157,9 +189,9 @@ class _HomeNGOState extends State<HomeNGO> {
                                   builder: (context, snapshot) {
                                     if (snapshot.hasData) {
                                       final data = snapshot.data as Map;
+
                                       Map<String, List<List<String>>>
                                           cuisineData = {};
-
                                       data.forEach((key, value) {
                                         final d = value as List<List<String>>;
                                         for (List<String> x in d) {
@@ -243,8 +275,7 @@ class _HomeNGOState extends State<HomeNGO> {
                                                   child: SingleChildScrollView(
                                                     child: Column(
                                                       children: [
-                                                        data[userCity].length ==
-                                                                1
+                                                        data[userCity].isEmpty
                                                             ? Center(
                                                                 child: Column(
                                                                   children: const [
@@ -286,16 +317,23 @@ class _HomeNGOState extends State<HomeNGO> {
                                                                         itemBuilder:
                                                                             (context,
                                                                                 index) {
-                                                                          return index == 0
-                                                                              ? const SizedBox()
-                                                                              : (_foodListingItem(
-                                                                                  context,
-                                                                                  data[userCity][index][1],
-                                                                                  data[userCity][index][6],
-                                                                                  data[userCity][index][3],
-                                                                                  data[userCity][index][4],
-                                                                                  data[userCity][index][7],
-                                                                                ));
+                                                                          return (_foodListingItem(
+                                                                            context,
+                                                                            data[userCity][index][1],
+                                                                            data[userCity][index][6],
+                                                                            data[userCity][index][3],
+                                                                            data[userCity][index][4],
+                                                                            data[userCity][index][7],
+                                                                            data[userCity][index][8],
+                                                                            data[userCity][index][9],
+                                                                            data[userCity][index][0],
+                                                                            data[userCity][index][10],
+                                                                            data[userCity][index][5],
+                                                                            data[userCity][index][11],
+                                                                            data[userCity][index][12],
+                                                                            data[userCity][index][13],
+                                                                            data[userCity][index][14],
+                                                                          ));
                                                                         }),
                                                               )
                                                       ],
@@ -341,8 +379,17 @@ class _HomeNGOState extends State<HomeNGO> {
                                                                                     cuisineData[selectedData]![index][3],
                                                                                     cuisineData[selectedData]![index][4],
                                                                                     cuisineData[selectedData]![index][7],
+                                                                                    cuisineData[selectedData]![index][8],
+                                                                                    cuisineData[selectedData]![index][9],
+                                                                                    cuisineData[selectedData]![index][0],
+                                                                                    cuisineData[selectedData]![index][10],
+                                                                                    cuisineData[selectedData]![index][5],
+                                                                                    cuisineData[selectedData]![index][11],
+                                                                                    cuisineData[selectedData]![index][12],
+                                                                                    cuisineData[selectedData]![index][13],
+                                                                                    cuisineData[selectedData]![index][14],
                                                                                   ))
-                                                                                : SizedBox();
+                                                                                : const SizedBox();
                                                                       })
                                                               : const SizedBox(),
                                                         )
@@ -417,9 +464,19 @@ class _HomeNGOState extends State<HomeNGO> {
                                               if (snapshot.hasData) {
                                                 List<List<String>> data =
                                                     snapshot.data!;
-                                                if (data.length > 1) {
+                                                data.sort((a, b) =>
+                                                    int.parse(b[4]).compareTo(
+                                                        int.parse(a[4])));
+                                                data.sort((a, b) {
+                                                  var dateA = DateTime.parse(
+                                                      "${a[3].split("-")[2]}-${a[3].split("-")[1]}-${a[3].split("-")[0]}");
+                                                  var dateB = DateTime.parse(
+                                                      "${b[3].split("-")[2]}-${b[3].split("-")[1]}-${b[3].split("-")[0]}");
+                                                  return dateB.compareTo(dateA);
+                                                });
+                                                if (data.isNotEmpty) {
                                                   int numberOfRequest =
-                                                      data.length - 1;
+                                                      data.length;
                                                   return Column(
                                                     children: [
                                                       ListView.builder(
@@ -432,12 +489,9 @@ class _HomeNGOState extends State<HomeNGO> {
                                                               (context, index) {
                                                             return _requestIltem(
                                                               context,
-                                                              data[index + 1]
-                                                                  [1],
-                                                              data[index + 1]
-                                                                  [2],
-                                                              data[index + 1]
-                                                                  [0],
+                                                              data[index][1],
+                                                              data[index][2],
+                                                              data[index][0],
                                                             );
                                                           })
                                                     ],
@@ -688,8 +742,20 @@ class _HomeNGOState extends State<HomeNGO> {
 
                     Map<String, String> requestData = {
                       'Full Name': userName.trim(),
-                      'Food Item': foodItem.trim(),
-                      'Cuisine': cuisine.trim(),
+                      'Food Item': foodItem
+                          .trim()
+                          .toLowerCase()
+                          .split(" ")
+                          .map((word) =>
+                              "${word[0].toUpperCase()}${word.substring(1)}")
+                          .join(" "),
+                      'Cuisine': cuisine
+                          .trim()
+                          .toLowerCase()
+                          .split(" ")
+                          .map((word) =>
+                              "${word[0].toUpperCase()}${word.substring(1)}")
+                          .join(" "),
                       'Number of people': numberPeople.trim(),
                       'Area': ngoAddress.trim(),
                     };
@@ -710,9 +776,7 @@ class _HomeNGOState extends State<HomeNGO> {
                   } on FirebaseAuthException catch (e) {
                     if (e.code == 'user-not-found') {
                       Navigator.of(context).pop();
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("User not found")));
+                      showToast("User not found");
                     }
                   } finally {
                     Navigator.pop(context);
@@ -772,13 +836,25 @@ class _HomeNGOState extends State<HomeNGO> {
           menuItem("Dashboard", Icons.dashboard_outlined, () {
             Navigator.of(context).pop();
           }),
-          menuItem("Recent Chats", Icons.chat_outlined, () {}),
+          menuItem("Recent Chats", Icons.chat_outlined, () async {
+            Navigator.of(context).pop();
+
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => RecentChats(
+                          userType: "NGOs",
+                        )));
+          }),
           menuItem("Notifications", Icons.notifications_outlined, () {}),
           const Divider(
             color: Colors.black,
           ),
-          menuItem("Privacy Policy", Icons.dashboard_outlined, () {}),
-          menuItem("Send Feedback", Icons.dashboard_outlined, () {}),
+          menuItem("Send Feedback", Icons.feedback_outlined, () {}),
+          menuItem("Privacy Policy", Icons.privacy_tip_outlined, () {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => const PrivacyPolicy()));
+          }),
           const Divider(
             color: Colors.black,
           ),
@@ -790,7 +866,7 @@ class _HomeNGOState extends State<HomeNGO> {
               (route) => true,
             );
           }),
-          menuItem("Logout", Icons.dashboard_outlined, () async {
+          menuItem("Logout", Icons.logout_outlined, () async {
             final shouldLogout = await showLogOutDialog(context);
             if (shouldLogout) {
               userCountry = "";
@@ -929,28 +1005,319 @@ Future<bool> showCancelConfirmation(BuildContext context) {
 }
 
 Widget _foodListingItem(
-  BuildContext context,
-  String lineOne,
-  String lineTwo,
-  String userID,
-  String orderNumber,
-  String fullName,
-) {
+    BuildContext context,
+    String lineOne,
+    String lineTwo,
+    String userID,
+    String orderNumber,
+    String fullName,
+    String imagePath,
+    String foodItem,
+    String cuisine,
+    String serving,
+    String bestBefore,
+    String storeName,
+    String storeNumber,
+    String area,
+    String city) {
   return Row(
     children: [
-      SizedBox(
-        width: MediaQuery.of(context).size.width * 0.56,
-        height: MediaQuery.of(context).size.height * 0.4,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          ClipRRect(
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        InkWell(
+          onTap: (() {
+            String dateListed = orderNumber;
+            final formattedListed = formatDate1(dateListed);
+            bestBefore = formatDate(bestBefore);
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Text(
+                    "Listing Details",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 16.0,
+                          ),
+                          children: [
+                            const TextSpan(
+                              text: 'Food Item: ',
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextSpan(
+                              text: foodItem,
+                              style: const TextStyle(
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 16.0,
+                          ),
+                          children: [
+                            const TextSpan(
+                              text: 'Cuisine: ',
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextSpan(
+                              text: cuisine,
+                              style: const TextStyle(
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 16.0,
+                          ),
+                          children: [
+                            const TextSpan(
+                              text: 'Serving: ',
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextSpan(
+                              text: serving,
+                              style: const TextStyle(
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 16.0,
+                          ),
+                          children: [
+                            const TextSpan(
+                              text: 'Date Listed On: ',
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextSpan(
+                              text: formattedListed,
+                              style: const TextStyle(
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 16.0,
+                          ),
+                          children: [
+                            const TextSpan(
+                              text: 'Best Before: ',
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextSpan(
+                              text: bestBefore,
+                              style: const TextStyle(
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 16.0,
+                          ),
+                          children: [
+                            const TextSpan(
+                              text: "Donator's Name: ",
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextSpan(
+                              text: fullName,
+                              style: const TextStyle(
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 16.0,
+                          ),
+                          children: [
+                            const TextSpan(
+                              text: 'Store Name: ',
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextSpan(
+                              text: storeName,
+                              style: const TextStyle(
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 16.0,
+                          ),
+                          children: [
+                            const TextSpan(
+                              text: 'Store Number: ',
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextSpan(
+                              text: storeNumber,
+                              style: const TextStyle(
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 16.0,
+                          ),
+                          children: [
+                            const TextSpan(
+                              text: 'Area: ',
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextSpan(
+                              text: area,
+                              style: const TextStyle(
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 16.0,
+                          ),
+                          children: [
+                            const TextSpan(
+                              text: 'City: ',
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextSpan(
+                              text: city,
+                              style: const TextStyle(
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Close'),
+                    ),
+                  ],
+                );
+              },
+            );
+          }),
+          child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Container(
-              width: MediaQuery.of(context).size.width * 0.56,
-              height: MediaQuery.of(context).size.height * 0.32,
-              color: const Color(0xFFDBE8D8),
+            child: Stack(
+              children: [
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.56,
+                  height: MediaQuery.of(context).size.height * 0.32,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage(imagePath),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.56,
+                  height: MediaQuery.of(context).size.height * 0.32,
+                  color: Colors.black.withOpacity(0.2),
+                ),
+              ],
             ),
           ),
-          Row(
+        ),
+        Expanded(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Padding(
@@ -963,22 +1330,26 @@ Widget _foodListingItem(
                       const SizedBox(
                         height: 2,
                       ),
-                      Text(
-                        lineOne,
-                        style: const TextStyle(
-                            fontSize: 14.5,
-                            fontFamily: "Roboto",
-                            color: Colors.green),
+                      Flexible(
+                        child: Text(
+                          lineOne,
+                          style: const TextStyle(
+                              fontSize: 14.5,
+                              fontFamily: "Roboto",
+                              color: Colors.green),
+                        ),
                       ),
                       const SizedBox(
                         height: 2,
                       ),
-                      Text(
-                        lineTwo,
-                        style: const TextStyle(
-                            fontSize: 12,
-                            fontFamily: "Roboto",
-                            color: Color(0xff05240E)),
+                      Flexible(
+                        child: Text(
+                          lineTwo,
+                          style: const TextStyle(
+                              fontSize: 12,
+                              fontFamily: "Roboto",
+                              color: Color(0xff05240E)),
+                        ),
                       ),
                     ],
                   ),
@@ -1007,9 +1378,9 @@ Widget _foodListingItem(
                 ],
               )
             ],
-          )
-        ]),
-      ),
+          ),
+        )
+      ]),
       SizedBox(
         width: MediaQuery.of(context).size.width * 0.05,
       ),
@@ -1031,350 +1402,377 @@ Widget _requestIltem(
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 1,
-                        child: Text(
-                          textOne,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontFamily: "Roboto",
-                            color: Color(0xff05240E),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 0,
-                        child: GestureDetector(
-                          onTap: () async {
-                            User? user = FirebaseAuth.instance.currentUser;
-                            final _foodItem = TextEditingController();
-                            final _cuisine = TextEditingController();
-                            final _numberOfPeople = TextEditingController();
-                            final _formKey = GlobalKey<FormState>();
-                            bool _clicked = false;
-
-                            DatabaseReference ref = FirebaseDatabase.instance
-                                .ref()
-                                .child("Requests")
-                                .child(userCountry)
-                                .child(userCity)
-                                .child(user!.uid)
-                                .child(dateTime);
-
-                            DatabaseEvent event = await ref.once();
-                            final requestData = event.snapshot.value as Map;
-                            _cuisine.text = requestData["Cuisine"];
-                            _foodItem.text = requestData["Food Item"];
-                            _numberOfPeople.text =
-                                requestData["Number of people"];
-                            showDialog(
-                              barrierDismissible: false,
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: const Text('Update Details'),
-                                  content: SizedBox(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.72,
-                                    child: Form(
-                                      key: _formKey,
-                                      autovalidateMode: _clicked
-                                          ? AutovalidateMode.onUserInteraction
-                                          : AutovalidateMode.disabled,
-                                      child: SingleChildScrollView(
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            TextFormField(
-                                              controller: _foodItem,
-                                              textInputAction:
-                                                  TextInputAction.next,
-                                              keyboardType: TextInputType.text,
-                                              decoration: const InputDecoration(
-                                                labelText: "Food Item",
-                                                floatingLabelBehavior:
-                                                    FloatingLabelBehavior.auto,
-                                                border: OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.all(
-                                                          Radius.circular(
-                                                              14.0)),
-                                                ),
-                                                focusedBorder:
-                                                    OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.all(
-                                                          Radius.circular(
-                                                              14.0)),
-                                                  borderSide: BorderSide(
-                                                      color: Colors.green,
-                                                      width: 2.0),
-                                                ),
-                                                contentPadding:
-                                                    EdgeInsets.symmetric(
-                                                        horizontal: 20.0,
-                                                        vertical: 15.0),
-                                              ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return "Please enter the food item";
-                                                }
-                                                return null;
-                                              },
-                                            ),
-                                            const SizedBox(height: 12),
-                                            TextFormField(
-                                              controller: _cuisine,
-                                              textInputAction:
-                                                  TextInputAction.next,
-                                              keyboardType: TextInputType.text,
-                                              decoration: const InputDecoration(
-                                                labelText: "Cuisine",
-                                                floatingLabelBehavior:
-                                                    FloatingLabelBehavior.auto,
-                                                border: OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.all(
-                                                          Radius.circular(
-                                                              14.0)),
-                                                ),
-                                                focusedBorder:
-                                                    OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.all(
-                                                          Radius.circular(
-                                                              14.0)),
-                                                  borderSide: BorderSide(
-                                                      color: Colors.green,
-                                                      width: 2.0),
-                                                ),
-                                                contentPadding:
-                                                    EdgeInsets.symmetric(
-                                                        horizontal: 20.0,
-                                                        vertical: 15.0),
-                                              ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return "Please enter the cuisine";
-                                                }
-                                                return null;
-                                              },
-                                            ),
-                                            const SizedBox(height: 12),
-                                            TextFormField(
-                                              controller: _numberOfPeople,
-                                              textInputAction:
-                                                  TextInputAction.next,
-                                              keyboardType: TextInputType.text,
-                                              decoration: const InputDecoration(
-                                                labelText: "Number of people",
-                                                floatingLabelBehavior:
-                                                    FloatingLabelBehavior.auto,
-                                                border: OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.all(
-                                                          Radius.circular(
-                                                              14.0)),
-                                                ),
-                                                focusedBorder:
-                                                    OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.all(
-                                                          Radius.circular(
-                                                              14.0)),
-                                                  borderSide: BorderSide(
-                                                      color: Colors.green,
-                                                      width: 2.0),
-                                                ),
-                                                contentPadding:
-                                                    EdgeInsets.symmetric(
-                                                        horizontal: 20.0,
-                                                        vertical: 15.0),
-                                              ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return "Please enter the number of people";
-                                                }
-                                                final pattern =
-                                                    RegExp(r'^(\d+|\d+-\d+)$');
-                                                if (!pattern.hasMatch(value)) {
-                                                  return "Invalid! Enter a number or range (e.g. 2 or 2-4)";
-                                                }
-                                                final parts = value.split('-');
-                                                if (parts.length > 1) {
-                                                  final start =
-                                                      int.tryParse(parts[0]);
-                                                  final end =
-                                                      int.tryParse(parts[1]);
-                                                  if (start == null ||
-                                                      end == null ||
-                                                      start >= end) {
-                                                    return "Invalid! Enter a valid range (e.g. 2-4)";
-                                                  }
-                                                }
-                                                return null;
-                                              },
-                                            ),
-                                            const SizedBox(height: 12),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        _foodItem.text = "";
-                                        _cuisine.text = "";
-                                        _numberOfPeople.text = "";
-                                        Navigator.pop(context);
-                                      },
-                                      child: const Text('Cancel'),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        _clicked = true;
-                                        FocusManager.instance.primaryFocus
-                                            ?.unfocus();
-                                        final foodItem = _foodItem.text;
-                                        final cuisine = _cuisine.text;
-                                        final numberPeople =
-                                            _numberOfPeople.text;
-                                        if (_formKey.currentState!.validate()) {
-                                          showDialog(
-                                              barrierDismissible: false,
-                                              context: context,
-                                              builder: (_) {
-                                                return Dialog(
-                                                  // The background color
-                                                  backgroundColor: Colors.white,
-                                                  child: Padding(
-                                                    padding: const EdgeInsets
-                                                            .symmetric(
-                                                        vertical: 20),
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              14.0),
-                                                      child: Row(
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        children: const [
-                                                          // The loading indicator
-                                                          CircularProgressIndicator(),
-                                                          SizedBox(
-                                                            width: 15,
-                                                          ),
-
-                                                          // Some text
-                                                          Text('Loading...')
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                );
-                                              });
-                                          try {
-                                            User? user = FirebaseAuth
-                                                .instance.currentUser;
-                                            FirebaseDatabase database =
-                                                FirebaseDatabase.instance;
-
-                                            Map<String, String> requestData = {
-                                              'Food Item': foodItem.trim(),
-                                              'Cuisine': cuisine.trim(),
-                                              'Number of people':
-                                                  numberPeople.trim(),
-                                            };
-                                            database
-                                                .ref()
-                                                .child("Requests")
-                                                .child(userCountry)
-                                                .child(userCity)
-                                                .child(user!.uid)
-                                                .child(dateTime)
-                                                .update(requestData);
-                                            _foodItem.text = "";
-                                            _cuisine.text = "";
-                                            _numberOfPeople.text = "";
-                                            Navigator.of(context).pop();
-                                          } on FirebaseAuthException catch (e) {
-                                            if (e.code == 'user-not-found') {
-                                              Navigator.of(context).pop();
-
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(const SnackBar(
-                                                      content: Text(
-                                                          "User not found")));
-                                            }
-                                          } finally {
-                                            Navigator.pop(context);
-                                          }
-                                        }
-                                      },
-                                      child: const Text('Submit'),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                          child: const Text(
-                            "Edit",
-                            style: TextStyle(
-                              fontSize: 12,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: Text(
+                            textOne,
+                            style: const TextStyle(
+                              fontSize: 16,
                               fontFamily: "Roboto",
                               color: Color(0xff05240E),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 1,
-                        child: Text(
-                          textTwo,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontFamily: "Roboto",
-                            color: Colors.green,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 0,
-                        child: GestureDetector(
-                          onTap: () async {
-                            User? user = FirebaseAuth.instance.currentUser;
-                            final userid = user!.uid;
+                        Expanded(
+                          flex: 0,
+                          child: GestureDetector(
+                            onTap: () async {
+                              User? user = FirebaseAuth.instance.currentUser;
+                              final _foodItem = TextEditingController();
+                              final _cuisine = TextEditingController();
+                              final _numberOfPeople = TextEditingController();
+                              final _formKey = GlobalKey<FormState>();
+                              bool _clicked = false;
 
-                            bool cancel = await showCancelConfirmation(context);
-                            if (cancel) {
-                              DatabaseReference ref = FirebaseDatabase.instance.ref(
-                                  "Requests/$userCountry/$userCity/$userid/$dateTime");
+                              DatabaseReference ref = FirebaseDatabase.instance
+                                  .ref()
+                                  .child("Requests")
+                                  .child(userCountry)
+                                  .child(userCity)
+                                  .child(user!.uid)
+                                  .child(dateTime);
 
-                              await ref.remove();
-                            }
-                          },
-                          child: Text(
-                            "Cancel",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontFamily: "Roboto",
-                              color: Colors.red.shade600,
+                              DatabaseEvent event = await ref.once();
+                              final requestData = event.snapshot.value as Map;
+                              _cuisine.text = requestData["Cuisine"];
+                              _foodItem.text = requestData["Food Item"];
+                              _numberOfPeople.text =
+                                  requestData["Number of people"];
+                              showDialog(
+                                barrierDismissible: false,
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text('Update Details'),
+                                    content: SizedBox(
+                                      width: MediaQuery.of(context).size.width *
+                                          0.72,
+                                      child: Form(
+                                        key: _formKey,
+                                        autovalidateMode: _clicked
+                                            ? AutovalidateMode.onUserInteraction
+                                            : AutovalidateMode.disabled,
+                                        child: SingleChildScrollView(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              TextFormField(
+                                                controller: _foodItem,
+                                                textInputAction:
+                                                    TextInputAction.next,
+                                                keyboardType:
+                                                    TextInputType.text,
+                                                decoration:
+                                                    const InputDecoration(
+                                                  labelText: "Food Item",
+                                                  floatingLabelBehavior:
+                                                      FloatingLabelBehavior
+                                                          .auto,
+                                                  border: OutlineInputBorder(
+                                                    borderRadius:
+                                                        BorderRadius.all(
+                                                            Radius.circular(
+                                                                14.0)),
+                                                  ),
+                                                  focusedBorder:
+                                                      OutlineInputBorder(
+                                                    borderRadius:
+                                                        BorderRadius.all(
+                                                            Radius.circular(
+                                                                14.0)),
+                                                    borderSide: BorderSide(
+                                                        color: Colors.green,
+                                                        width: 2.0),
+                                                  ),
+                                                  contentPadding:
+                                                      EdgeInsets.symmetric(
+                                                          horizontal: 20.0,
+                                                          vertical: 15.0),
+                                                ),
+                                                validator: (value) {
+                                                  if (value == null ||
+                                                      value.isEmpty) {
+                                                    return "Please enter the food item";
+                                                  }
+                                                  return null;
+                                                },
+                                              ),
+                                              const SizedBox(height: 12),
+                                              TextFormField(
+                                                controller: _cuisine,
+                                                textInputAction:
+                                                    TextInputAction.next,
+                                                keyboardType:
+                                                    TextInputType.text,
+                                                decoration:
+                                                    const InputDecoration(
+                                                  labelText: "Cuisine",
+                                                  floatingLabelBehavior:
+                                                      FloatingLabelBehavior
+                                                          .auto,
+                                                  border: OutlineInputBorder(
+                                                    borderRadius:
+                                                        BorderRadius.all(
+                                                            Radius.circular(
+                                                                14.0)),
+                                                  ),
+                                                  focusedBorder:
+                                                      OutlineInputBorder(
+                                                    borderRadius:
+                                                        BorderRadius.all(
+                                                            Radius.circular(
+                                                                14.0)),
+                                                    borderSide: BorderSide(
+                                                        color: Colors.green,
+                                                        width: 2.0),
+                                                  ),
+                                                  contentPadding:
+                                                      EdgeInsets.symmetric(
+                                                          horizontal: 20.0,
+                                                          vertical: 15.0),
+                                                ),
+                                                validator: (value) {
+                                                  if (value == null ||
+                                                      value.isEmpty) {
+                                                    return "Please enter the cuisine";
+                                                  }
+                                                  return null;
+                                                },
+                                              ),
+                                              const SizedBox(height: 12),
+                                              TextFormField(
+                                                controller: _numberOfPeople,
+                                                textInputAction:
+                                                    TextInputAction.next,
+                                                keyboardType:
+                                                    TextInputType.text,
+                                                decoration:
+                                                    const InputDecoration(
+                                                  labelText: "Number of people",
+                                                  floatingLabelBehavior:
+                                                      FloatingLabelBehavior
+                                                          .auto,
+                                                  border: OutlineInputBorder(
+                                                    borderRadius:
+                                                        BorderRadius.all(
+                                                            Radius.circular(
+                                                                14.0)),
+                                                  ),
+                                                  focusedBorder:
+                                                      OutlineInputBorder(
+                                                    borderRadius:
+                                                        BorderRadius.all(
+                                                            Radius.circular(
+                                                                14.0)),
+                                                    borderSide: BorderSide(
+                                                        color: Colors.green,
+                                                        width: 2.0),
+                                                  ),
+                                                  contentPadding:
+                                                      EdgeInsets.symmetric(
+                                                          horizontal: 20.0,
+                                                          vertical: 15.0),
+                                                ),
+                                                validator: (value) {
+                                                  if (value == null ||
+                                                      value.isEmpty) {
+                                                    return "Please enter the number of people";
+                                                  }
+                                                  final pattern = RegExp(
+                                                      r'^(\d+|\d+-\d+)$');
+                                                  if (!pattern
+                                                      .hasMatch(value)) {
+                                                    return "Invalid! Enter a number or range (e.g. 2 or 2-4)";
+                                                  }
+                                                  final parts =
+                                                      value.split('-');
+                                                  if (parts.length > 1) {
+                                                    final start =
+                                                        int.tryParse(parts[0]);
+                                                    final end =
+                                                        int.tryParse(parts[1]);
+                                                    if (start == null ||
+                                                        end == null ||
+                                                        start >= end) {
+                                                      return "Invalid! Enter a valid range (e.g. 2-4)";
+                                                    }
+                                                  }
+                                                  return null;
+                                                },
+                                              ),
+                                              const SizedBox(height: 12),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    actions: [
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          _foodItem.text = "";
+                                          _cuisine.text = "";
+                                          _numberOfPeople.text = "";
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text('Cancel'),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          _clicked = true;
+                                          FocusManager.instance.primaryFocus
+                                              ?.unfocus();
+                                          final foodItem = _foodItem.text;
+                                          final cuisine = _cuisine.text;
+                                          final numberPeople =
+                                              _numberOfPeople.text;
+                                          if (_formKey.currentState!
+                                              .validate()) {
+                                            showDialog(
+                                                barrierDismissible: false,
+                                                context: context,
+                                                builder: (_) {
+                                                  return Dialog(
+                                                    // The background color
+                                                    backgroundColor:
+                                                        Colors.white,
+                                                    child: Padding(
+                                                      padding: const EdgeInsets
+                                                              .symmetric(
+                                                          vertical: 20),
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(14.0),
+                                                        child: Row(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: const [
+                                                            // The loading indicator
+                                                            CircularProgressIndicator(),
+                                                            SizedBox(
+                                                              width: 15,
+                                                            ),
+
+                                                            // Some text
+                                                            Text('Loading...')
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  );
+                                                });
+                                            try {
+                                              User? user = FirebaseAuth
+                                                  .instance.currentUser;
+                                              FirebaseDatabase database =
+                                                  FirebaseDatabase.instance;
+
+                                              Map<String, String> requestData =
+                                                  {
+                                                'Food Item': foodItem
+                                                    .trim()
+                                                    .toLowerCase()
+                                                    .split(" ")
+                                                    .map((word) =>
+                                                        "${word[0].toUpperCase()}${word.substring(1)}")
+                                                    .join(" "),
+                                                'Cuisine': cuisine
+                                                    .trim()
+                                                    .toLowerCase()
+                                                    .split(" ")
+                                                    .map((word) =>
+                                                        "${word[0].toUpperCase()}${word.substring(1)}")
+                                                    .join(" "),
+                                                'Number of people':
+                                                    numberPeople.trim(),
+                                              };
+                                              database
+                                                  .ref()
+                                                  .child("Requests")
+                                                  .child(userCountry)
+                                                  .child(userCity)
+                                                  .child(user!.uid)
+                                                  .child(dateTime)
+                                                  .update(requestData);
+                                              _foodItem.text = "";
+                                              _cuisine.text = "";
+                                              _numberOfPeople.text = "";
+                                              Navigator.of(context).pop();
+                                            } on FirebaseAuthException catch (e) {
+                                              if (e.code == 'user-not-found') {
+                                                Navigator.of(context).pop();
+                                              }
+                                            } finally {
+                                              Navigator.pop(context);
+                                            }
+                                          }
+                                        },
+                                        child: const Text('Submit'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                            child: const Text(
+                              "Edit",
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontFamily: "Roboto",
+                                color: Color(0xff05240E),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: Text(
+                            textTwo,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontFamily: "Roboto",
+                              color: Colors.green,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 0,
+                          child: GestureDetector(
+                            onTap: () async {
+                              User? user = FirebaseAuth.instance.currentUser;
+                              final userid = user!.uid;
+
+                              bool cancel =
+                                  await showCancelConfirmation(context);
+                              if (cancel) {
+                                DatabaseReference ref =
+                                    FirebaseDatabase.instance.ref(
+                                        "Requests/$userCountry/$userCity/$userid/$dateTime");
+
+                                await ref.remove();
+                              }
+                            },
+                            child: Text(
+                              "Cancel",
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontFamily: "Roboto",
+                                color: Colors.red.shade600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   )
                 ]),
           ),
@@ -1393,6 +1791,69 @@ String getFormattedDate() {
   return formatter.format(now);
 }
 
+String formatDate(String input) {
+  final parts = input.split('-');
+  final day = int.parse(parts[0]);
+  final monthNumber = int.parse(parts[1]);
+  final year = int.parse(parts[2]);
+  final monthName = _getMonthName(monthNumber);
+  return '$day$monthName';
+}
+
+String _getMonthName(int monthNumber) {
+  switch (monthNumber) {
+    case 1:
+      return 'st January';
+    case 2:
+      return 'nd February';
+    case 3:
+      return 'rd March';
+    case 4:
+      return 'th April';
+    case 5:
+      return 'th May';
+    case 6:
+      return 'th June';
+    case 7:
+      return 'th July';
+    case 8:
+      return 'th August';
+    case 9:
+      return 'th September';
+    case 10:
+      return 'th October';
+    case 11:
+      return 'th November';
+    case 12:
+      return 'th December';
+    default:
+      return '';
+  }
+}
+
+String formatDate1(String input) {
+  final date = DateFormat("dd-MM-yyyy HH:mm:ss:SSS").parse(input);
+  final day = date.day;
+  final monthName = DateFormat("MMMM").format(date);
+  return '$day${_getOrdinalSuffix(day)} $monthName';
+}
+
+String _getOrdinalSuffix(int day) {
+  if (day >= 11 && day <= 13) {
+    return "th";
+  }
+  switch (day % 10) {
+    case 1:
+      return "st";
+    case 2:
+      return "nd";
+    case 3:
+      return "rd";
+    default:
+      return "th";
+  }
+}
+
 Stream<List<List<String>>> _getRequestDetails() {
   User? user = FirebaseAuth.instance.currentUser;
   final userUID = user?.uid ?? "";
@@ -1400,9 +1861,7 @@ Stream<List<List<String>>> _getRequestDetails() {
       FirebaseDatabase.instance.ref("Requests/$userCountry/$userCity/$userUID");
   StreamController<List<List<String>>> controller =
       StreamController.broadcast();
-  List<List<String>> mainData = [
-    [""]
-  ];
+  List<List<String>> mainData = [];
 
   ref.once().then((event) {
     if (event.snapshot.value != null) {
@@ -1422,7 +1881,10 @@ Stream<List<List<String>>> _getRequestDetails() {
         numberOfPeople = data2["Number of people"];
         lineOne = "$foodItem - $cuisine";
         lineTwo = "$numberOfPeople people";
-        secondData = [key, lineOne, lineTwo];
+        final dateTime = key as String;
+        final date = dateTime.split(" ")[0];
+        final time = dateTime.split(" ")[1].replaceAll(":", "");
+        secondData = [key, lineOne, lineTwo, date, time];
         mainData.add(secondData);
       });
 
@@ -1445,7 +1907,10 @@ Stream<List<List<String>>> _getRequestDetails() {
     numberOfPeople = data["Number of people"];
     lineOne = "$foodItem - $cuisine";
     lineTwo = "$numberOfPeople people";
-    secondData = [event.snapshot.key ?? "", lineOne, lineTwo];
+    final dateTime = event.snapshot.key as String;
+    final date = dateTime.split(" ")[0];
+    final time = dateTime.split(" ")[1].replaceAll(":", "");
+    secondData = [event.snapshot.key ?? "", lineOne, lineTwo, date, time];
 
     int index = mainData.indexWhere((data) => data[0] == event.snapshot.key);
     if (index != -1) {
@@ -1497,7 +1962,7 @@ Stream<Map<String, List<List<String>>>> _getListing() {
       final data = event.snapshot.value as Map;
 
       data.forEach((key, value) {
-        List<List<String>> cityData = [[]];
+        List<List<String>> cityData = [];
         final cityKey = key;
         final users = value as Map;
 
@@ -1510,6 +1975,9 @@ Stream<Map<String, List<List<String>>>> _getListing() {
             final orderTime = key;
 
             final requestData = value as Map;
+
+            String storeNumber = requestData["Store Number"];
+            String imagePath = requestData["File Path"];
             String fullName = requestData["Full Name"];
             String beforeDate = requestData["Best Before"];
             String storeName = requestData["Store Name"];
@@ -1520,7 +1988,9 @@ Stream<Map<String, List<List<String>>>> _getListing() {
             String lineOne = "$storeName - $foodItem";
             String lineTwo = "$numberOfPeople people, $cityKey";
             String lineThree = "$numberOfPeople people, $area";
-
+            final dateTime = orderTime as String;
+            final date = dateTime.split(" ")[0];
+            final time = dateTime.split(" ")[1].replaceAll(":", "");
             reqData = [
               cuisine,
               lineOne,
@@ -1530,13 +2000,28 @@ Stream<Map<String, List<List<String>>>> _getListing() {
               beforeDate,
               lineThree,
               fullName,
+              imagePath, foodItem, // 9
+              numberOfPeople, // 10
+              storeName, // 11
+              storeNumber, // 12
+              area, // 13
+              cityKey,
+              date,
+              time // 14
             ];
             if (reqData.isNotEmpty) {
               cityData.add(reqData);
             }
           });
         });
-
+        cityData.sort((a, b) => int.parse(b[16]).compareTo(int.parse(a[16])));
+        cityData.sort((a, b) {
+          var dateA = DateTime.parse(
+              "${a[15].split("-")[2]}-${a[15].split("-")[1]}-${a[15].split("-")[0]}");
+          var dateB = DateTime.parse(
+              "${b[15].split("-")[2]}-${b[15].split("-")[1]}-${b[15].split("-")[0]}");
+          return dateB.compareTo(dateA);
+        });
         myMap[cityKey] = cityData;
       });
 
@@ -1550,7 +2035,7 @@ Stream<Map<String, List<List<String>>>> _getListing() {
     final data = event.snapshot.value as Map;
     final keyCity = event.snapshot.key;
     myMap.remove(keyCity);
-    List<List<String>> cityData = [[]];
+    List<List<String>> cityData = [];
     data.forEach((key, value) {
       List<String> reqData = [];
       final userID = key;
@@ -1560,8 +2045,9 @@ Stream<Map<String, List<List<String>>>> _getListing() {
         final orderTime = key;
 
         final requestData = value as Map;
+        String storeNumber = requestData["Store Number"];
         String fullName = requestData["Full Name"];
-
+        String imagePath = requestData["File Path"];
         String beforeDate = requestData["Best Before"];
         String storeName = requestData["Store Name"];
         String area = requestData["Area"];
@@ -1571,34 +2057,52 @@ Stream<Map<String, List<List<String>>>> _getListing() {
         String lineOne = "$storeName - $foodItem";
         String lineTwo = "$numberOfPeople people, $keyCity";
         String lineThree = "$numberOfPeople people, $area";
-
+        final dateTime = orderTime as String;
+        final date = dateTime.split(" ")[0];
+        final time = dateTime.split(" ")[1].replaceAll(":", "");
         reqData = [
-          cuisine,
-          lineOne,
-          lineTwo,
-          userID,
-          orderTime,
-          beforeDate,
-          lineThree,
-          fullName
+          cuisine, // 0
+          lineOne, // 1
+          lineTwo, // 2
+          userID, // 3
+          orderTime, // 4
+          beforeDate, // 5
+          lineThree, // 6
+          fullName, // 7
+          imagePath, // 8
+          foodItem, // 9
+          numberOfPeople, // 10
+          storeName, // 11
+          storeNumber, // 12
+          area, // 13
+          keyCity!,
+          date,
+          time
         ];
         if (reqData.isNotEmpty) {
           cityData.add(reqData);
         }
       });
     });
+    cityData.sort((a, b) => int.parse(b[16]).compareTo(int.parse(a[16])));
+    cityData.sort((a, b) {
+      var dateA = DateTime.parse(
+          "${a[15].split("-")[2]}-${a[15].split("-")[1]}-${a[15].split("-")[0]}");
+      var dateB = DateTime.parse(
+          "${b[15].split("-")[2]}-${b[15].split("-")[1]}-${b[15].split("-")[0]}");
+      return dateB.compareTo(dateA);
+    });
     myMap[keyCity!] = cityData;
-    List<List<String>> userCityValues = myMap.remove(userCity) ?? [[]];
+    List<List<String>> userCityValues = myMap.remove(userCity) ?? [];
     myMap = {userCity: userCityValues, ...myMap};
 
     controller.add(myMap);
   });
   ref.onChildAdded.listen((event) {
-    // devetools.log(event.snapshot.value.toString());
     final data = event.snapshot.value as Map;
     final keyCity = event.snapshot.key;
     myMap.remove(keyCity);
-    List<List<String>> cityData = [[]];
+    List<List<String>> cityData = [];
     data.forEach((key, value) {
       List<String> reqData = [];
       final userID = key;
@@ -1608,8 +2112,10 @@ Stream<Map<String, List<List<String>>>> _getListing() {
         final orderTime = key;
 
         final requestData = value as Map;
-        String fullName = requestData["Full Name"];
 
+        String storeNumber = requestData["Store Number"];
+        String fullName = requestData["Full Name"];
+        String imagePath = requestData["File Path"];
         String beforeDate = requestData["Best Before"];
         String storeName = requestData["Store Name"];
         String area = requestData["Area"];
@@ -1619,7 +2125,9 @@ Stream<Map<String, List<List<String>>>> _getListing() {
         String lineOne = "$storeName - $foodItem";
         String lineTwo = "$numberOfPeople people, $keyCity";
         String lineThree = "$numberOfPeople people, $area";
-
+        final dateTime = orderTime as String;
+        final date = dateTime.split(" ")[0];
+        final time = dateTime.split(" ")[1].replaceAll(":", "");
         reqData = [
           cuisine,
           lineOne,
@@ -1628,12 +2136,29 @@ Stream<Map<String, List<List<String>>>> _getListing() {
           orderTime,
           beforeDate,
           lineThree,
-          fullName
+          fullName,
+          imagePath,
+          foodItem, // 9
+          numberOfPeople, // 10
+          storeName, // 11
+          storeNumber, // 12
+          area, // 13
+          keyCity!, // 14
+          date,
+          time
         ];
         if (reqData.isNotEmpty) {
           cityData.add(reqData);
         }
       });
+    });
+    cityData.sort((a, b) => int.parse(b[16]).compareTo(int.parse(a[16])));
+    cityData.sort((a, b) {
+      var dateA = DateTime.parse(
+          "${a[15].split("-")[2]}-${a[15].split("-")[1]}-${a[15].split("-")[0]}");
+      var dateB = DateTime.parse(
+          "${b[15].split("-")[2]}-${b[15].split("-")[1]}-${b[15].split("-")[0]}");
+      return dateB.compareTo(dateA);
     });
     myMap[keyCity!] = cityData;
     List<List<String>> userCityValues = myMap.remove(userCity) ?? [[]];
@@ -1644,7 +2169,7 @@ Stream<Map<String, List<List<String>>>> _getListing() {
   ref.onChildRemoved.listen((event) {
     final key = event.snapshot.key;
     myMap.remove(key);
-    List<List<String>> userCityValues = myMap.remove(userCity) ?? [[]];
+    List<List<String>> userCityValues = myMap.remove(userCity) ?? [];
     myMap = {userCity: userCityValues, ...myMap};
     controller.add(myMap);
   });

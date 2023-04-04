@@ -3,6 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'dart:developer' as devetools show log;
 import '../assets/country_cities.dart';
 import '../main.dart';
@@ -26,8 +27,11 @@ class _DetailsNGOState extends State<DetailsNGO> {
   String cityValue = "";
   bool _clicked = false;
   bool nullState = false;
+  FToast? fToast;
   @override
   void initState() {
+    fToast = FToast();
+    fToast!.init(context);
     _ngoName = TextEditingController();
     _ngoNumber = TextEditingController();
     _address = TextEditingController();
@@ -42,6 +46,31 @@ class _DetailsNGOState extends State<DetailsNGO> {
     _address.dispose();
 
     super.dispose();
+  }
+
+  showToast(String message) {
+    Widget toast = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25.0),
+        color: Colors.grey.shade900,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            message,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ],
+      ),
+    );
+
+    fToast!.showToast(
+      child: toast,
+      gravity: ToastGravity.BOTTOM,
+      toastDuration: const Duration(seconds: 2),
+    );
   }
 
   @override
@@ -351,10 +380,7 @@ class _DetailsNGOState extends State<DetailsNGO> {
                                             } on FirebaseAuthException catch (e) {
                                               if (e.code == 'not-found') {
                                                 Navigator.of(context).pop();
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(const SnackBar(
-                                                        content: Text(
-                                                            "User not found")));
+                                                showToast("User not found");
                                               }
                                             } finally {}
                                           }

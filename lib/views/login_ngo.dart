@@ -1,9 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
-
-import 'dart:developer' as devetools show log;
-import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:sfm/views/login_donator.dart';
 import '../main.dart';
 
@@ -18,20 +16,20 @@ class LoginViewNGO extends StatefulWidget {
 
 class _LoginViewNGOState extends State<LoginViewNGO> {
   late final TextEditingController _email;
-
   late final TextEditingController _password;
-  bool isObscure = true;
-  final _formKey = GlobalKey<FormState>();
-  bool _clicked = false;
   late final TextEditingController _resetEmail;
   final _formKeyReset = GlobalKey<FormState>();
-
+  final _formKey = GlobalKey<FormState>();
+  bool isObscure = true;
+  bool _clicked = false;
   bool _clickedReset = false;
-
   bool _passwordFaild = false;
+  FToast? fToast;
 
   @override
   void initState() {
+    fToast = FToast();
+    fToast!.init(context);
     _resetEmail = TextEditingController();
 
     _email = TextEditingController();
@@ -44,8 +42,31 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
     _email.dispose();
     _password.dispose();
     _resetEmail.dispose();
-
     super.dispose();
+  }
+
+  showToast(String message) {
+    Widget toast = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25.0),
+        color: Colors.grey.shade900,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            message,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ],
+      ),
+    );
+    fToast!.showToast(
+      child: toast,
+      gravity: ToastGravity.BOTTOM,
+      toastDuration: const Duration(seconds: 2),
+    );
   }
 
   @override
@@ -58,7 +79,7 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.02,
+              height: MediaQuery.of(context).size.height * 0.035,
             ),
             Padding(
               padding: const EdgeInsets.all(14.0),
@@ -93,7 +114,7 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(42),
                     child: Container(
-                      height: MediaQuery.of(context).size.height * 0.72,
+                      height: MediaQuery.of(context).size.height * 0.76,
                       width: MediaQuery.of(context).size.width * 0.85,
                       color: Colors.white,
                       child: Scaffold(
@@ -309,10 +330,8 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
                                                 } else {
                                                   Navigator.of(context).pop();
 
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(const SnackBar(
-                                                          content: Text(
-                                                              "Email Not Verified")));
+                                                  showToast(
+                                                      "Email not verified");
                                                   final shouldSend =
                                                       await verifyEmailDialog(
                                                           context);
@@ -324,19 +343,12 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
                                               } else {
                                                 Navigator.of(context).pop();
 
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(const SnackBar(
-                                                        content: Text(
-                                                            "Invalid User")));
+                                                showToast("Invalid user");
                                               }
                                             } on FirebaseAuthException catch (e) {
                                               if (e.code == 'user-not-found') {
                                                 Navigator.of(context).pop();
-
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(const SnackBar(
-                                                        content: Text(
-                                                            "User not found")));
+                                                showToast("User not found");
                                                 _email.clear();
                                                 _password.clear();
                                               } else if (e.code ==
@@ -345,10 +357,7 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
                                                   _passwordFaild = true;
                                                 });
                                                 Navigator.of(context).pop();
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(const SnackBar(
-                                                        content: Text(
-                                                            "Wrong Password")));
+                                                showToast("Wrong password");
                                                 _password.clear();
                                               }
                                             } finally {}
@@ -510,18 +519,14 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
                           await FirebaseAuth.instance
                               .sendPasswordResetEmail(email: _resetEmail.text);
                           Navigator.of(context).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text("Reset Email Sent")));
+                          showToast("Reset email sent");
                           _resetEmail.text = "";
                         } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Invalid User")));
+                          showToast("Invalid user");
                         }
                       } on FirebaseAuthException catch (e) {
                         if (e.code == 'user-not-found') {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("User not found")));
+                          showToast("User not found");
                         }
                       }
                     }

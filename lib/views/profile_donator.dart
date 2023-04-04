@@ -4,14 +4,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sfm/assets/country_cities.dart';
-import 'package:sfm/views/home_donator.dart';
 import '../assets/profile_pic.dart';
 import '../assets/storage_service.dart';
 import '../main.dart';
 import 'dart:developer' as devetools show log;
+
+import 'login_donator.dart';
 
 String cFullName = "";
 String cNumber = "";
@@ -31,9 +33,6 @@ final Storage storage = Storage();
 String filePath = "";
 String fileName = "";
 ImageProvider<Object>? networkFile = const NetworkImage("");
-
-XFile? _imageFile;
-final ImagePicker _picker = ImagePicker();
 
 class GetDetailsDonator extends StatefulWidget {
   const GetDetailsDonator({super.key});
@@ -164,10 +163,16 @@ class _ProfileDonatorState extends State<ProfileDonator> {
   bool clicked2 = false;
   bool? notSavedChanges;
   bool _showFirstForm = true;
+  FToast? fToast;
+  late final TextEditingController _resetEmail;
+  final _formKeyReset = GlobalKey<FormState>();
+  bool _clickedReset = false;
 
   File? _image;
   @override
   void initState() {
+    fToast = FToast();
+    fToast!.init(context);
     _fullname = TextEditingController(text: widget.aFulltName);
     _number = TextEditingController(text: widget.aNumber);
     _email = TextEditingController(text: widget.aEmail);
@@ -176,12 +181,14 @@ class _ProfileDonatorState extends State<ProfileDonator> {
     _storeName = TextEditingController(text: widget.aStoreName);
     _storeNumber = TextEditingController(text: widget.aStoreNumber);
     _address = TextEditingController(text: widget.aStoreAddress);
+    _resetEmail = TextEditingController();
 
     super.initState();
   }
 
   @override
   void dispose() {
+    _resetEmail.dispose();
     _storeName.dispose();
     _storeNumber.dispose();
     _address.dispose();
@@ -190,6 +197,31 @@ class _ProfileDonatorState extends State<ProfileDonator> {
     _password.dispose();
     _cpassword.dispose();
     super.dispose();
+  }
+
+  showToast(String message) {
+    Widget toast = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25.0),
+        color: Colors.grey.shade900,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            message,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ],
+      ),
+    );
+
+    fToast!.showToast(
+      child: toast,
+      gravity: ToastGravity.BOTTOM,
+      toastDuration: const Duration(seconds: 2),
+    );
   }
 
   @override
@@ -202,7 +234,7 @@ class _ProfileDonatorState extends State<ProfileDonator> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.02,
+              height: MediaQuery.of(context).size.height * 0.035,
             ),
             Padding(
               padding: const EdgeInsets.all(14.0),
@@ -237,7 +269,7 @@ class _ProfileDonatorState extends State<ProfileDonator> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(42),
                     child: Container(
-                      height: MediaQuery.of(context).size.height * 0.72,
+                      height: MediaQuery.of(context).size.height * 0.76,
                       width: MediaQuery.of(context).size.width * 0.85,
                       color: Colors.white,
                       child: Scaffold(
@@ -507,91 +539,194 @@ class _ProfileDonatorState extends State<ProfileDonator> {
         SizedBox(
           height: MediaQuery.of(context).size.height * 0.02,
         ),
-        TextButton(
-          style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all<Color>(Colors.green)),
-          onPressed: () async {
-            if (isEditing == false) {
-              setState(() {
-                isEditing = true;
-              });
-            } else {
-              setState(() {
-                clicked = true;
-              });
-              FocusManager.instance.primaryFocus?.unfocus();
-              if (formKey.currentState!.validate()) {
-                final shouldSave = await confirmChangesDialog(context, "");
-                showDialog(
-                    barrierDismissible: false,
-                    context: context,
-                    builder: (_) {
-                      return Dialog(
-                        // The background color
-                        backgroundColor: Colors.white,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          child: Padding(
-                            padding: const EdgeInsets.all(14.0),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                // The loading indicator
-                                CircularProgressIndicator(),
-                                SizedBox(
-                                  width: 15,
-                                ),
-
-                                // Some text
-                                Text('Loading...')
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    });
-                if (shouldSave) {
-                  final user = FirebaseAuth.instance.currentUser;
-                  final userDocID =
-                      await findDocID(user?.uid ?? "None", "Donators");
-                  try {
-                    await FirebaseFirestore.instance
-                        .collection('Donators')
-                        .doc(userDocID)
-                        .update({
-                      'Full Name': _fullname.text.trim(),
-                      'Contact Number': _number.text.trim(),
-                    });
-                  } on FirebaseAuthException catch (e) {
-                    if (e.code == 'not-found') {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("User not found")));
-                    }
-                  } finally {
-                    // ignore: unused_local_variable
-                    String a = await getDetails();
-                    setState(() {
-                      isEditing = false;
-                    });
-                    Navigator.of(context).pop();
-                  }
-                } else {
-                  await getDetails();
+        Column(
+          children: [
+            TextButton(
+              style: ButtonStyle(
+                  backgroundColor:
+                      MaterialStateProperty.all<Color>(Colors.green)),
+              onPressed: () async {
+                if (isEditing == false) {
                   setState(() {
-                    isEditing = false;
-                    isEditing = false;
-                    isEditingEP = false;
-                    _fullname.text = cFullName;
-                    _number.text = cNumber;
-                    _email.text = cEmail;
+                    isEditing = true;
                   });
-                  Navigator.of(context).pop();
+                } else {
+                  setState(() {
+                    clicked = true;
+                  });
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  if (formKey.currentState!.validate()) {
+                    final shouldSave = await confirmChangesDialog(context, "");
+                    showDialog(
+                        barrierDismissible: false,
+                        context: context,
+                        builder: (_) {
+                          return Dialog(
+                            // The background color
+                            backgroundColor: Colors.white,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 20),
+                              child: Padding(
+                                padding: const EdgeInsets.all(14.0),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: const [
+                                    // The loading indicator
+                                    CircularProgressIndicator(),
+                                    SizedBox(
+                                      width: 15,
+                                    ),
+
+                                    // Some text
+                                    Text('Loading...')
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        });
+                    if (shouldSave) {
+                      final user = FirebaseAuth.instance.currentUser;
+                      final userDocID =
+                          await findDocID(user?.uid ?? "None", "Donators");
+                      try {
+                        await FirebaseFirestore.instance
+                            .collection('Donators')
+                            .doc(userDocID)
+                            .update({
+                          'Full Name': _fullname.text.trim(),
+                          'Contact Number': _number.text.trim(),
+                        });
+                      } on FirebaseAuthException catch (e) {
+                        if (e.code == 'not-found') {
+                          showToast("User not found");
+                        }
+                      } finally {
+                        // ignore: unused_local_variable
+                        String a = await getDetails();
+                        setState(() {
+                          isEditing = false;
+                        });
+                        Navigator.of(context).pop();
+                      }
+                    } else {
+                      await getDetails();
+                      setState(() {
+                        isEditing = false;
+                        isEditing = false;
+                        isEditingEP = false;
+                        _fullname.text = cFullName;
+                        _number.text = cNumber;
+                        _email.text = cEmail;
+                      });
+                      Navigator.of(context).pop();
+                    }
+                  }
                 }
-              }
-            }
-          },
-          child: Text(isEditing ? "Save Changes" : "Edit",
-              style: const TextStyle(color: Colors.white)),
+              },
+              child: Text(isEditing ? "Save Changes" : "Edit",
+                  style: const TextStyle(color: Colors.white)),
+            ),
+            InkWell(
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text("Reset Password"),
+                      content: Form(
+                        key: _formKeyReset,
+                        autovalidateMode: _clickedReset
+                            ? AutovalidateMode.onUserInteraction
+                            : AutovalidateMode.disabled,
+                        child: TextFormField(
+                          textInputAction: TextInputAction.next,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: const InputDecoration(
+                            labelText: "Email",
+                            floatingLabelBehavior: FloatingLabelBehavior.auto,
+                            prefixIcon: Icon(Icons.email),
+                            border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(14.0)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(14.0)),
+                              borderSide:
+                                  BorderSide(color: Colors.green, width: 2.0),
+                            ),
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 20.0, vertical: 15.0),
+                          ),
+                          controller: _resetEmail,
+                          validator: (value) {
+                            String pattern =
+                                r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
+                            RegExp regex = RegExp(pattern);
+                            if (value == null || value.isEmpty) {
+                              return "Please enter your email address";
+                            } else if (!regex.hasMatch(value)) {
+                              return 'Please enter a valid email';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      actions: [
+                        ElevatedButton(
+                          child: const Text("Cancel"),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            _resetEmail.text = "";
+                          },
+                        ),
+                        ElevatedButton(
+                          child: const Text("Reset"),
+                          onPressed: () async {
+                            setState(() {
+                              _clickedReset = true;
+                            });
+                            FocusManager.instance.primaryFocus?.unfocus();
+                            if (_formKeyReset.currentState!.validate()) {
+                              try {
+                                final userType =
+                                    await getUserTypeReset(_resetEmail.text);
+                                devetools.log(userType);
+                                if (userType == "Donators") {
+                                  await FirebaseAuth.instance
+                                      .sendPasswordResetEmail(
+                                          email: _resetEmail.text);
+                                  Navigator.of(context).pop();
+                                  showToast("Reset email sent");
+                                  _resetEmail.text = "";
+                                } else {
+                                  showToast("Invalid user");
+                                }
+                              } on FirebaseAuthException catch (e) {
+                                if (e.code == 'user-not-found') {
+                                  showToast("User not found");
+                                }
+                              }
+                            }
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              child: const SizedBox(
+                height: 30,
+                child: Center(
+                  child: Text(
+                    "Change Password?",
+                    style: TextStyle(color: Colors.green),
+                  ),
+                ),
+              ),
+            )
+          ],
         ),
       ]),
     );
@@ -852,8 +987,7 @@ class _ProfileDonatorState extends State<ProfileDonator> {
                     });
                   } on FirebaseAuthException catch (e) {
                     if (e.code == 'not-found') {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("User not found")));
+                      showToast("User not found");
                     }
                   } finally {
                     await getDetails();
@@ -885,29 +1019,6 @@ class _ProfileDonatorState extends State<ProfileDonator> {
               style: const TextStyle(color: Colors.white)),
         ),
       ]),
-    );
-  }
-
-  Widget imageProfile(BuildContext context) {
-    return Center(
-      child: Stack(
-        children: <Widget>[
-          InkWell(
-            onTap: () {
-              showModalBottomSheet(
-                context: context,
-                builder: (context) => bottomSheet(context),
-              );
-            },
-            child: CircleAvatar(
-              radius: 42,
-              backgroundImage: _imageFile == null
-                  ? const AssetImage("assets/images/user2.png")
-                  : FileImage(File(_imageFile!.path)) as ImageProvider<Object>?,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -977,14 +1088,6 @@ class _ProfileDonatorState extends State<ProfileDonator> {
         )
       ]),
     );
-  }
-
-  void takePhoto(ImageSource source) async {
-    final pickedfile = await _picker.pickImage(source: source);
-    setState(() {
-      _imageFile = pickedfile;
-    });
-    Navigator.pop(context);
   }
 }
 

@@ -5,7 +5,6 @@ import 'package:sfm/views/home_donator.dart';
 import 'package:sfm/views/home_ngo.dart';
 import 'package:sfm/views/login_donator.dart';
 import 'package:sfm/views/login_ngo.dart';
-import 'dart:developer' as devetools show log;
 
 import '../main.dart';
 

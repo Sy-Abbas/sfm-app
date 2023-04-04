@@ -1,15 +1,24 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:async';
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'dart:developer' as devetools show log;
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:sfm/assets/storage_service.dart';
+import 'package:sfm/views/feedback_page.dart';
+import 'package:sfm/views/privacy_policy.dart';
+import 'package:sfm/views/recent.chats.dart';
 import 'package:sfm/views/single_chat.dart';
+import '../assets/profile_pic.dart';
 import '../main.dart';
+import 'dart:developer' as devetools show log;
+import 'package:fluttertoast/fluttertoast.dart';
 
 final Storage storage = Storage();
 String userEmail = "";
@@ -17,10 +26,12 @@ String userName = "";
 String userCountry = "";
 String userCity = "";
 String storeName = "";
+String storeNumber = "";
 String storeAddress = "";
 String filePath = "";
 String fileName = "";
 ImageProvider<Object>? networkFile = const NetworkImage("");
+final imageHelper = ImageHelper();
 
 enum MenuAction {
   dashboard,
@@ -51,24 +62,57 @@ class _HomeDonatorsState extends State<HomeDonators> {
   String selectedCity = userCity;
   DateTime? _dateTime;
   bool _isLoading = true;
-
+  File? _image;
+  String foodImagePath = "";
+  FToast? fToast;
+  Timer? _timer;
   late Future<String> _getDetails;
 
   @override
   void initState() {
+    fToast = FToast();
+    fToast!.init(context);
     _getDetails = getPics();
     super.initState();
-    Future.delayed(const Duration(seconds: 5), () {
+    _timer = Timer(const Duration(seconds: 5), () {
       setState(() {
         _isLoading = false;
       });
     });
   }
 
+  showToast(String message) {
+    Widget toast = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25.0),
+        color: Colors.grey.shade900,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            message,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ],
+      ),
+    );
+
+    fToast!.showToast(
+      child: toast,
+      gravity: ToastGravity.BOTTOM,
+      toastDuration: const Duration(seconds: 2),
+    );
+  }
+
   @override
   void dispose() {
+    _timer?.cancel();
     _foodItem.dispose();
     _cuisine.dispose();
+    _numberOfPeople.dispose();
+    _date.dispose();
     super.dispose();
   }
 
@@ -137,11 +181,11 @@ class _HomeDonatorsState extends State<HomeDonators> {
                               Row(
                                 children: [
                                   Text(
-                                    "SFM - $storeName Homepage",
+                                    "My Dashboard - Donator",
                                     style: TextStyle(
                                         fontSize:
                                             MediaQuery.of(context).size.width *
-                                                0.072,
+                                                0.066,
                                         fontFamily: "Roboto",
                                         color: const Color(0xff05240E)),
                                     textAlign: TextAlign.center,
@@ -159,7 +203,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                   builder: (context, snapshot) {
                                     if (snapshot.hasData) {
                                       final data = snapshot.data as Map;
-                                      // devetools.log(data.toString());
+
                                       List<String> cities = [];
                                       data.forEach(
                                         (key, value) {
@@ -225,60 +269,53 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                                   child: SingleChildScrollView(
                                                     child: Column(
                                                       children: [
-                                                        data[userCity] != null
-                                                            ? ListView.builder(
-                                                                physics:
-                                                                    const NeverScrollableScrollPhysics(),
-                                                                shrinkWrap:
-                                                                    true,
-                                                                itemCount: data[
-                                                                        userCity]
-                                                                    .length,
-                                                                itemBuilder:
-                                                                    (context,
-                                                                        index) {
-                                                                  return index ==
-                                                                          0
-                                                                      ? (data[userCity].length ==
-                                                                              1
-                                                                          ? Center(
-                                                                              child: Column(
-                                                                                children: const [
-                                                                                  Text(
-                                                                                    "No food requests in your area.",
-                                                                                    style: TextStyle(
-                                                                                      fontSize: 14,
-                                                                                      fontWeight: FontWeight.bold,
-                                                                                      color: Colors.grey,
-                                                                                    ),
-                                                                                  ),
-                                                                                  SizedBox(
-                                                                                    height: 10,
-                                                                                  ),
-                                                                                ],
-                                                                              ),
-                                                                            )
-                                                                          : const SizedBox())
-                                                                      : (_requestIltem(
-                                                                          context,
-                                                                          data[userCity][index]
-                                                                              [
-                                                                              2],
-                                                                          data[userCity][index]
-                                                                              [
-                                                                              3],
-                                                                          data[userCity][index]
-                                                                              [
-                                                                              1],
-                                                                          data[userCity][index]
-                                                                              [
-                                                                              4],
-                                                                          data[userCity][index]
-                                                                              [
-                                                                              0],
-                                                                        ));
-                                                                })
-                                                            : const SizedBox(),
+                                                        data[userCity].isEmpty
+                                                            ? Center(
+                                                                child: Column(
+                                                                  children: const [
+                                                                    Text(
+                                                                      "No food requests in your area.",
+                                                                      style:
+                                                                          TextStyle(
+                                                                        fontSize:
+                                                                            14,
+                                                                        fontWeight:
+                                                                            FontWeight.bold,
+                                                                        color: Colors
+                                                                            .grey,
+                                                                      ),
+                                                                    ),
+                                                                    SizedBox(
+                                                                      height:
+                                                                          10,
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              )
+                                                            : data[userCity] !=
+                                                                    null
+                                                                ? ListView
+                                                                    .builder(
+                                                                        physics:
+                                                                            const NeverScrollableScrollPhysics(),
+                                                                        shrinkWrap:
+                                                                            true,
+                                                                        itemCount:
+                                                                            data[userCity]
+                                                                                .length,
+                                                                        itemBuilder:
+                                                                            (context,
+                                                                                index) {
+                                                                          return (_requestIltem(
+                                                                            context,
+                                                                            data[userCity][index][2],
+                                                                            data[userCity][index][3],
+                                                                            data[userCity][index][1],
+                                                                            data[userCity][index][4],
+                                                                            data[userCity][index][0],
+                                                                          ));
+                                                                        })
+                                                                : const SizedBox()
                                                       ],
                                                     ),
                                                   ),
@@ -303,27 +340,24 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                                                 itemBuilder:
                                                                     (context,
                                                                         index) {
-                                                                  return index ==
-                                                                          0
-                                                                      ? const SizedBox()
-                                                                      : (_requestIltem(
-                                                                          context,
-                                                                          data[selectedCity][index]
-                                                                              [
-                                                                              2],
-                                                                          data[selectedCity][index]
-                                                                              [
-                                                                              3],
-                                                                          data[selectedCity][index]
-                                                                              [
-                                                                              1],
-                                                                          data[selectedCity][index]
-                                                                              [
-                                                                              4],
-                                                                          data[selectedCity][index]
-                                                                              [
-                                                                              0],
-                                                                        ));
+                                                                  return (_requestIltem(
+                                                                    context,
+                                                                    data[selectedCity]
+                                                                        [
+                                                                        index][2],
+                                                                    data[selectedCity]
+                                                                        [
+                                                                        index][3],
+                                                                    data[selectedCity]
+                                                                        [
+                                                                        index][1],
+                                                                    data[selectedCity]
+                                                                        [
+                                                                        index][4],
+                                                                    data[selectedCity]
+                                                                        [
+                                                                        index][0],
+                                                                  ));
                                                                 })
                                                             : const SizedBox()
                                                       ],
@@ -389,31 +423,6 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                                 fontFamily: "Roboto",
                                                 color: const Color(0xff05240E)),
                                           ),
-                                          // PopupMenuButton<MenuRequest>(
-                                          //     icon: const Icon(
-                                          //       Icons.more_horiz,
-                                          //       color: Colors.green,
-                                          //     ),
-                                          //     // color: const Color(0xFFDBE8D8),
-                                          //     onSelected: (value) async {
-                                          //       switch (value) {
-                                          //         case MenuRequest.add:
-                                          //           _showDialog();
-                                          //           break;
-                                          //       }
-                                          //     },
-                                          //     itemBuilder: ((context) {
-                                          //       return const [
-                                          //         PopupMenuItem<MenuRequest>(
-                                          //           value: MenuRequest.add,
-                                          //           child: Text(
-                                          //             "Add Food Listing",
-                                          //             style: TextStyle(
-                                          //                 color: Color(0xFF05240E)),
-                                          //           ),
-                                          //         ),
-                                          //       ];
-                                          //     }))
                                           IconButton(
                                               onPressed: _showDialog,
                                               icon: const Icon(
@@ -433,8 +442,18 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                   builder: (context, snapshot) {
                                     if (snapshot.hasData) {
                                       List<List<String>> data = snapshot.data!;
-                                      if (data.length > 1) {
-                                        int numberOfListing = data.length - 1;
+                                      data.sort((a, b) => int.parse(b[5])
+                                          .compareTo(int.parse(a[5])));
+                                      data.sort((a, b) {
+                                        var dateA = DateTime.parse(
+                                            "${a[4].split("-")[2]}-${a[4].split("-")[1]}-${a[4].split("-")[0]}");
+                                        var dateB = DateTime.parse(
+                                            "${b[4].split("-")[2]}-${b[4].split("-")[1]}-${b[4].split("-")[0]}");
+                                        return dateB.compareTo(dateA);
+                                      });
+                                      if (data.isNotEmpty) {
+                                        int numberOfListing = data.length;
+
                                         return SizedBox(
                                             height: MediaQuery.of(context)
                                                     .size
@@ -448,9 +467,10 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                                 itemBuilder: ((context, index) {
                                                   return _foodListingItem(
                                                       context,
-                                                      data[index + 1][0],
-                                                      data[index + 1][1],
-                                                      data[index + 1][2]);
+                                                      data[index][0],
+                                                      data[index][1],
+                                                      data[index][2],
+                                                      data[index][3]);
                                                 })));
                                       } else {
                                         return Center(
@@ -520,6 +540,65 @@ class _HomeDonatorsState extends State<HomeDonators> {
             return const Scaffold();
           }
         });
+  }
+
+  Widget bottomSheet(BuildContext context) {
+    return Container(
+      height: 100,
+      width: MediaQuery.of(context).size.width,
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      child: Column(children: <Widget>[
+        const Text(
+          "Choose Profile Photo",
+          style: TextStyle(fontSize: 20),
+        ),
+        const SizedBox(
+          height: 20,
+        ),
+        Row(
+          children: [
+            TextButton.icon(
+                onPressed: (() async {
+                  // final user = FirebaseAuth.instance.currentUser;
+                  // final String userID = user!.uid;
+
+                  final files =
+                      await imageHelper.pickImage(source: ImageSource.camera);
+                  if (files.isNotEmpty) {
+                    final croppedFile = await imageHelper.crop(
+                        file: files.first, cropStyle: CropStyle.rectangle);
+                    if (croppedFile != null) {
+                      setState(() {
+                        _image = File(croppedFile.path);
+                        foodImagePath = croppedFile.path;
+                      });
+                    }
+                  }
+                  Navigator.pop(context);
+                }),
+                icon: const Icon(Icons.camera),
+                label: const Text("Camera")),
+            TextButton.icon(
+                onPressed: (() async {
+                  final files = await imageHelper.pickImage();
+                  if (files.isNotEmpty) {
+                    final croppedFile = await imageHelper.crop(
+                        file: files.first, cropStyle: CropStyle.rectangle);
+                    if (croppedFile != null) {
+                      setState(() {
+                        _image = File(croppedFile.path);
+                        foodImagePath = croppedFile.path;
+                      });
+                    }
+                  }
+                  Navigator.pop(context);
+                }),
+                icon: const Icon(Icons.image),
+                label: const Text("Gallery")),
+          ],
+        )
+      ]),
+    );
   }
 
   void _showDialog() {
@@ -665,18 +744,74 @@ class _HomeDonatorsState extends State<HomeDonators> {
                           ),
                         ),
                       ),
-                    )
+                    ),
+                    const SizedBox(
+                      height: 12,
+                    ),
+                    // GestureDetector(
+                    //   onTap: () async {
+
+                    //   },
+                    //   child: Container(
+                    //     width: MediaQuery.of(context).size.width * 0.56,
+                    //     height: MediaQuery.of(context).size.height * 0.32,
+                    //     decoration: BoxDecoration(
+                    //       color: Colors.white,
+                    //       borderRadius: BorderRadius.circular(10),
+                    //       border: Border.all(
+                    //         color: Colors.black,
+                    //         width: 1,
+                    //       ),
+                    //       image: foodImagePath != ""
+                    //           ? DecorationImage(
+                    //               image: FileImage(_image!),
+                    //               fit: BoxFit.cover,
+                    //             )
+                    //           : null,
+                    //     ),
+                    //     child: foodImagePath == ""
+                    //         ? Column(
+                    //             mainAxisAlignment: MainAxisAlignment.center,
+                    //             children: const [
+                    //               Text(
+                    //                 '+',
+                    //                 style: TextStyle(
+                    //                   fontSize: 28,
+                    //                   color: Colors.grey,
+                    //                 ),
+                    //               ),
+                    //               Text(
+                    //                 'Select an image',
+                    //                 style: TextStyle(
+                    //                   fontSize: 18,
+                    //                   color: Colors.grey,
+                    //                 ),
+                    //               ),
+                    //             ],
+                    //           )
+                    //         : const SizedBox(),
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
             ),
           ),
           actions: [
+            TextButton(
+                onPressed: (() async {
+                  await showModalBottomSheet(
+                    context: context,
+                    builder: (context) => bottomSheet(context),
+                  );
+                }),
+                child: const Text("Select Image")),
             ElevatedButton(
               onPressed: () {
                 setState(() {
                   _clicked = false;
                 });
+                foodImagePath = "";
                 _foodItem.text = "";
                 _cuisine.text = "";
                 _numberOfPeople.text = "";
@@ -686,7 +821,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 setState(() {
                   _clicked = true;
                 });
@@ -695,71 +830,101 @@ class _HomeDonatorsState extends State<HomeDonators> {
                 final cuisine = _cuisine.text;
                 final numberPeople = _numberOfPeople.text;
                 final beforeDate = _date.text;
-                if (_formKey.currentState!.validate()) {
-                  showDialog(
-                      barrierDismissible: false,
-                      context: context,
-                      builder: (_) {
-                        return Dialog(
-                          // The background color
-                          backgroundColor: Colors.white,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 20),
+                if (foodImagePath == "") {
+                  showToast("Image not selected");
+                } else {
+                  if (_formKey.currentState!.validate() &&
+                      foodImagePath != "") {
+                    showDialog(
+                        barrierDismissible: false,
+                        context: context,
+                        builder: (_) {
+                          return Dialog(
+                            // The background color
+                            backgroundColor: Colors.white,
                             child: Padding(
-                              padding: const EdgeInsets.all(14.0),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: const [
-                                  // The loading indicator
-                                  CircularProgressIndicator(),
-                                  SizedBox(
-                                    width: 15,
-                                  ),
+                              padding: const EdgeInsets.symmetric(vertical: 20),
+                              child: Padding(
+                                padding: const EdgeInsets.all(14.0),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: const [
+                                    // The loading indicator
+                                    CircularProgressIndicator(),
+                                    SizedBox(
+                                      width: 15,
+                                    ),
 
-                                  // Some text
-                                  Text('Loading...')
-                                ],
+                                    // Some text
+                                    Text('Loading...')
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      });
-                  try {
+                          );
+                        });
                     User? user = FirebaseAuth.instance.currentUser;
-                    FirebaseDatabase database = FirebaseDatabase.instance;
+                    final String userID = user!.uid;
+
                     final String date = getFormattedDate();
-
-                    Map<String, String> orderData = {
-                      'Full Name': userName.trim(),
-                      'Store Name': storeName.trim(),
-                      'Best Before': beforeDate.trim(),
-                      'Food Item': foodItem.trim(),
-                      'Cuisine': cuisine.trim(),
-                      'Number of people': numberPeople.trim(),
-                      'Area': storeAddress.trim(),
-                    };
-                    database
+                    await storage.uploadFile(
+                        foodImagePath, "$userID/Orders/$date/orderPicture.jpg");
+                    final Reference reference = FirebaseStorage.instance
                         .ref()
-                        .child("Orders")
-                        .child(userCountry)
-                        .child(userCity)
-                        .child(user!.uid)
-                        .child(date)
-                        .set(orderData);
-                    _foodItem.text = "";
-                    _cuisine.text = "";
-                    _numberOfPeople.text = "";
-                    _date.text = "";
-                    Navigator.of(context).pop();
-                  } on FirebaseAuthException catch (e) {
-                    if (e.code == 'user-not-found') {
-                      Navigator.of(context).pop();
+                        .child('$userID/Orders/$date/orderPicture.jpg');
+                    final path = await reference.getDownloadURL();
+                    try {
+                      FirebaseDatabase database = FirebaseDatabase.instance;
+                      Map<String, String> orderData = {
+                        'Store Number': storeNumber.trim(),
+                        'File Path': path,
+                        'Full Name': userName.trim(),
+                        'Store Name': storeName.trim(),
+                        'Best Before': beforeDate.trim(),
+                        'Food Item': foodItem
+                            .trim()
+                            .toLowerCase()
+                            .split(" ")
+                            .map((word) =>
+                                "${word[0].toUpperCase()}${word.substring(1)}")
+                            .join(" "),
+                        'Cuisine': cuisine
+                            .trim()
+                            .toLowerCase()
+                            .split(" ")
+                            .map((word) =>
+                                "${word[0].toUpperCase()}${word.substring(1)}")
+                            .join(" "),
+                        'Number of people': numberPeople.trim(),
+                        'Area': storeAddress.trim(),
+                      };
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("User not found")));
+                      database
+                          .ref()
+                          .child("Orders")
+                          .child(userCountry)
+                          .child(userCity)
+                          .child(userID)
+                          .child(date)
+                          .set(orderData);
+                      setState(() {
+                        _clicked = false;
+                      });
+                      _foodItem.text = "";
+                      _cuisine.text = "";
+                      _numberOfPeople.text = "";
+                      _date.text = "";
+                      foodImagePath = "";
+                      Navigator.of(context).pop();
+                    } on FirebaseAuthException catch (e) {
+                      if (e.code == 'user-not-found') {
+                        Navigator.of(context).pop();
+
+                        showToast("User not found");
+                      }
+                    } finally {
+                      Navigator.pop(context);
                     }
-                  } finally {
-                    Navigator.pop(context);
                   }
                 }
               },
@@ -813,13 +978,32 @@ class _HomeDonatorsState extends State<HomeDonators> {
           menuItem("Dashboard", Icons.dashboard_outlined, () {
             Navigator.of(context).pop();
           }),
-          menuItem("Recent Chats", Icons.chat_outlined, () {}),
+          menuItem("Recent Chats", Icons.chat_outlined, () async {
+            Navigator.of(context).pop();
+
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => RecentChats(
+                          userType: "Donators",
+                        )));
+          }),
           menuItem("Notifications", Icons.notifications_outlined, () {}),
           const Divider(
             color: Colors.black,
           ),
-          menuItem("Privacy Policy", Icons.dashboard_outlined, () {}),
-          menuItem("Send Feedback", Icons.dashboard_outlined, () {}),
+          menuItem("Send Feedback", Icons.feedback_outlined, () {
+            Navigator.of(context).pop();
+
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => const FeedbackPage()));
+          }),
+          menuItem("Privacy Policy", Icons.privacy_tip_outlined, () {
+            Navigator.of(context).pop();
+
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => const PrivacyPolicy()));
+          }),
           const Divider(
             color: Colors.black,
           ),
@@ -831,7 +1015,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
               (route) => true,
             );
           }),
-          menuItem("Logout", Icons.dashboard_outlined, () async {
+          menuItem("Logout", Icons.logout_outlined, () async {
             final shouldLogout = await showLogOutDialog(context);
             if (shouldLogout) {
               userCountry = "";
@@ -840,6 +1024,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
               storeAddress = "";
               userName = "";
               userEmail = "";
+              storeNumber = "";
 
               await FirebaseAuth.instance.signOut();
               await FirebaseAuth.instance.signOut(); // clear cached data
@@ -955,7 +1140,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
         final data = event.snapshot.value as Map;
 
         data.forEach((key, value) {
-          List<List<String>> cityData = [[]];
+          List<List<String>> cityData = [];
           final cityKey = key;
           final users = value as Map;
 
@@ -975,13 +1160,31 @@ class _HomeDonatorsState extends State<HomeDonators> {
               String numberOfPeople = requestData["Number of people"];
               String lineOne = "$foodItem - $cuisine";
               String lineTwo = "$numberOfPeople people, $area";
-              reqData = [userID, orderTime, lineOne, lineTwo, fullName];
+              final dateTime = orderTime as String;
+              final date = dateTime.split(" ")[0];
+              final time = dateTime.split(" ")[1].replaceAll(":", "");
+              reqData = [
+                userID,
+                orderTime,
+                lineOne,
+                lineTwo,
+                fullName,
+                date,
+                time
+              ];
               if (reqData.isNotEmpty) {
                 cityData.add(reqData);
               }
             });
           });
-
+          cityData.sort((a, b) => int.parse(b[6]).compareTo(int.parse(a[6])));
+          cityData.sort((a, b) {
+            var dateA = DateTime.parse(
+                "${a[5].split("-")[2]}-${a[5].split("-")[1]}-${a[5].split("-")[0]}");
+            var dateB = DateTime.parse(
+                "${b[5].split("-")[2]}-${b[5].split("-")[1]}-${b[5].split("-")[0]}");
+            return dateB.compareTo(dateA);
+          });
           myMap[cityKey] = cityData;
         });
 
@@ -995,7 +1198,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
       final data = event.snapshot.value as Map;
       final key = event.snapshot.key;
       myMap.remove(key);
-      List<List<String>> cityData = [[]];
+      List<List<String>> cityData = [];
       data.forEach((key, value) {
         List<String> reqData = [];
         final userID = key;
@@ -1012,11 +1215,22 @@ class _HomeDonatorsState extends State<HomeDonators> {
           String numberOfPeople = requestData["Number of people"];
           String lineOne = "$foodItem - $cuisine";
           String lineTwo = "$numberOfPeople people, $area";
-          reqData = [userID, orderTime, lineOne, lineTwo, fullName];
+          final dateTime = orderTime as String;
+          final date = dateTime.split(" ")[0];
+          final time = dateTime.split(" ")[1].replaceAll(":", "");
+          reqData = [userID, orderTime, lineOne, lineTwo, fullName, date, time];
           if (reqData.isNotEmpty) {
             cityData.add(reqData);
           }
         });
+      });
+      cityData.sort((a, b) => int.parse(b[6]).compareTo(int.parse(a[6])));
+      cityData.sort((a, b) {
+        var dateA = DateTime.parse(
+            "${a[5].split("-")[2]}-${a[5].split("-")[1]}-${a[5].split("-")[0]}");
+        var dateB = DateTime.parse(
+            "${b[5].split("-")[2]}-${b[5].split("-")[1]}-${b[5].split("-")[0]}");
+        return dateB.compareTo(dateA);
       });
       myMap[key!] = cityData;
       List<List<String>> userCityValues = myMap.remove(userCity) ?? [[]];
@@ -1028,7 +1242,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
       final data = event.snapshot.value as Map;
       final key = event.snapshot.key;
       myMap.remove(key);
-      List<List<String>> cityData = [[]];
+      List<List<String>> cityData = [];
       data.forEach((key, value) {
         List<String> reqData = [];
         final userID = key;
@@ -1045,11 +1259,22 @@ class _HomeDonatorsState extends State<HomeDonators> {
           String numberOfPeople = requestData["Number of people"];
           String lineOne = "$foodItem - $cuisine";
           String lineTwo = "$numberOfPeople people, $area";
-          reqData = [userID, orderTime, lineOne, lineTwo, fullName];
+          final dateTime = orderTime as String;
+          final date = dateTime.split(" ")[0];
+          final time = dateTime.split(" ")[1].replaceAll(":", "");
+          reqData = [userID, orderTime, lineOne, lineTwo, fullName, date, time];
           if (reqData.isNotEmpty) {
             cityData.add(reqData);
           }
         });
+      });
+      cityData.sort((a, b) => int.parse(b[6]).compareTo(int.parse(a[6])));
+      cityData.sort((a, b) {
+        var dateA = DateTime.parse(
+            "${a[5].split("-")[2]}-${a[5].split("-")[1]}-${a[5].split("-")[0]}");
+        var dateB = DateTime.parse(
+            "${b[5].split("-")[2]}-${b[5].split("-")[1]}-${b[5].split("-")[0]}");
+        return dateB.compareTo(dateA);
       });
       myMap[key!] = cityData;
       List<List<String>> userCityValues = myMap.remove(userCity) ?? [[]];
@@ -1060,7 +1285,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
     ref.onChildRemoved.listen((event) {
       final key = event.snapshot.key;
       myMap.remove(key);
-      List<List<String>> userCityValues = myMap.remove(userCity) ?? [[]];
+      List<List<String>> userCityValues = myMap.remove(userCity) ?? [];
       myMap = {userCity: userCityValues, ...myMap};
       controller.add(myMap);
     });
@@ -1075,13 +1300,12 @@ class _HomeDonatorsState extends State<HomeDonators> {
         FirebaseDatabase.instance.ref("Orders/$userCountry/$userCity/$userUID");
     StreamController<List<List<String>>> controller =
         StreamController.broadcast();
-    List<List<String>> mainData = [
-      [""]
-    ];
+    List<List<String>> mainData = [];
+    ref.onValue.listen((event) {
+      final data = event.snapshot.value as Map?;
 
-    ref.once().then((event) {
-      if (event.snapshot.value != null) {
-        final data = event.snapshot.value as Map;
+      if (data != null) {
+        mainData.clear();
 
         data.forEach((key, value) {
           String lineOne;
@@ -1092,21 +1316,59 @@ class _HomeDonatorsState extends State<HomeDonators> {
 
           List<String> secondData;
 
-          final data2 = value as Map;
-          // String beforeDate = data2["Best Before"];
-          cuisine = data2["Cuisine"];
-          foodItem = data2["Food Item"];
-          numberOfPeople = data2["Number of people"];
+          cuisine = value["Cuisine"];
+          foodItem = value["Food Item"];
+          numberOfPeople = value["Number of people"];
           lineOne = "$foodItem - $cuisine";
-          // lineTwo = "$numberOfPeople people, Expiry: $beforeDate";
           lineTwo = "$numberOfPeople people";
+          final filePath = value["File Path"];
+          final dateTime = key as String;
+          final date = dateTime.split(" ")[0];
+          final time = dateTime.split(" ")[1].replaceAll(":", "");
 
-          secondData = [key, lineOne, lineTwo];
+          secondData = [key, lineOne, lineTwo, filePath, date, time];
           mainData.add(secondData);
         });
 
         controller.add(mainData);
       }
+    });
+    ref.onChildAdded.listen((event) {
+      final data = event.snapshot.value as Map;
+
+      String lineOne;
+      String lineTwo;
+      String cuisine;
+      String foodItem;
+      String numberOfPeople;
+      List<String> secondData;
+      // String beforeDate = data["Best Before"];
+
+      cuisine = data["Cuisine"];
+      foodItem = data["Food Item"];
+      numberOfPeople = data["Number of people"];
+      lineOne = "$foodItem - $cuisine";
+      // lineTwo = "$numberOfPeople people, Expiry: $beforeDate";
+      lineTwo = "$numberOfPeople people";
+      final filePath = data["File Path"];
+      final dateTime = event.snapshot.key as String;
+      final date = dateTime.split(" ")[0];
+      final time = dateTime.split(" ")[1].replaceAll(":", "");
+      secondData = [
+        event.snapshot.key ?? "",
+        lineOne,
+        lineTwo,
+        filePath,
+        date,
+        time
+      ];
+
+      int index = mainData.indexWhere((data) => data[0] == event.snapshot.key);
+      if (index != -1) {
+        mainData[index] = secondData;
+      }
+
+      controller.add(mainData);
     });
 
     ref.onChildChanged.listen((event) {
@@ -1126,8 +1388,18 @@ class _HomeDonatorsState extends State<HomeDonators> {
       lineOne = "$foodItem - $cuisine";
       // lineTwo = "$numberOfPeople people, Expiry: $beforeDate";
       lineTwo = "$numberOfPeople people";
-
-      secondData = [event.snapshot.key ?? "", lineOne, lineTwo];
+      final filePath = data["File Path"];
+      final dateTime = event.snapshot.key as String;
+      final date = dateTime.split(" ")[0];
+      final time = dateTime.split(" ")[1].replaceAll(":", "");
+      secondData = [
+        event.snapshot.key ?? "",
+        lineOne,
+        lineTwo,
+        filePath,
+        date,
+        time
+      ];
 
       int index = mainData.indexWhere((data) => data[0] == event.snapshot.key);
       if (index != -1) {
@@ -1150,23 +1422,34 @@ class _HomeDonatorsState extends State<HomeDonators> {
   }
 
   Widget _foodListingItem(BuildContext context, String orderNumber,
-      String lineOne, String lineTwo) {
+      String lineOne, String lineTwo, String imagePath) {
     return Row(
       children: [
-        SizedBox(
-          width: MediaQuery.of(context).size.width * 0.56,
-          height: MediaQuery.of(context).size.height * 0.4,
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                width: MediaQuery.of(context).size.width * 0.56,
-                height: MediaQuery.of(context).size.height * 0.32,
-                color: const Color(0xFFDBE8D8),
-              ),
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Stack(
+              children: [
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.56,
+                  height: MediaQuery.of(context).size.height * 0.32,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage(imagePath),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.56,
+                  height: MediaQuery.of(context).size.height * 0.32,
+                  color: Colors.black.withOpacity(0.2),
+                ),
+              ],
             ),
-            Row(
+          ),
+          Flexible(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Padding(
@@ -1179,22 +1462,26 @@ class _HomeDonatorsState extends State<HomeDonators> {
                         const SizedBox(
                           height: 2,
                         ),
-                        Text(
-                          lineOne,
-                          style: const TextStyle(
-                              fontSize: 14.5,
-                              fontFamily: "Roboto",
-                              color: Colors.green),
+                        Flexible(
+                          child: Text(
+                            lineOne,
+                            style: const TextStyle(
+                                fontSize: 14.5,
+                                fontFamily: "Roboto",
+                                color: Colors.green),
+                          ),
                         ),
                         const SizedBox(
                           height: 2,
                         ),
-                        Text(
-                          lineTwo,
-                          style: const TextStyle(
-                              fontSize: 12,
-                              fontFamily: "Roboto",
-                              color: Color(0xff05240E)),
+                        Flexible(
+                          child: Text(
+                            lineTwo,
+                            style: const TextStyle(
+                                fontSize: 12,
+                                fontFamily: "Roboto",
+                                color: Color(0xff05240E)),
+                          ),
                         ),
                       ],
                     ),
@@ -1434,19 +1721,33 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                         }
                                         Navigator.pop(context);
                                       }),
-                                      child: const Text("Cancel Order")),
+                                      child: const Text(
+                                        "Cancel Order",
+                                      )),
+                                  TextButton(
+                                      onPressed: (() async {
+                                        await showModalBottomSheet(
+                                          context: context,
+                                          builder: (context) =>
+                                              bottomSheet(context),
+                                        );
+                                      }),
+                                      child: const Text("Change Image")),
+                                  // ElevatedButton(
+                                  //   onPressed: () {
+                                  //     foodItemData.text = "";
+                                  //     cuisineData.text = "";
+                                  //     numberOfPeopleData
+                                  //         .text = "";
+                                  //     beforeDateData.text =
+                                  //         "";
+                                  //     Navigator.pop(context);
+                                  //   },
+                                  //   child:
+                                  //       const Text('Cancel'),
+                                  // ),
                                   ElevatedButton(
-                                    onPressed: () {
-                                      foodItemData.text = "";
-                                      cuisineData.text = "";
-                                      numberOfPeopleData.text = "";
-                                      beforeDateData.text = "";
-                                      Navigator.pop(context);
-                                    },
-                                    child: const Text('Cancel'),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: () {
+                                    onPressed: () async {
                                       clicked = true;
                                       FocusManager.instance.primaryFocus
                                           ?.unfocus();
@@ -1491,12 +1792,26 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                         try {
                                           User? user =
                                               FirebaseAuth.instance.currentUser;
+                                          final String userID = user!.uid;
+
                                           FirebaseDatabase database =
                                               FirebaseDatabase.instance;
 
                                           Map<String, String> requestData = {
-                                            'Food Item': foodItem.trim(),
-                                            'Cuisine': cuisine.trim(),
+                                            'Food Item': foodItem
+                                                .trim()
+                                                .toLowerCase()
+                                                .split(" ")
+                                                .map((word) =>
+                                                    "${word[0].toUpperCase()}${word.substring(1)}")
+                                                .join(" "),
+                                            'Cuisine': cuisine
+                                                .trim()
+                                                .toLowerCase()
+                                                .split(" ")
+                                                .map((word) =>
+                                                    "${word[0].toUpperCase()}${word.substring(1)}")
+                                                .join(" "),
                                             'Number of people':
                                                 numberPeople.trim(),
                                             'Best Before': beforeDate.trim(),
@@ -1506,9 +1821,34 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                               .child("Orders")
                                               .child(userCountry)
                                               .child(userCity)
-                                              .child(user!.uid)
+                                              .child(userID)
                                               .child(orderNumber)
                                               .update(requestData);
+
+                                          if (foodImagePath != '') {
+                                            await storage.uploadFile(
+                                                foodImagePath,
+                                                "$userID/Orders/$orderNumber/orderPicture.jpg");
+                                            final Reference reference =
+                                                FirebaseStorage.instance
+                                                    .ref()
+                                                    .child(
+                                                        '$userID/Orders/$orderNumber/orderPicture.jpg');
+                                            final path = await reference
+                                                .getDownloadURL();
+                                            Map<String, String> sendPath = {
+                                              "File Path": path
+                                            };
+                                            database
+                                                .ref()
+                                                .child("Orders")
+                                                .child(userCountry)
+                                                .child(userCity)
+                                                .child(userID)
+                                                .child(orderNumber)
+                                                .update(sendPath);
+                                          }
+                                          foodImagePath = '';
                                           foodItemData.text = "";
                                           cuisineData.text = "";
                                           numberOfPeopleData.text = "";
@@ -1518,10 +1858,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                           if (e.code == 'user-not-found') {
                                             Navigator.of(context).pop();
 
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(const SnackBar(
-                                                    content: Text(
-                                                        "User not found")));
+                                            showToast("User not found");
                                           }
                                         } finally {
                                           Navigator.pop(context);
@@ -1542,9 +1879,9 @@ class _HomeDonatorsState extends State<HomeDonators> {
                   ],
                 )
               ],
-            )
-          ]),
-        ),
+            ),
+          )
+        ]),
         SizedBox(
           width: MediaQuery.of(context).size.width * 0.05,
         ),
@@ -1617,27 +1954,33 @@ Widget _requestIltem(BuildContext context, String textOne, String textTwo,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Text(
-                      textOne,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontFamily: "Roboto",
-                        color: Color(0xff05240E),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          textOne,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontFamily: "Roboto",
+                            color: Color(0xff05240E),
+                          ),
+                        ),
                       ),
-                    ),
-                    Text(
-                      textTwo,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontFamily: "Roboto",
-                        color: Colors.green,
+                      Flexible(
+                        child: Text(
+                          textTwo,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontFamily: "Roboto",
+                            color: Colors.green,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -1695,6 +2038,7 @@ Stream<void> getDataStream() async* {
     storeAddress = snapshot["Address Line"];
     userName = snapshot["Full Name"];
     userEmail = snapshot["Email"];
+    storeNumber = snapshot["Store Contact Number"];
   });
 }
 

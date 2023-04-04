@@ -2,14 +2,16 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'dart:developer' as devetools show log;
-import 'home_donator.dart';
+import '../assets/storage_service.dart';
 import 'package:intl/intl.dart';
+import 'dart:developer' as devetools show log;
 
-String filePathUser = "";
-String fileNameUser = "";
 String filePathOther = "";
 String fileNameOther = "";
+String preivousTime = '';
+String preiousUID = '';
+String filePathUser = "";
+String fileNameUser = "";
 ImageProvider<Object>? networkFileUser = const NetworkImage("");
 ImageProvider<Object>? networkFileOther = const NetworkImage("");
 
@@ -57,15 +59,20 @@ class _GetPicturesState extends State<GetPictures> {
   }
 
   Future<String> getPics() async {
+    preivousTime = '';
+    preiousUID = '';
     final user = FirebaseAuth.instance.currentUser;
     final String userID = user!.uid;
     final otherUser = widget.otherUID;
+
     try {
+      final Storage storage = Storage();
       filePathUser = await storage.downloadURL("$userID/userProfile.jpg");
       networkFileUser = NetworkImage(filePathUser);
       // ignore: empty_catches
     } catch (error) {}
     try {
+      final Storage storage = Storage();
       filePathOther = await storage.downloadURL("$otherUser/userProfile.jpg");
       networkFileOther = NetworkImage(filePathOther);
       // ignore: empty_catches
@@ -132,7 +139,7 @@ class _ChatState extends State<Chat> {
                   "${b[0].split("-")[2]}-${b[0].split("-")[1]}-${b[0].split("-")[0]}");
               return dateB.compareTo(dateA);
             });
-
+            devetools.log(data.toString());
             List<int> datesList = [];
             String currentKey = data.first.first;
             for (int i = 1; i < data.length; i++) {
@@ -144,6 +151,7 @@ class _ChatState extends State<Chat> {
             if (datesList.isEmpty || datesList.last != data.length - 1) {
               datesList.add(data.length - 1);
             }
+
             List<String> allTimes = [];
 
             for (List<String> sublist in data) {
@@ -186,8 +194,8 @@ class _ChatState extends State<Chat> {
                 }
               }
             }
-            List<String> output = [];
 
+            List<String> output = [];
             for (int i = 0; i < filteredTime.length; i++) {
               int hours = filteredTime[i] ~/ 100;
               int minutes = filteredTime[i] % 100;
@@ -284,9 +292,15 @@ class _ChatState extends State<Chat> {
                                       final date = dateTime[0];
                                       final time = dateTime[1];
 
-                                      DatabaseReference ref =
-                                          FirebaseDatabase.instance.ref(
-                                              "Chats/$userID|$otherUserUID|$orderNum/$date/$userID/$time/");
+                                      DatabaseReference ref;
+
+                                      if (widget.showRecentChat ?? false) {
+                                        ref = FirebaseDatabase.instance.ref(
+                                            "Chats/$otherUserUID|$userID|$orderNum/$date/$userID/$time/");
+                                      } else {
+                                        ref = FirebaseDatabase.instance.ref(
+                                            "Chats/$userID|$otherUserUID|$orderNum/$date/$userID/$time/");
+                                      }
                                       if (message != '') {
                                         await ref.set({
                                           "Message": message,
@@ -310,6 +324,7 @@ class _ChatState extends State<Chat> {
           } else {
             return Scaffold(
               appBar: AppBar(
+                elevation: 0,
                 actions: [
                   IconButton(
                       color: Colors.white,
@@ -332,66 +347,81 @@ class _ChatState extends State<Chat> {
                   child: SingleChildScrollView(
                     controller: _scrollController,
                     child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.78,
-                            child: ListView.builder(
-                              reverse: true,
-                              itemCount: 1,
-                              itemBuilder: (BuildContext context, int index) {
-                                return const SizedBox();
-                              },
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _textController,
-                                    keyboardType: TextInputType.text,
-                                    decoration: const InputDecoration(
-                                      hintText: "Type a message",
-                                      border: OutlineInputBorder(),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8.0),
-                                ElevatedButton(
-                                  onPressed: () async {
-                                    final message = _textController.text.trim();
-                                    final user =
-                                        FirebaseAuth.instance.currentUser;
-                                    final String userID = user!.uid;
-                                    final otherUserUID = widget.otherUID;
-                                    final orderNum = widget.orderNumber;
-                                    final dateTime = getFormattedDate();
-                                    final date = dateTime[0];
-                                    final time = dateTime[1];
-                                    DatabaseReference ref;
-
-                                    if (widget.showRecentChat ?? false) {
-                                      ref = FirebaseDatabase.instance.ref(
-                                          "Chats/$otherUserUID|$userID|$orderNum/$date/$userID/$time/");
-                                    } else {
-                                      ref = FirebaseDatabase.instance.ref(
-                                          "Chats/$userID|$otherUserUID|$orderNum/$date/$userID/$time/");
-                                    }
-                                    if (message != '') {
-                                      await ref.set({
-                                        "Message": message,
-                                      });
-                                    }
-                                    _textController.text = "";
+                      child: Container(
+                        color: Colors.green,
+                        child: Column(
+                          children: [
+                            ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(50),
+                                  topRight: Radius.circular(50)),
+                              child: Container(
+                                color: Colors.white,
+                                height:
+                                    MediaQuery.of(context).size.height * 0.78,
+                                child: ListView.builder(
+                                  reverse: true,
+                                  itemCount: 1,
+                                  itemBuilder:
+                                      (BuildContext context, int index) {
+                                    return const SizedBox();
                                   },
-                                  child: const Text("Send"),
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
-                        ],
+                            Container(
+                              color: Colors.white,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextField(
+                                        controller: _textController,
+                                        keyboardType: TextInputType.text,
+                                        decoration: const InputDecoration(
+                                          hintText: "Type a message",
+                                          border: OutlineInputBorder(),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8.0),
+                                    ElevatedButton(
+                                      onPressed: () async {
+                                        final message =
+                                            _textController.text.trim();
+                                        final user =
+                                            FirebaseAuth.instance.currentUser;
+                                        final String userID = user!.uid;
+                                        final otherUserUID = widget.otherUID;
+                                        final orderNum = widget.orderNumber;
+                                        final dateTime = getFormattedDate();
+                                        final date = dateTime[0];
+                                        final time = dateTime[1];
+                                        DatabaseReference ref;
+
+                                        if (widget.showRecentChat ?? false) {
+                                          ref = FirebaseDatabase.instance.ref(
+                                              "Chats/$otherUserUID|$userID|$orderNum/$date/$userID/$time/");
+                                        } else {
+                                          ref = FirebaseDatabase.instance.ref(
+                                              "Chats/$userID|$otherUserUID|$orderNum/$date/$userID/$time/");
+                                        }
+                                        if (message != '') {
+                                          await ref.set({
+                                            "Message": message,
+                                          });
+                                        }
+                                        _textController.text = "";
+                                      },
+                                      child: const Text("Send"),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -419,8 +449,6 @@ class _ChatState extends State<Chat> {
     return dataTime;
   }
 
-  String preivousTime = '';
-
   Widget _showChatMessage(String date, String uid, String chat, bool showPic,
       bool showDate, String time, List<String> filteredTime) {
     bool s = true;
@@ -440,11 +468,14 @@ class _ChatState extends State<Chat> {
     } else {
       showPic = false;
     }
-    if (!showPic || filteredTime.contains(time)) {
-      if (time != preivousTime) {
+    if (filteredTime.contains(time) || preiousUID != uid) {
+      if (time != preivousTime && filteredTime.contains(time)) {
+        showTime = true;
+      } else if (preiousUID != uid) {
         showTime = true;
       }
     }
+    preiousUID = uid;
     preivousTime = time;
 
     return s
@@ -503,7 +534,7 @@ class _ChatState extends State<Chat> {
                       //             : networkFileUser,
                       //       )
                       //     : const SizedBox(width: 40, height: 40),
-                      // const SizedBox(width: 10),
+                      const SizedBox(width: 10),
                     ],
                   ),
                 ],
@@ -523,8 +554,8 @@ class _ChatState extends State<Chat> {
                       ],
                     )
                   : const SizedBox(),
-              const SizedBox(
-                height: 8,
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.005,
               ),
             ],
           )
@@ -607,8 +638,8 @@ class _ChatState extends State<Chat> {
                       : const SizedBox(),
                 ],
               ),
-              const SizedBox(
-                height: 14,
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.005,
               )
             ],
           );

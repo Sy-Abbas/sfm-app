@@ -9,11 +9,12 @@ import 'package:sfm/views/home_ngo.dart';
 import 'package:sfm/views/home_page.dart';
 import 'package:sfm/views/login_donator.dart';
 import 'package:sfm/views/login_ngo.dart';
+import 'package:sfm/views/privacy_policy.dart';
 import 'package:sfm/views/profile_donator.dart';
 import 'package:sfm/views/profile_ngo.dart';
+import 'package:sfm/views/recent.chats.dart';
 import 'package:sfm/views/register_donator.dart';
 import 'package:sfm/views/register_ngo.dart';
-import 'package:sfm/views/single_chat.dart';
 import 'firebase_options.dart';
 
 void main() {
@@ -36,6 +37,8 @@ void main() {
         '/detailsdonator/': ((context) => const DetailsDonator()),
         '/profilengo/': ((context) => const GetDetailsNGO()),
         '/profiledonator/': (context) => const GetDetailsDonator(),
+        '/recentchats/': (context) => RecentChats(),
+        '/privacypolicy/': ((context) => const PrivacyPolicy())
       }));
 }
 
