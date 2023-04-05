@@ -1,4 +1,5 @@
 import 'dart:developer' as devetools show log;
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,15 @@ import 'package:sfm/views/register_ngo.dart';
 import 'firebase_options.dart';
 
 void main() {
+  AwesomeNotifications().initialize(
+      null,
+      [
+        NotificationChannel(
+            channelKey: 'basic_channel',
+            channelName: 'Basic Notification',
+            channelDescription: "Notification channel for basic tests ")
+      ],
+      debug: true);
   runApp(MaterialApp(
       debugShowCheckedModeBanner: false,
       title: "Surplus Food Management",
@@ -118,6 +128,37 @@ Future<String> getUserType(String uid) async {
     return "NGOs";
   } else {
     return "None";
+  }
+}
+
+Future<bool> containNumber(String number) async {
+  var donatorsUID = [];
+  await FirebaseFirestore.instance
+      .collection('Donators')
+      .get()
+      .then((QuerySnapshot querySnapshot) {
+    for (var element in querySnapshot.docs) {
+      donatorsUID.add(element["Contact Number"]);
+      donatorsUID.add(element["Store Contact Number"]);
+    }
+  });
+  var ngoUID = [];
+  await FirebaseFirestore.instance
+      .collection('NGOs')
+      .get()
+      .then((QuerySnapshot querySnapshot) {
+    for (var element in querySnapshot.docs) {
+      ngoUID.add(element["Contact Number"]);
+      ngoUID.add(element["NGO Contact Number"]);
+    }
+  });
+
+  if (donatorsUID.contains(number)) {
+    return true;
+  } else if (ngoUID.contains(number)) {
+    return true;
+  } else {
+    return false;
   }
 }
 
@@ -428,4 +469,10 @@ class _DropdownFormFieldCityState extends State<DropdownFormFieldCity> {
       },
     );
   }
+}
+
+triggerNotfication(int id, String title, String body) {
+  AwesomeNotifications().createNotification(
+      content: NotificationContent(
+          id: 10, channelKey: "basic_channel", title: title, body: body));
 }

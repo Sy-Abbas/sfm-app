@@ -1,3 +1,4 @@
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sfm/assets/sfm_icons.dart';
@@ -122,6 +123,16 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   @override
+  void initState() {
+    // AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
+    //   if (!isAllowed) {
+    //     AwesomeNotifications().requestPermissionToSendNotifications();
+    //   }
+    // });
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
@@ -228,7 +239,7 @@ class _HomePageState extends State<HomePage> {
                                       '/logindonator/', (route) => true);
                                 }),
                                 child: const Text(
-                                  "Donators",
+                                  "I'm a Donator",
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,
@@ -250,7 +261,7 @@ class _HomePageState extends State<HomePage> {
                                       '/loginngo/', (route) => true);
                                 }),
                                 child: const Text(
-                                  "NGOs",
+                                  "I'm an NGO",
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,

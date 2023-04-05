@@ -48,6 +48,12 @@ dependencies:
   image_cropper: ^3.0.1
   cached_network_image: ^3.2.3
   url_launcher: ^6.1.10
+  intl_phone_field: ^3.1.0
+  flutter_phone_direct_caller: ^2.1.1
+  lottie: ^2.3.1
+  awesome_notifications: ^0.7.4+1
+  firebase_messaging: ^14.4.0
+  flutter_local_notifications: ^13.0.0
 
 dev_dependencies:
   flutter_test:
@@ -74,6 +80,7 @@ flutter:
   assets:
     - assets/logo.png
     - assets/images/
+    - assets/animation/
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 

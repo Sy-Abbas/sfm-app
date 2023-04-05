@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../assets/storage_service.dart';
 import 'package:intl/intl.dart';
 import 'dart:developer' as devetools show log;
+
+import '../main.dart';
 
 String filePathOther = "";
 String fileNameOther = "";
@@ -59,8 +63,8 @@ class _GetPicturesState extends State<GetPictures> {
   }
 
   Future<String> getPics() async {
-    preivousTime = '';
-    preiousUID = '';
+    preivousTime = '10';
+    preiousUID = '10';
     final user = FirebaseAuth.instance.currentUser;
     final String userID = user!.uid;
     final otherUser = widget.otherUID;
@@ -126,222 +130,225 @@ class _ChatState extends State<Chat> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<List<String>>>(
-        stream: _getChats(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            final data = snapshot.data as List<List<String>>;
-            data.sort((a, b) => int.parse(b[2]).compareTo(int.parse(a[2])));
-            data.sort((a, b) {
-              var dateA = DateTime.parse(
-                  "${a[0].split("-")[2]}-${a[0].split("-")[1]}-${a[0].split("-")[0]}");
-              var dateB = DateTime.parse(
-                  "${b[0].split("-")[2]}-${b[0].split("-")[1]}-${b[0].split("-")[0]}");
-              return dateB.compareTo(dateA);
-            });
-            devetools.log(data.toString());
-            List<int> datesList = [];
-            String currentKey = data.first.first;
-            for (int i = 1; i < data.length; i++) {
-              if (data[i].first != currentKey) {
-                datesList.add(i - 1);
-                currentKey = data[i].first;
-              }
-            }
-            if (datesList.isEmpty || datesList.last != data.length - 1) {
-              datesList.add(data.length - 1);
-            }
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        actions: [
+          IconButton(
+              color: Colors.white,
+              onPressed: () async {
+                final userUID = widget.otherUID;
+                final userType = await getUserType(userUID ?? "");
+                String docID = await findDocID(userUID ?? "None", userType);
+                final data = await FirebaseFirestore.instance
+                    .collection(userType)
+                    .doc(docID)
+                    .get();
+                final number = userType == "NGOs"
+                    ? (data["NGO Contact Number"] as String).replaceAll("-", "")
+                    : (data["Store Contact Number"] as String)
+                        .replaceAll("-", "");
+                final Uri uri = Uri(scheme: "tel", path: number);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri);
+                } else {}
+              },
+              icon: const Icon(Icons.phone))
+        ],
+        backgroundColor: Colors.green,
+        centerTitle: true,
+        title: Text(
+          widget.fullName!,
+          style: TextStyle(
+              color: Colors.white,
+              fontSize: MediaQuery.of(context).size.width * 0.050,
+              fontFamily: "Roboto"),
+        ),
+      ),
+      body: StreamBuilder<List<List<String>>>(
+          stream: _getChats(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              final data = snapshot.data as List<List<String>>;
+              data.sort((a, b) => int.parse(b[2]).compareTo(int.parse(a[2])));
+              data.sort((a, b) {
+                var dateA = DateTime.parse(
+                    "${a[0].split("-")[2]}-${a[0].split("-")[1]}-${a[0].split("-")[0]}");
+                var dateB = DateTime.parse(
+                    "${b[0].split("-")[2]}-${b[0].split("-")[1]}-${b[0].split("-")[0]}");
+                return dateB.compareTo(dateA);
+              });
 
-            List<String> allTimes = [];
-
-            for (List<String> sublist in data) {
-              String hhMM1 = sublist[2].substring(0, 2);
-              String hhMM2 = sublist[2].substring(2, 4);
-
-              String time = "$hhMM1:$hhMM2";
-              allTimes.add(time);
-            }
-            List<int> filteredTime = [];
-            for (String x in allTimes) {
-              String temp = x.replaceAll(':', '');
-              int timeInt = int.parse(temp);
-              if (filteredTime.isEmpty) {
-                filteredTime.add(timeInt);
-              } else {
-                int plusOne = timeInt + 1;
-                int plusTwo = timeInt + 2;
-                int plusThree = timeInt + 3;
-                int plusFour = timeInt + 4;
-                int plusFive = timeInt + 5;
-                int minusOne = timeInt - 1;
-                int minusTwo = timeInt - 2;
-                int minusThree = timeInt - 3;
-                int minusFour = timeInt - 4;
-                int minusFive = timeInt - 5;
-                if (filteredTime.contains(timeInt) ||
-                    filteredTime.contains(plusOne) ||
-                    filteredTime.contains(plusTwo) ||
-                    filteredTime.contains(plusThree) ||
-                    filteredTime.contains(plusFour) ||
-                    filteredTime.contains(plusFive) ||
-                    filteredTime.contains(minusOne) ||
-                    filteredTime.contains(minusTwo) ||
-                    filteredTime.contains(minusThree) ||
-                    filteredTime.contains(minusFour) ||
-                    filteredTime.contains(minusFive)) {
-                } else {
-                  filteredTime.add(timeInt);
+              List<int> datesList = [];
+              String currentKey = data.first.first;
+              for (int i = 1; i < data.length; i++) {
+                if (data[i].first != currentKey) {
+                  datesList.add(i - 1);
+                  currentKey = data[i].first;
                 }
               }
-            }
+              if (datesList.isEmpty || datesList.last != data.length - 1) {
+                datesList.add(data.length - 1);
+              }
 
-            List<String> output = [];
-            for (int i = 0; i < filteredTime.length; i++) {
-              int hours = filteredTime[i] ~/ 100;
-              int minutes = filteredTime[i] % 100;
-              String hoursString = hours.toString().padLeft(2, '0');
-              String minutesString = minutes.toString().padLeft(2, '0');
-              output.add("$hoursString:$minutesString");
-            }
+              List<String> allTimes = [];
 
-            return Scaffold(
-              appBar: AppBar(
-                elevation: 0,
-                actions: [
-                  IconButton(
-                      color: Colors.white,
-                      onPressed: () {},
-                      icon: const Icon(Icons.phone))
-                ],
-                backgroundColor: Colors.green,
-                centerTitle: true,
-                title: Text(
-                  widget.fullName!,
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: MediaQuery.of(context).size.width * 0.050,
-                      fontFamily: "Roboto"),
-                ),
-              ),
-              body: SafeArea(
-                child: SingleChildScrollView(
-                  controller: _scrollController,
+              for (List<String> sublist in data) {
+                String hhMM1 = sublist[2].substring(0, 2);
+                String hhMM2 = sublist[2].substring(2, 4);
+
+                String time = "$hhMM1:$hhMM2";
+                allTimes.add(time);
+              }
+              List<int> filteredTime = [];
+              for (String x in allTimes) {
+                String temp = x.replaceAll(':', '');
+                int timeInt = int.parse(temp);
+                if (filteredTime.isEmpty) {
+                  filteredTime.add(timeInt);
+                } else {
+                  int plusOne = timeInt + 1;
+                  int plusTwo = timeInt + 2;
+                  int plusThree = timeInt + 3;
+                  int plusFour = timeInt + 4;
+                  int plusFive = timeInt + 5;
+                  int minusOne = timeInt - 1;
+                  int minusTwo = timeInt - 2;
+                  int minusThree = timeInt - 3;
+                  int minusFour = timeInt - 4;
+                  int minusFive = timeInt - 5;
+                  if (filteredTime.contains(timeInt) ||
+                      filteredTime.contains(plusOne) ||
+                      filteredTime.contains(plusTwo) ||
+                      filteredTime.contains(plusThree) ||
+                      filteredTime.contains(plusFour) ||
+                      filteredTime.contains(plusFive) ||
+                      filteredTime.contains(minusOne) ||
+                      filteredTime.contains(minusTwo) ||
+                      filteredTime.contains(minusThree) ||
+                      filteredTime.contains(minusFour) ||
+                      filteredTime.contains(minusFive)) {
+                  } else {
+                    filteredTime.add(timeInt);
+                  }
+                }
+              }
+
+              List<String> output = [];
+              for (int i = 0; i < filteredTime.length; i++) {
+                int hours = filteredTime[i] ~/ 100;
+                int minutes = filteredTime[i] % 100;
+                String hoursString = hours.toString().padLeft(2, '0');
+                String minutesString = minutes.toString().padLeft(2, '0');
+                output.add("$hoursString:$minutesString");
+              }
+              preivousTime = 'None';
+
+              return Container(
+                color: Colors.white,
+                child: SafeArea(
                   child: SingleChildScrollView(
-                    child: Container(
-                      color: Colors.green,
-                      child: Column(
-                        children: [
-                          ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(50),
-                                topRight: Radius.circular(50)),
-                            child: Container(
-                              color: Colors.white,
-                              height: MediaQuery.of(context).size.height * 0.78,
-                              child: ListView.builder(
-                                reverse: true,
-                                itemCount: data.length,
-                                itemBuilder: (BuildContext context, int index) {
-                                  return index == 0
-                                      ? _showChatMessage(
-                                          data[index][0],
-                                          data[index][1],
-                                          data[index][3],
-                                          false,
-                                          datesList.contains(index),
-                                          allTimes[index],
-                                          output)
-                                      : _showChatMessage(
-                                          data[index][0],
-                                          data[index][1],
-                                          data[index][3],
-                                          data[index][1] == data[index - 1][1],
-                                          datesList.contains(index),
-                                          allTimes[index],
-                                          output);
-                                },
+                    controller: _scrollController,
+                    child: SingleChildScrollView(
+                      child: Container(
+                        color: Colors.green,
+                        child: Column(
+                          children: [
+                            ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(50),
+                                  topRight: Radius.circular(50)),
+                              child: Container(
+                                color: Colors.white,
+                                height:
+                                    MediaQuery.of(context).size.height * 0.78,
+                                child: ListView.builder(
+                                  reverse: true,
+                                  itemCount: data.length,
+                                  itemBuilder:
+                                      (BuildContext context, int index) {
+                                    return index == 0
+                                        ? _showChatMessage(
+                                            data[index][0],
+                                            data[index][1],
+                                            data[index][3],
+                                            false,
+                                            datesList.contains(index),
+                                            allTimes[index],
+                                            output)
+                                        : _showChatMessage(
+                                            data[index][0],
+                                            data[index][1],
+                                            data[index][3],
+                                            data[index][1] ==
+                                                data[index - 1][1],
+                                            datesList.contains(index),
+                                            allTimes[index],
+                                            output);
+                                  },
+                                ),
                               ),
                             ),
-                          ),
-                          Container(
-                            color: Colors.white,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _textController,
-                                      decoration: const InputDecoration(
-                                        hintText: "Type a message",
-                                        border: OutlineInputBorder(),
+                            Container(
+                              color: Colors.white,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextField(
+                                        controller: _textController,
+                                        decoration: const InputDecoration(
+                                          hintText: "Type a message",
+                                          border: OutlineInputBorder(),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 8.0),
-                                  ElevatedButton(
-                                    onPressed: () async {
-                                      final message =
-                                          _textController.text.trim();
-                                      final user =
-                                          FirebaseAuth.instance.currentUser;
-                                      final String userID = user!.uid;
-                                      final otherUserUID = widget.otherUID;
-                                      final orderNum = widget.orderNumber;
-                                      final dateTime = getFormattedDate();
-                                      final date = dateTime[0];
-                                      final time = dateTime[1];
+                                    const SizedBox(width: 8.0),
+                                    ElevatedButton(
+                                      onPressed: () async {
+                                        final message =
+                                            _textController.text.trim();
+                                        final user =
+                                            FirebaseAuth.instance.currentUser;
+                                        final String userID = user!.uid;
+                                        final otherUserUID = widget.otherUID;
+                                        final orderNum = widget.orderNumber;
+                                        final dateTime = getFormattedDate();
+                                        final date = dateTime[0];
+                                        final time = dateTime[1];
 
-                                      DatabaseReference ref;
+                                        DatabaseReference ref;
 
-                                      if (widget.showRecentChat ?? false) {
-                                        ref = FirebaseDatabase.instance.ref(
-                                            "Chats/$otherUserUID|$userID|$orderNum/$date/$userID/$time/");
-                                      } else {
-                                        ref = FirebaseDatabase.instance.ref(
-                                            "Chats/$userID|$otherUserUID|$orderNum/$date/$userID/$time/");
-                                      }
-                                      if (message != '') {
-                                        await ref.set({
-                                          "Message": message,
-                                        });
-                                      }
-                                      _textController.text = "";
-                                    },
-                                    child: const Text("Send"),
-                                  ),
-                                ],
+                                        if (widget.showRecentChat ?? false) {
+                                          ref = FirebaseDatabase.instance.ref(
+                                              "Chats/$otherUserUID|$userID|$orderNum/$date/$userID/$time/");
+                                        } else {
+                                          ref = FirebaseDatabase.instance.ref(
+                                              "Chats/$userID|$otherUserUID|$orderNum/$date/$userID/$time/");
+                                        }
+                                        if (message != '') {
+                                          await ref.set({
+                                            "Message": message,
+                                          });
+                                        }
+                                        _textController.text = "";
+                                      },
+                                      child: const Text("Send"),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            );
-          } else {
-            return Scaffold(
-              appBar: AppBar(
-                elevation: 0,
-                actions: [
-                  IconButton(
-                      color: Colors.white,
-                      onPressed: () {},
-                      icon: const Icon(Icons.phone))
-                ],
-                backgroundColor: Colors.green,
-                centerTitle: true,
-                title: Text(
-                  widget.fullName!,
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: MediaQuery.of(context).size.width * 0.050,
-                      fontFamily: "Roboto"),
-                ),
-              ),
-              body: Container(
+              );
+            } else {
+              return Container(
                 color: Colors.white,
                 child: SafeArea(
                   child: SingleChildScrollView(
@@ -426,10 +433,10 @@ class _ChatState extends State<Chat> {
                     ),
                   ),
                 ),
-              ),
-            );
-          }
-        });
+              );
+            }
+          }),
+    );
   }
 
   List<String> getFormattedDate() {
@@ -469,7 +476,7 @@ class _ChatState extends State<Chat> {
       showPic = false;
     }
     if (filteredTime.contains(time) || preiousUID != uid) {
-      if (time != preivousTime && filteredTime.contains(time)) {
+      if (preivousTime != time && filteredTime.contains(time)) {
         showTime = true;
       } else if (preiousUID != uid) {
         showTime = true;
@@ -549,7 +556,7 @@ class _ChatState extends State<Chat> {
                               const TextStyle(color: Colors.grey, fontSize: 12),
                         ),
                         const SizedBox(
-                          width: 15,
+                          width: 20,
                         )
                       ],
                     )

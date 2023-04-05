@@ -8,11 +8,17 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:sfm/assets/storage_service.dart';
+import 'package:sfm/views/feedback_page.dart';
 import 'package:sfm/views/privacy_policy.dart';
 import 'package:sfm/views/recent.chats.dart';
 import 'package:sfm/views/single_chat.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
+import 'dart:developer' as develtools show log;
+
+import 'notfications.dart';
 
 final Storage storage = Storage();
 String userEmail = "";
@@ -130,16 +136,16 @@ class _HomeNGOState extends State<HomeNGO> {
                               const SizedBox(
                                 width: 10,
                               ),
-                              Text(
-                                "Surplus Food Management",
-                                style: TextStyle(
-                                    fontSize:
-                                        MediaQuery.of(context).size.width *
-                                            0.046,
-                                    fontFamily: "Roboto",
-                                    color: const Color(0xff05240E)),
-                                textAlign: TextAlign.center,
-                              )
+                              // Text(
+                              //   "Surplus Food Management",
+                              //   style: TextStyle(
+                              //       fontSize:
+                              //           MediaQuery.of(context).size.width *
+                              //               0.046,
+                              //       fontFamily: "Roboto",
+                              //       color: const Color(0xff05240E)),
+                              //   textAlign: TextAlign.center,
+                              // )
                             ],
                           ),
                         ),
@@ -165,12 +171,12 @@ class _HomeNGOState extends State<HomeNGO> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      "My Dashboard - NGO",
+                                      "Surplus Food Available",
                                       style: TextStyle(
                                           fontSize: MediaQuery.of(context)
                                                   .size
                                                   .width *
-                                              0.066,
+                                              0.060,
                                           fontFamily: "Roboto",
                                           color: const Color(0xff05240E)),
                                       // textAlign: TextAlign.center,
@@ -178,12 +184,18 @@ class _HomeNGOState extends State<HomeNGO> {
                                   ),
                                 ],
                               ),
-                              // const TestPicture(),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                              Container(
+                                color: Colors.green,
+                                height: 2,
+                                width: MediaQuery.of(context).size.width * 0.50,
+                              ),
                               SizedBox(
                                 height:
                                     MediaQuery.of(context).size.height * 0.02,
                               ),
-
                               StreamBuilder<Map<String, List<List<String>>>>(
                                   stream: _getListing(),
                                   builder: (context, snapshot) {
@@ -280,7 +292,7 @@ class _HomeNGOState extends State<HomeNGO> {
                                                                 child: Column(
                                                                   children: const [
                                                                     Text(
-                                                                      "No food listings near you.",
+                                                                      "No food listings from donators near you.",
                                                                       style:
                                                                           TextStyle(
                                                                         fontSize:
@@ -402,7 +414,16 @@ class _HomeNGOState extends State<HomeNGO> {
                                     } else {
                                       return Center(
                                         child: _isLoading
-                                            ? const CircularProgressIndicator()
+                                            ? SizedBox(
+                                                height: 50,
+                                                child: OverflowBox(
+                                                  minHeight: 150,
+                                                  maxHeight: 150,
+                                                  child: Lottie.asset(
+                                                    "assets/animation/loading-utensils.json",
+                                                  ),
+                                                ),
+                                              )
                                             : Column(
                                                 children: [
                                                   SizedBox(
@@ -413,7 +434,7 @@ class _HomeNGOState extends State<HomeNGO> {
                                                             0.025,
                                                   ),
                                                   const Text(
-                                                    "No food listing found",
+                                                    "No food listing from donators found",
                                                     style: TextStyle(
                                                       fontSize: 14,
                                                       fontWeight:
@@ -429,7 +450,6 @@ class _HomeNGOState extends State<HomeNGO> {
                                       );
                                     }
                                   }),
-
                               Padding(
                                   padding: const EdgeInsets.only(right: 14.0),
                                   child: Column(
@@ -526,7 +546,16 @@ class _HomeNGOState extends State<HomeNGO> {
                                               } else {
                                                 return Center(
                                                   child: _isLoading
-                                                      ? const CircularProgressIndicator()
+                                                      ? SizedBox(
+                                                          height: 50,
+                                                          child: OverflowBox(
+                                                            minHeight: 150,
+                                                            maxHeight: 150,
+                                                            child: Lottie.asset(
+                                                              "assets/animation/loading-utensils.json",
+                                                            ),
+                                                          ),
+                                                        )
                                                       : Column(
                                                           children: [
                                                             SizedBox(
@@ -846,11 +875,21 @@ class _HomeNGOState extends State<HomeNGO> {
                           userType: "NGOs",
                         )));
           }),
-          menuItem("Notifications", Icons.notifications_outlined, () {}),
+          menuItem("Notifications", Icons.notifications_outlined, () {
+            Navigator.of(context).pop();
+
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const NotificationsPage()));
+          }),
           const Divider(
             color: Colors.black,
           ),
-          menuItem("Send Feedback", Icons.feedback_outlined, () {}),
+          menuItem("Send Feedback", Icons.feedback_outlined, () {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => const FeedbackPage()));
+          }),
           menuItem("Privacy Policy", Icons.privacy_tip_outlined, () {
             Navigator.push(context,
                 MaterialPageRoute(builder: (context) => const PrivacyPolicy()));
@@ -1318,6 +1357,7 @@ Widget _foodListingItem(
         ),
         Expanded(
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Padding(
@@ -1325,6 +1365,7 @@ Widget _foodListingItem(
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width * 0.6 - 90,
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(
@@ -2025,7 +2066,7 @@ Stream<Map<String, List<List<String>>>> _getListing() {
         myMap[cityKey] = cityData;
       });
 
-      List<List<String>> userCityValues = myMap.remove(userCity) ?? [[]];
+      List<List<String>> userCityValues = myMap.remove(userCity) ?? [];
       myMap = {userCity: userCityValues, ...myMap};
 
       controller.add(myMap);
@@ -2161,7 +2202,7 @@ Stream<Map<String, List<List<String>>>> _getListing() {
       return dateB.compareTo(dateA);
     });
     myMap[keyCity!] = cityData;
-    List<List<String>> userCityValues = myMap.remove(userCity) ?? [[]];
+    List<List<String>> userCityValues = myMap.remove(userCity) ?? [];
     myMap = {userCity: userCityValues, ...myMap};
 
     controller.add(myMap);

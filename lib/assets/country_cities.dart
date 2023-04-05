@@ -3963,3 +3963,470 @@ List<String> getStates(String country) {
   }
   return states.toList()..sort();
 }
+
+String getCountryCode(String number) {
+  if (number == "+93") {
+    return "AF";
+  } else if (number == "+358") {
+    return "AX";
+  } else if (number == "+355") {
+    return "AL";
+  } else if (number == "+213") {
+    return "DZ";
+  } else if (number == "+1684") {
+    return "AS";
+  } else if (number == "+376") {
+    return "AD";
+  } else if (number == "+244") {
+    return "AO";
+  } else if (number == "+1264") {
+    return "AI";
+  } else if (number == "+672") {
+    return "AQ";
+  } else if (number == "+1268") {
+    return "AG";
+  } else if (number == "+54") {
+    return "AR";
+  } else if (number == "+374") {
+    return "AM";
+  } else if (number == "+297") {
+    return "AW";
+  } else if (number == "+61") {
+    return "AU";
+  } else if (number == "+43") {
+    return "AT";
+  } else if (number == "+994") {
+    return "AZ";
+  } else if (number == "+1242") {
+    return "BS";
+  } else if (number == "+973") {
+    return "BH";
+  } else if (number == "+880") {
+    return "BD";
+  } else if (number == "+1246") {
+    return "BB";
+  } else if (number == "+375") {
+    return "BY";
+  } else if (number == "+32") {
+    return "BE";
+  } else if (number == "+501") {
+    return "BZ";
+  } else if (number == "+229") {
+    return "BJ";
+  } else if (number == "+1441") {
+    return "BM";
+  } else if (number == "+975") {
+    return "BT";
+  } else if (number == "+591") {
+    return "BO";
+  } else if (number == "+387") {
+    return "BA";
+  } else if (number == "+267") {
+    return "BW";
+  } else if (number == "+47") {
+    return "BV";
+  } else if (number == "+55") {
+    return "BR";
+  } else if (number == "+246") {
+    return "IO";
+  } else if (number == "+673") {
+    return "BN";
+  } else if (number == "+359") {
+    return "BG";
+  } else if (number == "+226") {
+    return "BF";
+  } else if (number == "+257") {
+    return "BI";
+  } else if (number == "+855") {
+    return "KH";
+  } else if (number == "+237") {
+    return "CM";
+  } else if (number == "+1") {
+    return "CA";
+  } else if (number == "+238") {
+    return "CV";
+  } else if (number == "+345") {
+    return "KY";
+  } else if (number == "+236") {
+    return "CF";
+  } else if (number == "+235") {
+    return "TD";
+  } else if (number == "+56") {
+    return "CL";
+  } else if (number == "+86") {
+    return "CN";
+  } else if (number == "+61") {
+    return "CX";
+  } else if (number == "+61") {
+    return "CC";
+  } else if (number == "+57") {
+    return "CO";
+  } else if (number == "+269") {
+    return "KM";
+  } else if (number == "+242") {
+    return "CG";
+  } else if (number == "+243") {
+    return "CD";
+  } else if (number == "+682") {
+    return "CK";
+  } else if (number == "+506") {
+    return "CR";
+  } else if (number == "+225") {
+    return "CI";
+  } else if (number == "+385") {
+    return "HR";
+  } else if (number == "+53") {
+    return "CU";
+  } else if (number == "+357") {
+    return "CY";
+  } else if (number == "+420") {
+    return "CZ";
+  } else if (number == "+45") {
+    return "DK";
+  } else if (number == "+253") {
+    return "DJ";
+  } else if (number == "+1767") {
+    return "DM";
+  } else if (number == "+1849") {
+    return "DO";
+  } else if (number == "+593") {
+    return "EC";
+  } else if (number == "+20") {
+    return "EG";
+  } else if (number == "+503") {
+    return "SV";
+  } else if (number == "+240") {
+    return "GQ";
+  } else if (number == "+291") {
+    return "ER";
+  } else if (number == "+372") {
+    return "EE";
+  } else if (number == "+251") {
+    return "ET";
+  } else if (number == "+500") {
+    return "FK";
+  } else if (number == "+298") {
+    return "FO";
+  } else if (number == "+679") {
+    return "FJ";
+  } else if (number == "+358") {
+    return "FI";
+  } else if (number == "+33") {
+    return "FR";
+  } else if (number == "+594") {
+    return "GF";
+  } else if (number == "+689") {
+    return "PF";
+  } else if (number == "+262") {
+    return "TF";
+  } else if (number == "+241") {
+    return "GA";
+  } else if (number == "+220") {
+    return "GM";
+  } else if (number == "+995") {
+    return "GE";
+  } else if (number == "+49") {
+    return "DE";
+  } else if (number == "+233") {
+    return "GH";
+  } else if (number == "+350") {
+    return "GI";
+  } else if (number == "+30") {
+    return "GR";
+  } else if (number == "+299") {
+    return "GL";
+  } else if (number == "+1473") {
+    return "GD";
+  } else if (number == "+590") {
+    return "GP";
+  } else if (number == "+1671") {
+    return "GU";
+  } else if (number == "+502") {
+    return "GT";
+  } else if (number == "+44" && number.startsWith("1481")) {
+    return "GG";
+  } else if (number == "+224") {
+    return "GN";
+  } else if (number == "+245") {
+    return "GW";
+  } else if (number == "+592") {
+    return "GY";
+  } else if (number == "+509") {
+    return "HT";
+  } else if (number == "+672") {
+    return "HM";
+  } else if (number == "+379") {
+    return "VA";
+  } else if (number == "+504") {
+    return "HN";
+  } else if (number == "+852") {
+    return "HK";
+  } else if (number == "+36") {
+    return "HU";
+  } else if (number == "+354") {
+    return "IS";
+  } else if (number == "+91") {
+    return "IN";
+  } else if (number == "+62") {
+    return "ID";
+  } else if (number == "+98") {
+    return "IR";
+  } else if (number == "+964") {
+    return "IQ";
+  } else if (number == "+353") {
+    return "IE";
+  } else if (number == "+44" && number.startsWith("1624")) {
+    return "IM";
+  } else if (number == "+39") {
+    return "IT";
+  } else if (number == "+1876") {
+    return "JM";
+  } else if (number == "+81") {
+    return "JP";
+  } else if (number == "+44" && number.startsWith("1534")) {
+    return "JE";
+  } else if (number == "+962") {
+    return "JO";
+  } else if (number == "+7" || number == "+77" || number == "+76") {
+    return "KZ";
+  } else if (number == "+254") {
+    return "KE";
+  } else if (number == "+686") {
+    return "KI";
+  } else if (number == "+850") {
+    return "KP";
+  } else if (number == "+82") {
+    return "KR";
+  } else if (number == "+383") {
+    return "XK";
+  } else if (number == "+965") {
+    return "KW";
+  } else if (number == "+996") {
+    return "KG";
+  } else if (number == "+856") {
+    return "LA";
+  } else if (number == "+371") {
+    return "LV";
+  } else if (number == "+961") {
+    return "LB";
+  } else if (number == "+266") {
+    return "LS";
+  } else if (number == "+231") {
+    return "LR";
+  } else if (number == "+218") {
+    return "LY";
+  } else if (number == "+423") {
+    return "LI";
+  } else if (number == "+370") {
+    return "LT";
+  } else if (number == "+352") {
+    return "LU";
+  } else if (number == "+853") {
+    return "MO";
+  } else if (number == "+389") {
+    return "MK";
+  } else if (number == "+261") {
+    return "MG";
+  } else if (number == "+265") {
+    return "MW";
+  } else if (number == "+60") {
+    return "MY";
+  } else if (number == "+960") {
+    return "MV";
+  } else if (number == "+223") {
+    return "ML";
+  } else if (number == "+356") {
+    return "MT";
+  } else if (number == "+692") {
+    return "MH";
+  } else if (number == "+596") {
+    return "MQ";
+  } else if (number == "+222") {
+    return "MR";
+  } else if (number == "+230") {
+    return "MU";
+  } else if (number == "+262") {
+    return "YT";
+  } else if (number == "+52") {
+    return "MX";
+  } else if (number == "+691") {
+    return "FM";
+  } else if (number == "+373") {
+    return "MD";
+  } else if (number == "+377") {
+    return "MC";
+  } else if (number == "+976") {
+    return "MN";
+  } else if (number == "+382") {
+    return "ME";
+  } else if (number == "+1664") {
+    return "MS";
+  } else if (number == "+212") {
+    return "MA";
+  } else if (number == "+258") {
+    return "MZ";
+  } else if (number == "+95") {
+    return "MM";
+  } else if (number == "+264") {
+    return "NA";
+  } else if (number == "+674") {
+    return "NR";
+  } else if (number == "+977") {
+    return "NP";
+  } else if (number == "+31") {
+    return "NL";
+  } else if (number == "+599") {
+    return "AN";
+  } else if (number == "+687") {
+    return "NC";
+  } else if (number == "+64") {
+    return "NZ";
+  } else if (number == "+505") {
+    return "NI";
+  } else if (number == "+227") {
+    return "NE";
+  } else if (number == "+234") {
+    return "NG";
+  } else if (number == "+683") {
+    return "NU";
+  } else if (number == "+672") {
+    return "NF";
+  } else if (number == "+1670") {
+    return "MP";
+  } else if (number == "+47") {
+    return "NO";
+  } else if (number == "+968") {
+    return "OM";
+  } else if (number == "+92") {
+    return "PK";
+  } else if (number == "+680") {
+    return "PW";
+  } else if (number == "+970") {
+    return "PS";
+  } else if (number == "+507") {
+    return "PA";
+  } else if (number == "+675") {
+    return "PG";
+  } else if (number == "+595") {
+    return "PY";
+  } else if (number == "+51") {
+    return "PE";
+  } else if (number == "+63") {
+    return "PH";
+  } else if (number == "+64") {
+    return "PN";
+  } else if (number == "+48") {
+    return "PL";
+  } else if (number == "+351") {
+    return "PT";
+  } else if (number == "+1939") {
+    return "PR";
+  } else if (number == "+974") {
+    return "QA";
+  } else if (number == "+40") {
+    return "RO";
+  } else if (number == "+7") {
+    return "RU";
+  } else if (number == "+250") {
+    return "RW";
+  } else if (number == "+262") {
+    return "RE";
+  } else if (number == "+290") {
+    return "SH";
+  } else if (number == "+1869") {
+    return "KN";
+  } else if (number == "+1758") {
+    return "LC";
+  } else if (number == "+590") {
+    return "MF";
+  } else if (number == "+508") {
+    return "PM";
+  } else if (number == "+1784") {
+    return "VC";
+  } else if (number == "+685") {
+    return "WS";
+  } else if (number == "+378") {
+    return "SM";
+  } else if (number == "+239") {
+    return "ST";
+  } else if (number == "+966") {
+    return "SA";
+  } else if (number == "+94") {
+    return "LK";
+  } else if (number == "+249") {
+    return "SD";
+  } else if (number == "+597") {
+    return "SR";
+  } else if (number == "+47") {
+    return "SJ";
+  } else if (number == "+268") {
+    return "SZ";
+  } else if (number == "+46") {
+    return "SE";
+  } else if (number == "+41") {
+    return "CH";
+  } else if (number == "+963") {
+    return "SY";
+  } else if (number == "+886") {
+    return "TW";
+  } else if (number == "+992") {
+    return "TJ";
+  } else if (number == "+255") {
+    return "TZ";
+  } else if (number == "+66") {
+    return "TH";
+  } else if (number == "+670") {
+    return "TL";
+  } else if (number == "+228") {
+    return "TG";
+  } else if (number == "+690") {
+    return "TK";
+  } else if (number == "+676") {
+    return "TO";
+  } else if (number == "+1868") {
+    return "TT";
+  } else if (number == "+216") {
+    return "TN";
+  } else if (number == "+90") {
+    return "TR";
+  } else if (number == "+993") {
+    return "TM";
+  } else if (number == "+1649") {
+    return "TC";
+  } else if (number == "+688") {
+    return "TV";
+  } else if (number == "+256") {
+    return "UG";
+  } else if (number == "+380") {
+    return "UA";
+  } else if (number == "+971") {
+    return "AE";
+  } else if (number == "+44") {
+    return "GB";
+  } else if (number == "+1") {
+    return "US";
+  } else if (number == "+598") {
+    return "UY";
+  } else if (number == "+998") {
+    return "UZ";
+  } else if (number == "+678") {
+    return "VU";
+  } else if (number == "+58") {
+    return "VE";
+  } else if (number == "+84") {
+    return "VN";
+  } else if (number == "+1284") {
+    return "VG";
+  } else if (number == "+1340") {
+    return "VI";
+  } else if (number == "+681") {
+    return "WF";
+  } else if (number == "+967") {
+    return "YE";
+  } else if (number == "+260") {
+    return "ZM";
+  } else if (number == "+263") {
+    return "ZW";
+  }
+  return "AE";
+}

@@ -2,7 +2,7 @@
     package="xyz.surplusfoodmanagement.sfm">
    <application
          android:requestLegacyExternalStorage="true"
-        android:label="sfm"
+        android:label="SFM"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

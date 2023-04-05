@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
+import 'package:lottie/lottie.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PrivacyPolicy extends StatefulWidget {
@@ -16,6 +17,13 @@ class _PrivacyPolicyState extends State<PrivacyPolicy> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: Text(
+          "Privacy Policy",
+          style: TextStyle(
+              color: const Color(0xff05240E),
+              fontSize: MediaQuery.of(context).size.width * 0.065,
+              fontFamily: "RobotoBold"),
+        ),
         iconTheme: const IconThemeData(
           color: Color(0xff05240E),
         ),
@@ -27,11 +35,23 @@ class _PrivacyPolicyState extends State<PrivacyPolicy> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(
+                height: 25,
+              ),
+              SizedBox(
+                height: 200,
+                child: OverflowBox(
+                  minHeight: 550,
+                  maxHeight: 550,
+                  child: Lottie.asset(
+                    "assets/animation/privacy-policy.json",
+                  ),
+                ),
+              ),
               const Padding(
                 padding: EdgeInsets.only(
                   left: 16.0,
                   right: 16,
-                  top: 5,
                 ),
                 child: Text(
                   'Terms & Conditions',

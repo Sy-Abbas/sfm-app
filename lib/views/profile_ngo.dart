@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:sfm/assets/country_cities.dart';
 import 'package:sfm/views/login_donator.dart';
 import '../assets/profile_pic.dart';
@@ -14,6 +15,8 @@ import '../assets/storage_service.dart';
 import '../main.dart';
 import 'dart:developer' as devetools show log;
 
+String countryCode = "";
+String firstCountryCode = "";
 String cFullName = "";
 String cNumber = "";
 String cEmail = "";
@@ -160,6 +163,8 @@ class _ProfileNGOState extends State<ProfileNGO> {
   final _formKeyReset = GlobalKey<FormState>();
   FToast? fToast;
   bool _clickedReset = false;
+  String _countryCode = "971";
+  String _firstCountryCode = "971";
 
   File? _image;
   @override
@@ -234,8 +239,8 @@ class _ProfileNGOState extends State<ProfileNGO> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/apple.png"),
@@ -243,8 +248,8 @@ class _ProfileNGOState extends State<ProfileNGO> {
                     )),
                   ),
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/pizzaSlice.png"),
@@ -261,7 +266,7 @@ class _ProfileNGOState extends State<ProfileNGO> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(42),
                     child: Container(
-                      height: MediaQuery.of(context).size.height * 0.76,
+                      height: MediaQuery.of(context).size.height * 0.75,
                       width: MediaQuery.of(context).size.width * 0.85,
                       color: Colors.white,
                       child: Scaffold(
@@ -387,8 +392,8 @@ class _ProfileNGOState extends State<ProfileNGO> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/burger.png"),
@@ -396,8 +401,8 @@ class _ProfileNGOState extends State<ProfileNGO> {
                     )),
                   ),
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/apple.png"),
@@ -450,7 +455,27 @@ class _ProfileNGOState extends State<ProfileNGO> {
           },
         ),
         const SizedBox(height: 12),
-        TextFormField(
+        IntlPhoneField(
+          disableLengthCheck: true,
+          validator: (p0) {
+            devetools.log(p0!.number);
+            if (p0.number.isEmpty) {
+              return "Please enter your contact number";
+            } else if (p0.number.length < 8 || p0.number.length > 9) {
+              return 'Please enter valid contact number';
+            }
+
+            return null;
+          },
+          onCountryChanged: (value) {
+            setState(() {
+              _firstCountryCode = value.dialCode;
+            });
+          },
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          initialCountryCode: getCountryCode(firstCountryCode),
+          flagsButtonPadding: const EdgeInsets.only(left: 12),
+          dropdownIconPosition: IconPosition.trailing,
           style: isEditing
               ? const TextStyle(color: Colors.black)
               : const TextStyle(color: Colors.grey),
@@ -458,6 +483,7 @@ class _ProfileNGOState extends State<ProfileNGO> {
           // textInputAction: TextInputAction.next,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
+            counterText: "",
             filled: true,
             fillColor: isEditing ? Colors.white : Colors.grey.shade200,
             labelText: "Contact Number",
@@ -474,17 +500,6 @@ class _ProfileNGOState extends State<ProfileNGO> {
                 const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
           ),
           controller: _number,
-          validator: (value) {
-            String patttern = r'(^(?:[+0]9)?[0-9]{10,12}$)';
-            RegExp regExp = RegExp(patttern);
-            if (value == null || value.isEmpty) {
-              return "Please enter your contact number";
-            } else if (!regExp.hasMatch(value)) {
-              return 'Please enter valid contact number';
-            }
-
-            return null;
-          },
         ),
         const SizedBox(height: 12),
         TextFormField(
@@ -576,25 +591,35 @@ class _ProfileNGOState extends State<ProfileNGO> {
                       final user = FirebaseAuth.instance.currentUser;
                       final userDocID =
                           await findDocID(user?.uid ?? "None", "NGOs");
-                      try {
-                        await FirebaseFirestore.instance
-                            .collection('NGOs')
-                            .doc(userDocID)
-                            .update({
-                          'Full Name': _fullname.text.trim(),
-                          'Contact Number': _number.text.trim(),
-                        });
-                      } on FirebaseAuthException catch (e) {
-                        if (e.code == 'not-found') {
-                          showToast("User not found");
-                        }
-                      } finally {
-                        // ignore: unused_local_variable
-                        String a = await getDetails();
-                        setState(() {
-                          isEditing = false;
-                        });
+                      final number =
+                          "+${_firstCountryCode.trim()}-${_number.text.trim()}";
+                      final numberRegistered = await containNumber(number);
+                      if (numberRegistered && _number.text != cNumber) {
                         Navigator.of(context).pop();
+                        _number.text = "";
+                        showToast("Number already in use");
+                      } else {
+                        try {
+                          await FirebaseFirestore.instance
+                              .collection('NGOs')
+                              .doc(userDocID)
+                              .update({
+                            'Full Name': _fullname.text.trim(),
+                            'Contact Number':
+                                "+${_firstCountryCode.trim()}-${_number.text.trim()}",
+                          });
+                        } on FirebaseAuthException catch (e) {
+                          if (e.code == 'not-found') {
+                            showToast("User not found");
+                          }
+                        } finally {
+                          // ignore: unused_local_variable
+                          String a = await getDetails();
+                          setState(() {
+                            isEditing = false;
+                          });
+                          Navigator.of(context).pop();
+                        }
                       }
                     } else {
                       await getDetails();
@@ -756,13 +781,34 @@ class _ProfileNGOState extends State<ProfileNGO> {
           },
         ),
         const SizedBox(height: 12),
-        TextFormField(
+        IntlPhoneField(
+          disableLengthCheck: true,
+          validator: (p0) {
+            devetools.log(p0!.number);
+            if (p0.number.isEmpty) {
+              return "Please enter your contact number";
+            } else if (p0.number.length < 8 || p0.number.length > 9) {
+              return 'Please enter valid contact number';
+            }
+
+            return null;
+          },
+          onCountryChanged: (value) {
+            setState(() {
+              _countryCode = value.dialCode;
+            });
+          },
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          initialCountryCode: getCountryCode(countryCode),
+          flagsButtonPadding: const EdgeInsets.only(left: 12),
+          dropdownIconPosition: IconPosition.trailing,
           style: isEditing2
               ? const TextStyle(color: Colors.black)
               : const TextStyle(color: Colors.grey),
           enabled: isEditing2,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
+            counterText: "",
             prefixIcon: const Icon(Icons.phone),
             labelText: "Phone Number",
             filled: true,
@@ -778,17 +824,6 @@ class _ProfileNGOState extends State<ProfileNGO> {
                 const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
           ),
           controller: _ngoNumber,
-          validator: (value) {
-            String patttern = r'(^(?:[+0]9)?[0-9]{10,12}$)';
-            RegExp regExp = RegExp(patttern);
-            if (value == null || value.isEmpty) {
-              return "Please enter your ngo's contact number";
-            } else if (!regExp.hasMatch(value)) {
-              return 'Please enter valid contact number';
-            }
-
-            return null;
-          },
         ),
         const SizedBox(height: 12),
         DropdownFormFieldCountry(
@@ -914,53 +949,67 @@ class _ProfileNGOState extends State<ProfileNGO> {
                   final user = FirebaseAuth.instance.currentUser;
                   final userid = user!.uid;
                   final userDocID = await findDocID(user.uid, "NGOs");
-                  try {
-                    if (countryValue == '') {
-                      countryValue = cCountry;
-                    }
-                    if (cityValue == '') {
-                      cityValue = cCity;
-                    }
-                    if (cityValue != cCity) {
-                      DatabaseReference ref = FirebaseDatabase.instance
-                          .ref("Requests/$cCountry/$cCity/$userid/");
-                      await ref.remove();
-                    }
-                    if (_address.text != cNGOAddress) {
-                      List<String> requests = [];
-                      DatabaseReference ref = FirebaseDatabase.instance
-                          .ref("Requests/$cCountry/$cCity/$userid/");
-                      DatabaseEvent event = await ref.once();
-                      if (event.snapshot.value != null) {
-                        final data = event.snapshot.value as Map;
-                        data.forEach((key, value) {
-                          requests.add(key);
-                        });
-                      }
-                      for (String x in requests) {
-                        DatabaseReference refs = FirebaseDatabase.instance
-                            .ref("Requests/$cCountry/$cCity/$userid/$x");
-                        await refs.update({"Area": _address.text});
-                      }
-                    }
-                    await FirebaseFirestore.instance
-                        .collection('NGOs')
-                        .doc(userDocID)
-                        .update({
-                      'NGO Name': _ngoName.text.trim(),
-                      'NGO Contact Number': _ngoNumber.text.trim(),
-                      'Country': countryValue.trim(),
-                      'City': cityValue.trim(),
-                      'Address Line': _address.text.trim(),
-                    });
-                  } on FirebaseAuthException catch (e) {
-                    if (e.code == 'not-found') {
-                      showToast("User not found");
-                    }
-                  } finally {
-                    await getDetails();
-                    nullState = false;
+                  final number =
+                      "+${_countryCode.trim()}-${_ngoNumber.text.trim()}";
+                  final numberRegistered = await containNumber(number);
+
+                  if (numberRegistered && _ngoNumber.text != cNGONumber) {
                     Navigator.of(context).pop();
+                    _ngoNumber.text = "";
+                    showToast("Number already in use");
+                  } else {
+                    try {
+                      if (countryValue == '') {
+                        countryValue = cCountry;
+                      }
+                      if (cityValue == '') {
+                        cityValue = cCity;
+                      }
+                      if (cityValue != cCity) {
+                        DatabaseReference ref = FirebaseDatabase.instance
+                            .ref("Requests/$cCountry/$cCity/$userid/");
+                        await ref.remove();
+                      }
+                      if (_address.text != cNGOAddress) {
+                        List<String> requests = [];
+                        DatabaseReference ref = FirebaseDatabase.instance
+                            .ref("Requests/$cCountry/$cCity/$userid/");
+                        DatabaseEvent event = await ref.once();
+                        if (event.snapshot.value != null) {
+                          final data = event.snapshot.value as Map;
+                          data.forEach((key, value) {
+                            requests.add(key);
+                          });
+                        }
+                        for (String x in requests) {
+                          DatabaseReference refs = FirebaseDatabase.instance
+                              .ref("Requests/$cCountry/$cCity/$userid/$x");
+                          await refs.update({"Area": _address.text.trim()});
+                        }
+                      }
+                      await FirebaseFirestore.instance
+                          .collection('NGOs')
+                          .doc(userDocID)
+                          .update({
+                        'NGO Name': _ngoName.text.trim(),
+                        'NGO Contact Number':
+                            "+${_countryCode.trim()}-${_ngoNumber.text.trim()}",
+                        'Country': countryValue.trim(),
+                        'City': cityValue.trim(),
+                        'Address Line': _address.text.trim(),
+                      });
+                    } on FirebaseAuthException catch (e) {
+                      if (e.code == 'not-found') {
+                        showToast("User not found");
+                      }
+                    } finally {
+                      setState(() {
+                        isEditing2 = false;
+                      });
+                      await getDetails();
+                      nullState = false;
+                      Navigator.of(context).pop();
+                    }
                   }
                 } else {
                   notSavedChanges = true;
@@ -977,9 +1026,6 @@ class _ProfileNGOState extends State<ProfileNGO> {
 
                   Navigator.of(context).pop();
                 }
-                setState(() {
-                  isEditing2 = false;
-                });
               }
             }
           },
@@ -1164,10 +1210,14 @@ Future<String> getDetails() async {
   final data =
       await FirebaseFirestore.instance.collection("NGOs").doc(docID).get();
   cFullName = data["Full Name"];
-  cNumber = data["Contact Number"];
+  cNumber = (data["Contact Number"] as String).split("-")[1];
+  firstCountryCode = (data["Contact Number"] as String).split("-")[0];
+
   cEmail = data["Email"];
   cNGOName = data["NGO Name"];
-  cNGONumber = data["NGO Contact Number"];
+  cNGONumber = (data["NGO Contact Number"] as String).split("-")[1];
+  countryCode = (data["NGO Contact Number"] as String).split("-")[0];
+
   cNGOAddress = data["Address Line"];
   cCountry = data["Country"];
   cCity = data["City"];

@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import 'dart:developer' as devetools show log;
 import '../assets/country_cities.dart';
 import '../main.dart';
@@ -28,6 +29,7 @@ class _DetailsNGOState extends State<DetailsNGO> {
   bool _clicked = false;
   bool nullState = false;
   FToast? fToast;
+  String _countryCode = "971";
   @override
   void initState() {
     fToast = FToast();
@@ -83,7 +85,7 @@ class _DetailsNGOState extends State<DetailsNGO> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.02,
+              height: MediaQuery.of(context).size.height * 0.035,
             ),
             Padding(
               padding: const EdgeInsets.all(14.0),
@@ -91,8 +93,8 @@ class _DetailsNGOState extends State<DetailsNGO> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/apple.png"),
@@ -100,8 +102,8 @@ class _DetailsNGOState extends State<DetailsNGO> {
                     )),
                   ),
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/pizzaSlice.png"),
@@ -118,7 +120,7 @@ class _DetailsNGOState extends State<DetailsNGO> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(42),
                     child: Container(
-                      height: MediaQuery.of(context).size.height * 0.72,
+                      height: MediaQuery.of(context).size.height * 0.75,
                       width: MediaQuery.of(context).size.width * 0.85,
                       color: Colors.white,
                       child: Scaffold(
@@ -187,10 +189,36 @@ class _DetailsNGOState extends State<DetailsNGO> {
                                         },
                                       ),
                                       const SizedBox(height: 14),
-                                      TextFormField(
+                                      IntlPhoneField(
+                                        disableLengthCheck: true,
+                                        validator: (p0) {
+                                          devetools.log(p0!.number);
+                                          if (p0.number.isEmpty) {
+                                            return "Please enter your contact number";
+                                          } else if (p0.number.length < 8 ||
+                                              p0.number.length > 9) {
+                                            return 'Please enter valid contact number';
+                                          }
+
+                                          return null;
+                                        },
+                                        onCountryChanged: (value) {
+                                          setState(() {
+                                            _countryCode = value.dialCode;
+                                          });
+                                        },
+                                        autovalidateMode:
+                                            AutovalidateMode.onUserInteraction,
+                                        initialCountryCode: "AE",
+                                        flagsButtonPadding:
+                                            const EdgeInsets.only(left: 12),
+                                        dropdownIconPosition:
+                                            IconPosition.trailing,
+                                        textInputAction: TextInputAction.next,
                                         keyboardType: TextInputType.number,
                                         decoration: const InputDecoration(
-                                          labelText: "NGO Contact Number",
+                                          counterText: "",
+                                          labelText: "Contact Number",
                                           floatingLabelBehavior:
                                               FloatingLabelBehavior.auto,
                                           prefixIcon: Icon(Icons.phone),
@@ -209,65 +237,45 @@ class _DetailsNGOState extends State<DetailsNGO> {
                                               horizontal: 20.0, vertical: 15.0),
                                         ),
                                         controller: _ngoNumber,
+                                      ),
+                                      const SizedBox(height: 14),
+                                      DropdownFormFieldCountry(
+                                        notSavedChanges: null,
+                                        initialValue: null,
+                                        isEditing: true,
+                                        labelText: "Country",
+                                        items: countries,
                                         validator: (value) {
-                                          String patttern =
-                                              r'(^(?:[+0]9)?[0-9]{10,12}$)';
-                                          RegExp regExp = RegExp(patttern);
-                                          if (value == null || value.isEmpty) {
-                                            return "Please enter your ngo's contact number";
-                                          } else if (!regExp.hasMatch(value)) {
-                                            return 'Please enter valid contact number';
+                                          if (value == null) {
+                                            return "Please select a country";
                                           }
-
                                           return null;
+                                        },
+                                        onChanged: (value) {
+                                          countryValue = value!;
+                                          devetools.log("sdsadasd");
+                                          setState(() {
+                                            nullState = true;
+                                            statesList =
+                                                getStates(countryValue);
+                                          });
                                         },
                                       ),
                                       const SizedBox(height: 14),
-                                      Row(
-                                        children: [
-                                          Flexible(
-                                            child: DropdownFormFieldCountry(
-                                              notSavedChanges: null,
-                                              initialValue: null,
-                                              isEditing: true,
-                                              labelText: "Country",
-                                              items: countries,
-                                              validator: (value) {
-                                                if (value == null) {
-                                                  return "Please select a country";
-                                                }
-                                                return null;
-                                              },
-                                              onChanged: (value) {
-                                                countryValue = value!;
-                                                devetools.log("sdsadasd");
-                                                setState(() {
-                                                  nullState = true;
-                                                  statesList =
-                                                      getStates(countryValue);
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                          const SizedBox(width: 14),
-                                          Flexible(
-                                            child: DropdownCity(
-                                              nullState: nullState,
-                                              labelText: "City",
-                                              items: statesList,
-                                              validator: (value) {
-                                                if (value == null) {
-                                                  return "Please select a city";
-                                                }
-                                                return null;
-                                              },
-                                              onChanged: (value) {
-                                                cityValue = value!;
-                                                nullState = false;
-                                              },
-                                            ),
-                                          ),
-                                        ],
+                                      DropdownCity(
+                                        nullState: nullState,
+                                        labelText: "Region",
+                                        items: statesList,
+                                        validator: (value) {
+                                          if (value == null) {
+                                            return "Please select a city";
+                                          }
+                                          return null;
+                                        },
+                                        onChanged: (value) {
+                                          cityValue = value!;
+                                          nullState = false;
+                                        },
                                       ),
                                       const SizedBox(height: 14),
                                       TextFormField(
@@ -358,31 +366,42 @@ class _DetailsNGOState extends State<DetailsNGO> {
                                                 .instance.currentUser;
                                             userID = await findDocID(
                                                 user?.uid ?? "None", "NGOs");
-
-                                            try {
-                                              await FirebaseFirestore.instance
-                                                  .collection('NGOs')
-                                                  .doc(userID)
-                                                  .update({
-                                                'NGO Name':
-                                                    _ngoName.text.trim(),
-                                                'NGO Contact Number':
-                                                    _ngoNumber.text.trim(),
-                                                'Country': countryValue.trim(),
-                                                'City': cityValue.trim(),
-                                                'Address Line':
-                                                    _address.text.trim(),
-                                              });
-                                              Navigator.of(context)
-                                                  .pushNamedAndRemoveUntil(
-                                                      '/homengo/',
-                                                      (route) => false);
-                                            } on FirebaseAuthException catch (e) {
-                                              if (e.code == 'not-found') {
-                                                Navigator.of(context).pop();
-                                                showToast("User not found");
-                                              }
-                                            } finally {}
+                                            final number =
+                                                "+${_countryCode.trim()}-${_ngoNumber.text.trim()}";
+                                            final numberRegistered =
+                                                await containNumber(number);
+                                            if (numberRegistered) {
+                                              Navigator.of(context).pop();
+                                              _ngoNumber.text = "";
+                                              showToast(
+                                                  "Number already in use");
+                                            } else {
+                                              try {
+                                                await FirebaseFirestore.instance
+                                                    .collection('NGOs')
+                                                    .doc(userID)
+                                                    .update({
+                                                  'NGO Name':
+                                                      _ngoName.text.trim(),
+                                                  'NGO Contact Number':
+                                                      "+${_countryCode.trim()}-${_ngoNumber.text.trim()}",
+                                                  'Country':
+                                                      countryValue.trim(),
+                                                  'City': cityValue.trim(),
+                                                  'Address Line':
+                                                      _address.text.trim(),
+                                                });
+                                                Navigator.of(context)
+                                                    .pushNamedAndRemoveUntil(
+                                                        '/homengo/',
+                                                        (route) => false);
+                                              } on FirebaseAuthException catch (e) {
+                                                if (e.code == 'not-found') {
+                                                  Navigator.of(context).pop();
+                                                  showToast("User not found");
+                                                }
+                                              } finally {}
+                                            }
                                           }
                                         },
                                         child: const Text("Submit",
@@ -406,8 +425,8 @@ class _DetailsNGOState extends State<DetailsNGO> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/burger.png"),
@@ -415,8 +434,8 @@ class _DetailsNGOState extends State<DetailsNGO> {
                     )),
                   ),
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/apple.png"),

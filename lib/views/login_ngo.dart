@@ -87,8 +87,8 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/apple.png"),
@@ -96,8 +96,8 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
                     )),
                   ),
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/pizzaSlice.png"),
@@ -114,7 +114,7 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(42),
                     child: Container(
-                      height: MediaQuery.of(context).size.height * 0.76,
+                      height: MediaQuery.of(context).size.height * 0.75,
                       width: MediaQuery.of(context).size.width * 0.85,
                       color: Colors.white,
                       child: Scaffold(
@@ -138,7 +138,7 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
                                                         Color>(
                                                     const Color(0xFF05240E))),
                                         onPressed: () {},
-                                        child: Text("Login NGO",
+                                        child: Text("NGO Login",
                                             style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize: MediaQuery.of(context)
@@ -428,8 +428,8 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/burger.png"),
@@ -437,8 +437,8 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
                     )),
                   ),
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/apple.png"),

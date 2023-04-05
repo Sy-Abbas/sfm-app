@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import '../main.dart';
 
 class RegisterViewNGO extends StatefulWidget {
@@ -27,6 +28,7 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
   bool _clicked = false;
   bool _agree = false;
   FToast? fToast;
+  String _countryCode = "971";
 
   @override
   void initState() {
@@ -94,8 +96,8 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/apple.png"),
@@ -103,8 +105,8 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                     )),
                   ),
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/pizzaSlice.png"),
@@ -121,7 +123,7 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(42),
                     child: Container(
-                      height: MediaQuery.of(context).size.height * 0.76,
+                      height: MediaQuery.of(context).size.height * 0.75,
                       width: MediaQuery.of(context).size.width * 0.85,
                       color: Colors.white,
                       child: Scaffold(
@@ -145,7 +147,7 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                                         Color>(
                                                     const Color(0xFF05240E))),
                                         onPressed: () {},
-                                        child: Text("Register NGO",
+                                        child: Text("NGO Sign Up",
                                             style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize: MediaQuery.of(context)
@@ -190,10 +192,34 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                         },
                                       ),
                                       const SizedBox(height: 10),
-                                      TextFormField(
+                                      IntlPhoneField(
+                                        disableLengthCheck: true,
+                                        validator: (p0) {
+                                          if (p0!.number.isEmpty) {
+                                            return "Please enter your contact number";
+                                          } else if (p0.number.length < 8 ||
+                                              p0.number.length > 9) {
+                                            return 'Please enter valid contact number';
+                                          }
+
+                                          return null;
+                                        },
+                                        onCountryChanged: (value) {
+                                          setState(() {
+                                            _countryCode = value.dialCode;
+                                          });
+                                        },
+                                        autovalidateMode:
+                                            AutovalidateMode.onUserInteraction,
+                                        initialCountryCode: "AE",
+                                        flagsButtonPadding:
+                                            const EdgeInsets.only(left: 12),
+                                        dropdownIconPosition:
+                                            IconPosition.trailing,
                                         textInputAction: TextInputAction.next,
                                         keyboardType: TextInputType.number,
                                         decoration: const InputDecoration(
+                                          counterText: "",
                                           labelText: "Contact Number",
                                           floatingLabelBehavior:
                                               FloatingLabelBehavior.auto,
@@ -213,18 +239,6 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                               horizontal: 20.0, vertical: 15.0),
                                         ),
                                         controller: _number,
-                                        validator: (value) {
-                                          String patttern =
-                                              r'(^(?:[+0]9)?[0-9]{10,12}$)';
-                                          RegExp regExp = RegExp(patttern);
-                                          if (value == null || value.isEmpty) {
-                                            return "Please enter your contact number";
-                                          } else if (!regExp.hasMatch(value)) {
-                                            return 'Please enter valid contact number';
-                                          }
-
-                                          return null;
-                                        },
                                       ),
                                       const SizedBox(height: 10),
                                       TextFormField(
@@ -468,56 +482,65 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                                       ),
                                                     );
                                                   });
-                                              try {
-                                                await FirebaseAuth.instance
-                                                    .createUserWithEmailAndPassword(
-                                                        email: email,
-                                                        password: password);
-                                                final user = FirebaseAuth
-                                                    .instance.currentUser;
-                                                final userUID = user?.uid;
-                                                develtools
-                                                    .log(userUID.toString());
-
-                                                // Making Types of user
-                                                CollectionReference fsUsers =
-                                                    FirebaseFirestore.instance
-                                                        .collection('NGOs');
-                                                await fsUsers.add({
-                                                  'uid': userUID,
-                                                  'Full Name':
-                                                      _fullname.text.trim(),
-                                                  'Contact Number':
-                                                      _number.text.trim(),
-                                                  'Email': email,
-                                                  'Address Line': "",
-                                                  'City': "",
-                                                  'Country': "",
-                                                  'NGO Contact Number': "",
-                                                  'NGO Name': "",
-                                                });
-                                                // ignore: unused_local_variable
-                                                final shouldSend =
-                                                    await verifyEmailDialog(
-                                                        context);
-                                                await user
-                                                    ?.sendEmailVerification();
-                                                Navigator.of(context)
-                                                    .pushNamedAndRemoveUntil(
-                                                  '/loginngo/',
-                                                  (route) => false,
-                                                );
-                                              } on FirebaseAuthException catch (e) {
-                                                if (e.code ==
-                                                    'email-already-in-use') {
-                                                  showToast(
-                                                      "Email already in use");
-                                                } else if (e.code ==
-                                                    'invalid-email') {
-                                                  showToast("Invalid user");
-                                                }
+                                              final number =
+                                                  "+${_countryCode.trim()}-${_number.text.trim()}";
+                                              final numberRegistered =
+                                                  await containNumber(number);
+                                              if (numberRegistered) {
                                                 Navigator.of(context).pop();
-                                              } finally {}
+                                                _number.text = "";
+                                                showToast(
+                                                    "Number already in use");
+                                              } else {
+                                                try {
+                                                  await FirebaseAuth.instance
+                                                      .createUserWithEmailAndPassword(
+                                                          email: email,
+                                                          password: password);
+                                                  final user = FirebaseAuth
+                                                      .instance.currentUser;
+                                                  final userUID = user?.uid;
+
+                                                  // Making Types of user
+                                                  CollectionReference fsUsers =
+                                                      FirebaseFirestore.instance
+                                                          .collection('NGOs');
+                                                  await fsUsers.add({
+                                                    'uid': userUID,
+                                                    'Full Name':
+                                                        _fullname.text.trim(),
+                                                    'Contact Number':
+                                                        "+$_countryCode-${_number.text.trim()}",
+                                                    'Email': email,
+                                                    'Address Line': "",
+                                                    'City': "",
+                                                    'Country': "",
+                                                    'NGO Contact Number': "",
+                                                    'NGO Name': "",
+                                                  });
+                                                  // ignore: unused_local_variable
+                                                  final shouldSend =
+                                                      await verifyEmailDialog(
+                                                          context);
+                                                  await user
+                                                      ?.sendEmailVerification();
+                                                  Navigator.of(context)
+                                                      .pushNamedAndRemoveUntil(
+                                                    '/loginngo/',
+                                                    (route) => false,
+                                                  );
+                                                } on FirebaseAuthException catch (e) {
+                                                  if (e.code ==
+                                                      'email-already-in-use') {
+                                                    showToast(
+                                                        "Email already in use");
+                                                  } else if (e.code ==
+                                                      'invalid-email') {
+                                                    showToast("Invalid user");
+                                                  }
+                                                  Navigator.of(context).pop();
+                                                } finally {}
+                                              }
                                             } else {
                                               showToast(
                                                   "You can't register unless you agree to the terms and conditions.");
@@ -590,8 +613,8 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/burger.png"),
@@ -599,8 +622,8 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                     )),
                   ),
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/apple.png"),

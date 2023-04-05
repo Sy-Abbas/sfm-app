@@ -10,8 +10,10 @@ import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:sfm/assets/storage_service.dart';
 import 'package:sfm/views/feedback_page.dart';
+import 'package:sfm/views/notfications.dart';
 import 'package:sfm/views/privacy_policy.dart';
 import 'package:sfm/views/recent.chats.dart';
 import 'package:sfm/views/single_chat.dart';
@@ -149,14 +151,14 @@ class _HomeDonatorsState extends State<HomeDonators> {
                               const SizedBox(
                                 width: 10,
                               ),
-                              const Text(
-                                "Surplus Food Management",
-                                style: TextStyle(
-                                    fontSize: 16,
-                                    fontFamily: "Roboto",
-                                    color: Color(0xff05240E)),
-                                textAlign: TextAlign.center,
-                              )
+                              // const Text(
+                              //   "Surplus Food Management",
+                              //   style: TextStyle(
+                              //       fontSize: 16,
+                              //       fontFamily: "Roboto",
+                              //       color: Color(0xff05240E)),
+                              //   textAlign: TextAlign.center,
+                              // )
                             ],
                           ),
                         ),
@@ -180,24 +182,32 @@ class _HomeDonatorsState extends State<HomeDonators> {
                             children: [
                               Row(
                                 children: [
-                                  Text(
-                                    "My Dashboard - Donator",
-                                    style: TextStyle(
-                                        fontSize:
-                                            MediaQuery.of(context).size.width *
-                                                0.066,
-                                        fontFamily: "Roboto",
-                                        color: const Color(0xff05240E)),
-                                    textAlign: TextAlign.center,
+                                  Expanded(
+                                    child: Text(
+                                      "Food Requests by NGOs",
+                                      style: TextStyle(
+                                          fontSize: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.06,
+                                          fontFamily: "Roboto",
+                                          color: Colors.black),
+                                    ),
                                   ),
                                 ],
                               ),
-                              // const TestPicture(),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                              Container(
+                                color: Colors.green,
+                                height: 2,
+                                width: MediaQuery.of(context).size.width * 0.55,
+                              ),
                               SizedBox(
                                 height:
                                     MediaQuery.of(context).size.height * 0.02,
                               ),
-
                               StreamBuilder<Map<String, List<List<String>>>>(
                                   stream: _getRequestDetails(),
                                   builder: (context, snapshot) {
@@ -292,8 +302,8 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                                                   ],
                                                                 ),
                                                               )
-                                                            : data[userCity] !=
-                                                                    null
+                                                            : data[userCity]
+                                                                    .isNotEmpty
                                                                 ? ListView
                                                                     .builder(
                                                                         physics:
@@ -382,9 +392,17 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                                 0.025,
                                           ),
                                           _isLoading
-                                              ? const Center(
-                                                  child:
-                                                      CircularProgressIndicator())
+                                              ? Center(
+                                                  child: SizedBox(
+                                                  height: 50,
+                                                  child: OverflowBox(
+                                                    minHeight: 150,
+                                                    maxHeight: 150,
+                                                    child: Lottie.asset(
+                                                      "assets/animation/loading-utensils.json",
+                                                    ),
+                                                  ),
+                                                ))
                                               : const Text(
                                                   "No Request Data",
                                                   style: TextStyle(
@@ -400,7 +418,6 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                       );
                                     }
                                   }),
-
                               SizedBox(
                                 height:
                                     MediaQuery.of(context).size.height * 0.005,
@@ -414,7 +431,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
-                                            "My Listing",
+                                            "My Surplus Food",
                                             style: TextStyle(
                                                 fontSize: MediaQuery.of(context)
                                                         .size
@@ -500,7 +517,16 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                     } else {
                                       return Center(
                                         child: _isLoading
-                                            ? const CircularProgressIndicator()
+                                            ? SizedBox(
+                                                height: 50,
+                                                child: OverflowBox(
+                                                  minHeight: 150,
+                                                  maxHeight: 150,
+                                                  child: Lottie.asset(
+                                                    "assets/animation/loading-utensils.json",
+                                                  ),
+                                                ),
+                                              )
                                             : Column(
                                                 children: [
                                                   SizedBox(
@@ -988,7 +1014,14 @@ class _HomeDonatorsState extends State<HomeDonators> {
                           userType: "Donators",
                         )));
           }),
-          menuItem("Notifications", Icons.notifications_outlined, () {}),
+          menuItem("Notifications", Icons.notifications_outlined, () {
+            Navigator.of(context).pop();
+
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const NotificationsPage()));
+          }),
           const Divider(
             color: Colors.black,
           ),
@@ -1188,7 +1221,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
           myMap[cityKey] = cityData;
         });
 
-        List<List<String>> userCityValues = myMap.remove(userCity) ?? [[]];
+        List<List<String>> userCityValues = myMap.remove(userCity) ?? [];
         myMap = {userCity: userCityValues, ...myMap};
 
         controller.add(myMap);
@@ -1233,7 +1266,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
         return dateB.compareTo(dateA);
       });
       myMap[key!] = cityData;
-      List<List<String>> userCityValues = myMap.remove(userCity) ?? [[]];
+      List<List<String>> userCityValues = myMap.remove(userCity) ?? [];
       myMap = {userCity: userCityValues, ...myMap};
 
       controller.add(myMap);
@@ -1277,7 +1310,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
         return dateB.compareTo(dateA);
       });
       myMap[key!] = cityData;
-      List<List<String>> userCityValues = myMap.remove(userCity) ?? [[]];
+      List<List<String>> userCityValues = myMap.remove(userCity) ?? [];
       myMap = {userCity: userCityValues, ...myMap};
 
       controller.add(myMap);
@@ -1450,6 +1483,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
           ),
           Flexible(
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Padding(
@@ -1457,6 +1491,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
                   child: SizedBox(
                     width: MediaQuery.of(context).size.width * 0.6 - 90,
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(

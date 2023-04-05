@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:intl_phone_field/phone_number.dart';
 import '../main.dart';
 
 class RegisterViewDonator extends StatefulWidget {
@@ -28,7 +30,7 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
   bool _clicked = false;
   bool _agree = false;
   FToast? fToast;
-
+  String _countryCode = "971";
   @override
   void initState() {
     fToast = FToast();
@@ -94,8 +96,8 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/apple.png"),
@@ -103,8 +105,8 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                     )),
                   ),
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/pizzaSlice.png"),
@@ -121,7 +123,7 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(42),
                     child: Container(
-                      height: MediaQuery.of(context).size.height * 0.76,
+                      height: MediaQuery.of(context).size.height * 0.75,
                       width: MediaQuery.of(context).size.width * 0.85,
                       color: Colors.white,
                       child: Scaffold(
@@ -145,7 +147,7 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                                         Color>(
                                                     const Color(0xFF05240E))),
                                         onPressed: () {},
-                                        child: Text("Register Donator",
+                                        child: Text("Donator Sign Up",
                                             style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize: MediaQuery.of(context)
@@ -190,10 +192,34 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                         },
                                       ),
                                       const SizedBox(height: 10),
-                                      TextFormField(
+                                      IntlPhoneField(
+                                        disableLengthCheck: true,
+                                        validator: (p0) {
+                                          if (p0!.number.isEmpty) {
+                                            return "Please enter your contact number";
+                                          } else if (p0.number.length < 8 ||
+                                              p0.number.length > 9) {
+                                            return 'Please enter valid contact number';
+                                          }
+
+                                          return null;
+                                        },
+                                        onCountryChanged: (value) {
+                                          setState(() {
+                                            _countryCode = value.dialCode;
+                                          });
+                                        },
+                                        autovalidateMode:
+                                            AutovalidateMode.onUserInteraction,
+                                        initialCountryCode: "AE",
+                                        flagsButtonPadding:
+                                            const EdgeInsets.only(left: 12),
+                                        dropdownIconPosition:
+                                            IconPosition.trailing,
                                         textInputAction: TextInputAction.next,
                                         keyboardType: TextInputType.number,
                                         decoration: const InputDecoration(
+                                          counterText: "",
                                           labelText: "Contact Number",
                                           floatingLabelBehavior:
                                               FloatingLabelBehavior.auto,
@@ -213,18 +239,6 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                               horizontal: 20.0, vertical: 15.0),
                                         ),
                                         controller: _number,
-                                        validator: (value) {
-                                          String patttern =
-                                              r'(^(?:[+0]9)?[0-9]{10,12}$)';
-                                          RegExp regExp = RegExp(patttern);
-                                          if (value == null || value.isEmpty) {
-                                            return "Please enter your contact number";
-                                          } else if (!regExp.hasMatch(value)) {
-                                            return 'Please enter valid contact number';
-                                          }
-
-                                          return null;
-                                        },
                                       ),
                                       const SizedBox(height: 10),
                                       TextFormField(
@@ -466,66 +480,74 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                                       ),
                                                     );
                                                   });
-
-                                              try {
-                                                await FirebaseAuth.instance
-                                                    .createUserWithEmailAndPassword(
-                                                        email: email,
-                                                        password: password);
-                                                final user = FirebaseAuth
-                                                    .instance.currentUser;
-                                                final userUID = user?.uid;
-                                                develtools
-                                                    .log(userUID.toString());
-
-                                                // Making Types of user
-                                                CollectionReference fsUsers =
-                                                    FirebaseFirestore.instance
-                                                        .collection('Donators');
-                                                await fsUsers.add({
-                                                  'uid': userUID,
-                                                  'Full Name':
-                                                      _fullname.text.trim(),
-                                                  'Contact Number':
-                                                      _number.text.trim(),
-                                                  'Email': email.trim(),
-                                                  'Address Line': "",
-                                                  'City': "",
-                                                  'Country': "",
-                                                  'Store Contact Number': "",
-                                                  'Store Name': "",
-                                                });
-                                                // ignore: unused_local_variable
-                                                final shouldSend =
-                                                    await verifyEmailDialog(
-                                                        context);
-
-                                                await user
-                                                    ?.sendEmailVerification();
-                                                Navigator.of(context)
-                                                    .pushNamedAndRemoveUntil(
-                                                  '/logindonator/',
-                                                  (route) => false,
-                                                );
-                                              } on FirebaseAuthException catch (e) {
-                                                if (e.code ==
-                                                    'email-already-in-use') {
-                                                  showToast(
-                                                      "Email already in use");
-                                                  _email.clear();
-                                                } else if (e.code ==
-                                                    'invalid-email') {
-                                                  showToast("Invalid user");
-                                                  _email.clear();
-                                                }
+                                              final number =
+                                                  "+${_countryCode.trim()}-${_number.text.trim()}";
+                                              final numberRegistered =
+                                                  await containNumber(number);
+                                              if (numberRegistered) {
                                                 Navigator.of(context).pop();
-                                              } finally {}
+                                                _number.text = "";
+                                                showToast(
+                                                    "Number already in use");
+                                              } else {
+                                                try {
+                                                  await FirebaseAuth.instance
+                                                      .createUserWithEmailAndPassword(
+                                                          email: email,
+                                                          password: password);
+                                                  final user = FirebaseAuth
+                                                      .instance.currentUser;
+                                                  final userUID = user?.uid;
 
+                                                  // Making Types of user
+                                                  CollectionReference fsUsers =
+                                                      FirebaseFirestore.instance
+                                                          .collection(
+                                                              'Donators');
+                                                  await fsUsers.add({
+                                                    'uid': userUID,
+                                                    'Full Name':
+                                                        _fullname.text.trim(),
+                                                    'Contact Number':
+                                                        "+${_countryCode.trim()}-${_number.text.trim()}",
+                                                    'Email': email.trim(),
+                                                    'Address Line': "",
+                                                    'City': "",
+                                                    'Country': "",
+                                                    'Store Contact Number': "",
+                                                    'Store Name': "",
+                                                  });
+                                                  // ignore: unused_local_variable
+                                                  final shouldSend =
+                                                      await verifyEmailDialog(
+                                                          context);
+
+                                                  await user
+                                                      ?.sendEmailVerification();
+                                                  Navigator.of(context)
+                                                      .pushNamedAndRemoveUntil(
+                                                    '/logindonator/',
+                                                    (route) => false,
+                                                  );
+                                                } on FirebaseAuthException catch (e) {
+                                                  if (e.code ==
+                                                      'email-already-in-use') {
+                                                    showToast(
+                                                        "Email already in use");
+                                                    _email.clear();
+                                                  } else if (e.code ==
+                                                      'invalid-email') {
+                                                    showToast("Invalid user");
+                                                    _email.clear();
+                                                  }
+                                                  Navigator.of(context).pop();
+                                                } finally {}
+                                              }
                                               // Navigator.of(context).pop();
 
                                             } else {
                                               showToast(
-                                                  "You can't register unless you agree to the terms and conditions.");
+                                                  "Terms & conditions not agreed.");
                                             }
                                           }
                                         },
@@ -595,8 +617,8 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/burger.png"),
@@ -604,8 +626,8 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                     )),
                   ),
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/apple.png"),

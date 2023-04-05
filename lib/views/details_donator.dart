@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import '../assets/country_cities.dart';
 import '../main.dart';
 
@@ -17,21 +18,22 @@ class DetailsDonator extends StatefulWidget {
 }
 
 class _DetailsDonatorState extends State<DetailsDonator> {
-  late final TextEditingController _ngoName;
-  late final TextEditingController _ngoNumber;
+  late final TextEditingController _storeName;
+  late final TextEditingController _storeNumber;
   late final TextEditingController _address;
   final _formKey = GlobalKey<FormState>();
   String countryValue = "";
   String cityValue = "";
   bool _clicked = false;
   bool nullState = false;
+  String _countryCode = "971";
 
   @override
   void initState() {
     fToast = FToast();
     fToast!.init(context);
-    _ngoName = TextEditingController();
-    _ngoNumber = TextEditingController();
+    _storeName = TextEditingController();
+    _storeNumber = TextEditingController();
     _address = TextEditingController();
 
     super.initState();
@@ -39,8 +41,8 @@ class _DetailsDonatorState extends State<DetailsDonator> {
 
   @override
   void dispose() {
-    _ngoName.dispose();
-    _ngoNumber.dispose();
+    _storeName.dispose();
+    _storeNumber.dispose();
     _address.dispose();
 
     super.dispose();
@@ -83,7 +85,7 @@ class _DetailsDonatorState extends State<DetailsDonator> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.02,
+              height: MediaQuery.of(context).size.height * 0.035,
             ),
             Padding(
               padding: const EdgeInsets.all(14.0),
@@ -91,8 +93,8 @@ class _DetailsDonatorState extends State<DetailsDonator> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/apple.png"),
@@ -100,8 +102,8 @@ class _DetailsDonatorState extends State<DetailsDonator> {
                     )),
                   ),
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/pizzaSlice.png"),
@@ -118,7 +120,7 @@ class _DetailsDonatorState extends State<DetailsDonator> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(42),
                     child: Container(
-                      height: MediaQuery.of(context).size.height * 0.72,
+                      height: MediaQuery.of(context).size.height * 0.75,
                       width: MediaQuery.of(context).size.width * 0.85,
                       color: Colors.white,
                       child: Scaffold(
@@ -178,7 +180,7 @@ class _DetailsDonatorState extends State<DetailsDonator> {
                                           contentPadding: EdgeInsets.symmetric(
                                               horizontal: 20.0, vertical: 15.0),
                                         ),
-                                        controller: _ngoName,
+                                        controller: _storeName,
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
                                             return "Please enter your store's name";
@@ -187,10 +189,35 @@ class _DetailsDonatorState extends State<DetailsDonator> {
                                         },
                                       ),
                                       const SizedBox(height: 14),
-                                      TextFormField(
+                                      IntlPhoneField(
+                                        disableLengthCheck: true,
+                                        validator: (p0) {
+                                          if (p0!.number.isEmpty) {
+                                            return "Please enter your contact number";
+                                          } else if (p0.number.length < 8 ||
+                                              p0.number.length > 9) {
+                                            return 'Please enter valid contact number';
+                                          }
+
+                                          return null;
+                                        },
+                                        onCountryChanged: (value) {
+                                          setState(() {
+                                            _countryCode = value.dialCode;
+                                          });
+                                        },
+                                        autovalidateMode:
+                                            AutovalidateMode.onUserInteraction,
+                                        initialCountryCode: "AE",
+                                        flagsButtonPadding:
+                                            const EdgeInsets.only(left: 12),
+                                        dropdownIconPosition:
+                                            IconPosition.trailing,
+                                        textInputAction: TextInputAction.next,
                                         keyboardType: TextInputType.number,
                                         decoration: const InputDecoration(
-                                          labelText: "Store Contact Number",
+                                          counterText: "",
+                                          labelText: "Contact Number",
                                           floatingLabelBehavior:
                                               FloatingLabelBehavior.auto,
                                           prefixIcon: Icon(Icons.phone),
@@ -208,19 +235,7 @@ class _DetailsDonatorState extends State<DetailsDonator> {
                                           contentPadding: EdgeInsets.symmetric(
                                               horizontal: 20.0, vertical: 15.0),
                                         ),
-                                        controller: _ngoNumber,
-                                        validator: (value) {
-                                          String patttern =
-                                              r'(^(?:[+0]9)?[0-9]{10,12}$)';
-                                          RegExp regExp = RegExp(patttern);
-                                          if (value == null || value.isEmpty) {
-                                            return "Please enter your store's contact number";
-                                          } else if (!regExp.hasMatch(value)) {
-                                            return 'Please enter valid contact number';
-                                          }
-
-                                          return null;
-                                        },
+                                        controller: _storeNumber,
                                       ),
                                       const SizedBox(height: 14),
                                       DropdownFormFieldCountry(
@@ -248,7 +263,7 @@ class _DetailsDonatorState extends State<DetailsDonator> {
                                       const SizedBox(height: 14),
                                       DropdownCity(
                                         nullState: nullState,
-                                        labelText: "City",
+                                        labelText: "Region",
                                         items: statesList,
                                         validator: (value) {
                                           if (value == null) {
@@ -350,31 +365,42 @@ class _DetailsDonatorState extends State<DetailsDonator> {
                                             userID = await findDocID(
                                                 user?.uid ?? "None",
                                                 "Donators");
-
-                                            try {
-                                              await FirebaseFirestore.instance
-                                                  .collection('Donators')
-                                                  .doc(userID)
-                                                  .update({
-                                                'Store Name':
-                                                    _ngoName.text.trim(),
-                                                'Store Contact Number':
-                                                    _ngoNumber.text.trim(),
-                                                'Country': countryValue.trim(),
-                                                'City': cityValue.trim(),
-                                                'Address Line':
-                                                    _address.text.trim(),
-                                              });
-                                              Navigator.of(context)
-                                                  .pushNamedAndRemoveUntil(
-                                                      '/homedonator/',
-                                                      (route) => false);
-                                            } on FirebaseAuthException catch (e) {
-                                              if (e.code == 'not-found') {
-                                                Navigator.of(context).pop();
-                                                showToast("User not foud");
-                                              }
-                                            } finally {}
+                                            final number =
+                                                "+${_countryCode.trim()}-${_storeNumber.text.trim()}";
+                                            final numberRegistered =
+                                                await containNumber(number);
+                                            if (numberRegistered) {
+                                              Navigator.of(context).pop();
+                                              _storeNumber.text = "";
+                                              showToast(
+                                                  "Number already in use");
+                                            } else {
+                                              try {
+                                                await FirebaseFirestore.instance
+                                                    .collection('Donators')
+                                                    .doc(userID)
+                                                    .update({
+                                                  'Store Name':
+                                                      _storeName.text.trim(),
+                                                  'Store Contact Number':
+                                                      "+${_countryCode.trim()}-${_storeNumber.text.trim()}",
+                                                  'Country':
+                                                      countryValue.trim(),
+                                                  'City': cityValue.trim(),
+                                                  'Address Line':
+                                                      _address.text.trim(),
+                                                });
+                                                Navigator.of(context)
+                                                    .pushNamedAndRemoveUntil(
+                                                        '/homedonator/',
+                                                        (route) => false);
+                                              } on FirebaseAuthException catch (e) {
+                                                if (e.code == 'not-found') {
+                                                  Navigator.of(context).pop();
+                                                  showToast("User not foud");
+                                                }
+                                              } finally {}
+                                            }
                                           }
                                         },
                                         child: const Text("Submit",
@@ -398,8 +424,8 @@ class _DetailsDonatorState extends State<DetailsDonator> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/burger.png"),
@@ -407,8 +433,8 @@ class _DetailsDonatorState extends State<DetailsDonator> {
                     )),
                   ),
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                       image: AssetImage("assets/images/apple.png"),

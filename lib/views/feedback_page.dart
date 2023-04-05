@@ -1,12 +1,17 @@
 // ignore_for_file: use_build_context_synchronously
-
 import 'dart:io';
-
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:lottie/lottie.dart';
+import 'package:sfm/assets/storage_service.dart';
 import 'dart:developer' as devetools show log;
 
 import '../assets/profile_pic.dart';
@@ -19,6 +24,7 @@ class FeedbackPage extends StatefulWidget {
 }
 
 class _FeedbackPageState extends State<FeedbackPage> {
+  final Storage storage = Storage();
   bool _login = false;
   bool _register = false;
   bool _profile = false;
@@ -38,15 +44,52 @@ class _FeedbackPageState extends State<FeedbackPage> {
   bool _effFour = false;
   bool _effFive = false;
   bool _editing = false;
+  bool _effError = false;
+  bool _useError = false;
+  bool _useSelected = false;
+  bool _effSelected = false;
   final TextEditingController _textController = TextEditingController();
   String filePath = "";
+  FToast? fToast;
   String fileName = "";
   ImageProvider<Object>? networkFile = const NetworkImage("");
   final imageHelper = ImageHelper();
-  File? _image;
   @override
   void initState() {
+    fToast = FToast();
+    fToast!.init(context);
     super.initState();
+  }
+
+  showToast(String message) {
+    Widget toast = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25.0),
+        color: Colors.grey.shade900,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            message,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ],
+      ),
+    );
+
+    fToast!.showToast(
+      child: toast,
+      gravity: ToastGravity.BOTTOM,
+      toastDuration: const Duration(seconds: 2),
+    );
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
   }
 
   @override
@@ -74,6 +117,16 @@ class _FeedbackPageState extends State<FeedbackPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              SizedBox(
+                height: 240,
+                child: OverflowBox(
+                  minHeight: 290,
+                  maxHeight: 290,
+                  child: Lottie.asset(
+                    "assets/animation/feedback.json",
+                  ),
+                ),
+              ),
               const SizedBox(
                 height: 14,
               ),
@@ -102,11 +155,13 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   InkWell(
                     onTap: () {
                       setState(() {
+                        _useError = false;
                         _useOne = true;
                         _useTwo = false;
                         _useThree = false;
                         _useFour = false;
                         _useFive = false;
+                        _useSelected = true;
                       });
                     },
                     child: CircleAvatar(
@@ -126,9 +181,11 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   InkWell(
                     onTap: () {
                       setState(() {
+                        _useError = false;
                         _useTwo = true;
                         _useThree = false;
                         _useFour = false;
+                        _useSelected = true;
                         _useFive = false;
                       });
                     },
@@ -146,8 +203,10 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   InkWell(
                     onTap: () {
                       setState(() {
+                        _useError = false;
                         _useThree = true;
                         _useFour = false;
+                        _useSelected = true;
                         _useFive = false;
                       });
                     },
@@ -164,7 +223,9 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   InkWell(
                     onTap: () {
                       setState(() {
+                        _useError = false;
                         _useFour = true;
+                        _useSelected = true;
                         _useFive = false;
                       });
                     },
@@ -181,6 +242,8 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   InkWell(
                     onTap: () {
                       setState(() {
+                        _useError = false;
+                        _useSelected = true;
                         _useFive = true;
                       });
                     },
@@ -192,8 +255,22 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   ),
                 ],
               ),
+              _useError
+                  ? const SizedBox(
+                      height: 8,
+                    )
+                  : const SizedBox(),
+              _useError
+                  ? const Text(
+                      "Please select a rating.",
+                      style: TextStyle(
+                          fontFamily: "Roboto",
+                          fontSize: 12,
+                          color: Colors.red),
+                    )
+                  : const SizedBox(),
               const SizedBox(
-                height: 26,
+                height: 20,
               ),
               const Text(
                 "Impact on food waste reduction",
@@ -220,11 +297,13 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   InkWell(
                     onTap: () {
                       setState(() {
+                        _effError = false;
                         _effOne = true;
                         _effTwo = false;
                         _effThree = false;
                         _effFour = false;
                         _effFive = false;
+                        _effSelected = true;
                       });
                     },
                     child: CircleAvatar(
@@ -244,9 +323,11 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   InkWell(
                     onTap: () {
                       setState(() {
+                        _effError = false;
                         _effTwo = true;
                         _effThree = false;
                         _effFour = false;
+                        _effSelected = true;
                         _effFive = false;
                       });
                     },
@@ -264,8 +345,10 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   InkWell(
                     onTap: () {
                       setState(() {
+                        _effError = false;
                         _effThree = true;
                         _effFour = false;
+                        _effSelected = true;
                         _effFive = false;
                       });
                     },
@@ -282,6 +365,8 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   InkWell(
                     onTap: () {
                       setState(() {
+                        _effSelected = true;
+                        _effError = false;
                         _effFour = true;
                         _effFive = false;
                       });
@@ -299,6 +384,8 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   InkWell(
                     onTap: () {
                       setState(() {
+                        _effError = false;
+                        _effSelected = true;
                         _effFive = true;
                       });
                     },
@@ -310,8 +397,22 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   ),
                 ],
               ),
+              _effError
+                  ? const SizedBox(
+                      height: 8,
+                    )
+                  : const SizedBox(),
+              _effError
+                  ? const Text(
+                      "Please select a rating.",
+                      style: TextStyle(
+                          fontFamily: "Roboto",
+                          fontSize: 12,
+                          color: Colors.red),
+                    )
+                  : const SizedBox(),
               const SizedBox(
-                height: 26,
+                height: 20,
               ),
               const Text(
                 "Care to share more?",
@@ -324,7 +425,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 height: 4,
               ),
               const Text(
-                "Please select the type of the feedback",
+                "Please select the features on which you would like to provide feedback.",
                 style: TextStyle(
                   fontFamily: "Roboto",
                   fontSize: 14,
@@ -602,9 +703,153 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 height: 20,
               ),
               Row(
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   ElevatedButton(
-                      onPressed: (() {}), child: const Text("Submit"))
+                      onPressed: (() async {
+                        FocusManager.instance.primaryFocus?.unfocus();
+                        if (!_effSelected) {
+                          setState(() {
+                            _effError = true;
+                          });
+                        } else if (!_useSelected) {
+                          setState(() {
+                            _useError = true;
+                          });
+                        } else {
+                          showDialog(
+                              barrierDismissible: false,
+                              context: context,
+                              builder: (_) {
+                                return Dialog(
+                                  // The background color
+                                  backgroundColor: Colors.white,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 20),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(14.0),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: const [
+                                          // The loading indicator
+                                          CircularProgressIndicator(),
+                                          SizedBox(
+                                            width: 15,
+                                          ),
+
+                                          // Some text
+                                          Text('Loading...')
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              });
+
+                          final user = FirebaseAuth.instance.currentUser;
+                          final userUID = user!.uid;
+                          var easeRating = "";
+                          if (_useOne) {
+                            easeRating = "1";
+                          } else if (_useTwo) {
+                            easeRating = "2";
+                          } else if (_useThree) {
+                            easeRating = "3";
+                          } else if (_useFour) {
+                            easeRating = "4";
+                          } else if (_useFive) {
+                            easeRating = "5";
+                          }
+                          var effRating = "";
+                          if (_effOne) {
+                            effRating = "";
+                          } else if (_effTwo) {
+                            effRating = "";
+                          } else if (_effThree) {
+                            effRating = "";
+                          } else if (_effFour) {
+                            effRating = "";
+                          } else if (_effFive) {
+                            effRating = "";
+                          }
+                          final dateTime = getFormattedDate();
+                          try {
+                            FirebaseDatabase database =
+                                FirebaseDatabase.instance;
+                            Map<String, String> feedbackData = {
+                              "easeRating": easeRating,
+                              "effectiveRaing": effRating,
+                              "Login Issue": _login.toString(),
+                              "Register Issue": _register.toString(),
+                              "Profile Issue": _profile.toString(),
+                              "Chat Issue": _chat.toString(),
+                              "Food Listing": _listing.toString(),
+                              "Food Request": _request.toString(),
+                              "Other Issue": _other.toString(),
+                              "Suggestions": _suggestion.toString(),
+                              "Brief": _textController.text,
+                            };
+                            database
+                                .ref()
+                                .child("Feedback")
+                                .child(userUID)
+                                .child(dateTime)
+                                .update(feedbackData);
+                            if (filePath != "") {
+                              await storage.uploadFile(filePath,
+                                  "Feedabck/$userUID/$dateTime/feedbackPicture.jpg");
+                              final Reference reference =
+                                  FirebaseStorage.instance.ref().child(
+                                      "Feedabck/$userUID/$dateTime/feedbackPicture.jpg");
+                              final path = await reference.getDownloadURL();
+                              Map<String, String> sendPath = {
+                                "File Path": path
+                              };
+                              database
+                                  .ref()
+                                  .child("Feedback")
+                                  .child(userUID)
+                                  .child(dateTime)
+                                  .update(sendPath);
+                            }
+                            setState(() {
+                              _login = false;
+                              _register = false;
+                              _profile = false;
+                              _listing = false;
+                              _request = false;
+                              _chat = false;
+                              _other = false;
+                              _suggestion = false;
+                              _useOne = false;
+                              _useTwo = false;
+                              _useThree = false;
+                              _useFour = false;
+                              _useFive = false;
+                              _effOne = false;
+                              _effTwo = false;
+                              _effThree = false;
+                              _effFour = false;
+                              _effFive = false;
+                              _editing = false;
+                              _effError = false;
+                              _useError = false;
+                              _useSelected = false;
+                              _effSelected = false;
+                              _textController.text = "";
+                              fileName = "";
+                              filePath = "";
+                            });
+                            Navigator.of(context).pop();
+                            showToast("Thank you for your feedback");
+                          } catch (e) {
+                            Navigator.of(context).pop();
+                            showToast("Error has occured");
+                          }
+                        }
+                      }),
+                      child: const Text("Submit"))
                 ],
               ),
             ],
@@ -612,6 +857,12 @@ class _FeedbackPageState extends State<FeedbackPage> {
         ),
       ),
     );
+  }
+
+  String getFormattedDate() {
+    final now = DateTime.now();
+    final formatter = DateFormat('dd-MM-yyyy HH:mm:ss');
+    return formatter.format(now);
   }
 
   Widget bottomSheet(BuildContext context) {
@@ -642,7 +893,6 @@ class _FeedbackPageState extends State<FeedbackPage> {
                         file: files.first, cropStyle: CropStyle.rectangle);
                     if (croppedFile != null) {
                       setState(() {
-                        _image = File(croppedFile.path);
                         filePath = croppedFile.path;
                         fileName = files.first.name;
                       });
@@ -663,7 +913,6 @@ class _FeedbackPageState extends State<FeedbackPage> {
                         file: files.first, cropStyle: CropStyle.rectangle);
                     if (croppedFile != null) {
                       setState(() {
-                        _image = File(croppedFile.path);
                         filePath = croppedFile.path;
                         fileName = files.first.name;
                       });
@@ -685,31 +934,23 @@ class _FeedbackPageState extends State<FeedbackPage> {
       height: 200,
       child: Stack(
         children: [
-          Form(
-            child: TextFormField(
-              onTap: () {
-                setState(() {
-                  _editing = true;
-                });
-              },
-              controller: _textController,
-              maxLines: 10,
-              decoration: const InputDecoration(
-                alignLabelWithHint: true,
-                labelStyle: TextStyle(fontFamily: "Roboto", fontSize: 14),
-                labelText: "Please briefly describe the issue",
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Color(0xffe5e5e5),
-                  ),
+          TextField(
+            onTap: () {
+              setState(() {
+                _editing = true;
+              });
+            },
+            controller: _textController,
+            maxLines: 10,
+            decoration: const InputDecoration(
+              alignLabelWithHint: true,
+              labelStyle: TextStyle(fontFamily: "Roboto", fontSize: 14),
+              labelText: "Please briefly describe the issue",
+              border: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: Color(0xffe5e5e5),
                 ),
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return "Please enter some brief description";
-                }
-                return null;
-              },
             ),
           ),
           Align(
