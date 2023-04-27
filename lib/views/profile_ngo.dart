@@ -1068,8 +1068,20 @@ class _ProfileNGOState extends State<ProfileNGO> {
                         filePath = "";
                       });
                     }
-                    storage.uploadFile(
+                    await storage.uploadFile(
                         croppedFile!.path, "$userID/userProfile.jpg");
+                    final profilePath =
+                        await storage.downloadURL("$userID/userProfile.jpg");
+
+                    final user = FirebaseAuth.instance.currentUser;
+                    final userid = user!.uid;
+                    final userDocID = await findDocID(userid, "NGOs");
+                    await FirebaseFirestore.instance
+                        .collection('NGOs')
+                        .doc(userDocID)
+                        .update({
+                      'Profile Picture': profilePath,
+                    });
                   }
                   Navigator.pop(context);
                 }),
@@ -1091,8 +1103,20 @@ class _ProfileNGOState extends State<ProfileNGO> {
                         filePath = "";
                       });
                     }
-                    storage.uploadFile(
+                    await storage.uploadFile(
                         croppedFile!.path, "$userID/userProfile.jpg");
+                    final profilePath =
+                        await storage.downloadURL("$userID/userProfile.jpg");
+
+                    final user = FirebaseAuth.instance.currentUser;
+                    final userid = user!.uid;
+                    final userDocID = await findDocID(userid, "NGOs");
+                    await FirebaseFirestore.instance
+                        .collection('NGOs')
+                        .doc(userDocID)
+                        .update({
+                      'Profile Picture': profilePath,
+                    });
                   }
                   Navigator.pop(context);
                 }),

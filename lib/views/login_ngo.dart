@@ -317,10 +317,22 @@ class _LoginViewNGOState extends State<LoginViewNGO> {
                                                           "NGOs",
                                                           idDoc);
                                                   if (isDetail == true) {
-                                                    Navigator.of(context)
-                                                        .pushNamedAndRemoveUntil(
-                                                            '/homengo/',
-                                                            (route) => false);
+                                                    bool isApproved =
+                                                        await accountApproved(
+                                                            user?.uid ?? "None",
+                                                            "NGOs",
+                                                            idDoc);
+                                                    if (isApproved) {
+                                                      Navigator.of(context)
+                                                          .pushNamedAndRemoveUntil(
+                                                              '/homengo/',
+                                                              (route) => false);
+                                                    } else {
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                      showToast(
+                                                          "Account not approved");
+                                                    }
                                                   } else {
                                                     Navigator.of(context)
                                                         .pushNamedAndRemoveUntil(

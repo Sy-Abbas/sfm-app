@@ -1016,8 +1016,10 @@ class _ProfileDonatorState extends State<ProfileDonator> {
                         for (String x in orders) {
                           DatabaseReference refs = FirebaseDatabase.instance
                               .ref("Orders/$cCountry/$cCity/$userid/$x");
-                          await refs.update(
-                              {"Store Number": _storeNumber.text.trim()});
+                          await refs.update({
+                            "Store Number":
+                                "+${_countryCode.trim()}-${_storeNumber.text.trim()}"
+                          });
                         }
                       }
                       if (_storeName.text != cStoreName) {
@@ -1136,8 +1138,20 @@ class _ProfileDonatorState extends State<ProfileDonator> {
                         filePath = "";
                       });
                     }
-                    storage.uploadFile(
+                    await storage.uploadFile(
                         croppedFile!.path, "$userID/userProfile.jpg");
+                    final profilePath =
+                        await storage.downloadURL("$userID/userProfile.jpg");
+
+                    final user = FirebaseAuth.instance.currentUser;
+                    final userid = user!.uid;
+                    final userDocID = await findDocID(userid, "Donators");
+                    await FirebaseFirestore.instance
+                        .collection('Donators')
+                        .doc(userDocID)
+                        .update({
+                      'Profile Picture': profilePath,
+                    });
                   }
                   Navigator.pop(context);
                 }),
@@ -1159,8 +1173,20 @@ class _ProfileDonatorState extends State<ProfileDonator> {
                         filePath = "";
                       });
                     }
-                    storage.uploadFile(
+                    await storage.uploadFile(
                         croppedFile!.path, "$userID/userProfile.jpg");
+                    final profilePath =
+                        await storage.downloadURL("$userID/userProfile.jpg");
+
+                    final user = FirebaseAuth.instance.currentUser;
+                    final userid = user!.uid;
+                    final userDocID = await findDocID(userid, "Donators");
+                    await FirebaseFirestore.instance
+                        .collection('Donators')
+                        .doc(userDocID)
+                        .update({
+                      'Profile Picture': profilePath,
+                    });
                   }
                   Navigator.pop(context);
                 }),

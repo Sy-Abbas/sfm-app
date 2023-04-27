@@ -218,7 +218,7 @@ class _DetailsNGOState extends State<DetailsNGO> {
                                         keyboardType: TextInputType.number,
                                         decoration: const InputDecoration(
                                           counterText: "",
-                                          labelText: "Contact Number",
+                                          labelText: "NGO Contact Number",
                                           floatingLabelBehavior:
                                               FloatingLabelBehavior.auto,
                                           prefixIcon: Icon(Icons.phone),
@@ -391,9 +391,11 @@ class _DetailsNGOState extends State<DetailsNGO> {
                                                   'Address Line':
                                                       _address.text.trim(),
                                                 });
+                                                await approveDialog(context);
+
                                                 Navigator.of(context)
                                                     .pushNamedAndRemoveUntil(
-                                                        '/homengo/',
+                                                        '/loginngo/',
                                                         (route) => false);
                                               } on FirebaseAuthException catch (e) {
                                                 if (e.code == 'not-found') {

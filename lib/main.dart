@@ -1,5 +1,4 @@
 import 'dart:developer' as devetools show log;
-import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -19,15 +18,6 @@ import 'package:sfm/views/register_ngo.dart';
 import 'firebase_options.dart';
 
 void main() {
-  AwesomeNotifications().initialize(
-      null,
-      [
-        NotificationChannel(
-            channelKey: 'basic_channel',
-            channelName: 'Basic Notification',
-            channelDescription: "Notification channel for basic tests ")
-      ],
-      debug: true);
   runApp(MaterialApp(
       debugShowCheckedModeBanner: false,
       title: "Surplus Food Management",
@@ -58,7 +48,6 @@ class Initialize extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     WidgetsFlutterBinding.ensureInitialized();
-
     return FutureBuilder(
       future: Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
@@ -185,6 +174,17 @@ Future<bool> detailsEntered(String uid, String userT, String userIDs) async {
     return false;
   } else {
     return true;
+  }
+}
+
+Future<bool> accountApproved(String uid, String userT, String userIDs) async {
+  // devetools.log(uid);
+  final data =
+      await FirebaseFirestore.instance.collection(userT).doc(userIDs).get();
+  if ((data['Approved'] as String).trim().toLowerCase() == "true") {
+    return true;
+  } else {
+    return false;
   }
 }
 
@@ -471,8 +471,8 @@ class _DropdownFormFieldCityState extends State<DropdownFormFieldCity> {
   }
 }
 
-triggerNotfication(int id, String title, String body) {
-  AwesomeNotifications().createNotification(
-      content: NotificationContent(
-          id: 10, channelKey: "basic_channel", title: title, body: body));
-}
+// triggerNotfication(int id, String title, String body) {
+//   AwesomeNotifications().createNotification(
+//       content: NotificationContent(
+//           id: 10, channelKey: "basic_channel", title: title, body: body));
+// }

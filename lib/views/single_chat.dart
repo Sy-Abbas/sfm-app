@@ -217,17 +217,18 @@ class _ChatState extends State<Chat> {
                   int minusThree = timeInt - 3;
                   int minusFour = timeInt - 4;
                   int minusFive = timeInt - 5;
+                  // if (plusOne )
                   if (filteredTime.contains(timeInt) ||
-                      filteredTime.contains(plusOne) ||
-                      filteredTime.contains(plusTwo) ||
-                      filteredTime.contains(plusThree) ||
-                      filteredTime.contains(plusFour) ||
-                      filteredTime.contains(plusFive) ||
-                      filteredTime.contains(minusOne) ||
-                      filteredTime.contains(minusTwo) ||
-                      filteredTime.contains(minusThree) ||
-                      filteredTime.contains(minusFour) ||
-                      filteredTime.contains(minusFive)) {
+                      filteredTime.contains(higherThan60(plusOne)) ||
+                      filteredTime.contains(higherThan60(plusTwo)) ||
+                      filteredTime.contains(higherThan60(plusThree)) ||
+                      filteredTime.contains(higherThan60(plusFour)) ||
+                      filteredTime.contains(higherThan60(plusFive)) ||
+                      filteredTime.contains(higherThan60(minusOne)) ||
+                      filteredTime.contains(higherThan60(minusTwo)) ||
+                      filteredTime.contains(higherThan60(minusThree)) ||
+                      filteredTime.contains(higherThan60(minusFour)) ||
+                      filteredTime.contains(higherThan60(minusFive))) {
                   } else {
                     filteredTime.add(timeInt);
                   }
@@ -437,6 +438,24 @@ class _ChatState extends State<Chat> {
             }
           }),
     );
+  }
+
+  int higherThan60(int number) {
+    String numberString = number.toString();
+
+    int lastTwoDigits = int.parse(numberString.substring(2));
+
+    if (lastTwoDigits > 60) {
+      int secondDigit = int.parse(numberString[1]);
+
+      secondDigit++;
+
+      numberString = numberString.replaceRange(1, 2, secondDigit.toString());
+
+      number = int.parse(numberString);
+    }
+
+    return number;
   }
 
   List<String> getFormattedDate() {

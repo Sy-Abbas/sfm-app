@@ -30,7 +30,7 @@ String userCity = "";
 String storeName = "";
 String storeNumber = "";
 String storeAddress = "";
-String filePath = "";
+String profilePath = "";
 String fileName = "";
 ImageProvider<Object>? networkFile = const NetworkImage("");
 final imageHelper = ImageHelper();
@@ -68,13 +68,12 @@ class _HomeDonatorsState extends State<HomeDonators> {
   String foodImagePath = "";
   FToast? fToast;
   Timer? _timer;
-  late Future<String> _getDetails;
 
   @override
   void initState() {
     fToast = FToast();
     fToast!.init(context);
-    _getDetails = getPics();
+
     super.initState();
     _timer = Timer(const Duration(seconds: 5), () {
       setState(() {
@@ -120,448 +119,392 @@ class _HomeDonatorsState extends State<HomeDonators> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: _getDetails,
+    return StreamBuilder(
+        stream: getDataStream(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            return StreamBuilder(
-                stream: getDataStream(),
-                builder: (context, snapshot) {
-                  if (storeName != '') {
-                    return Scaffold(
-                      backgroundColor: Colors.white,
-                      appBar: AppBar(
-                        iconTheme: const IconThemeData(color: Colors.green),
-                        backgroundColor: Colors.transparent,
-                        elevation: 0,
-                        automaticallyImplyLeading: false,
-                        title: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 50,
-                                height: 50,
-                                decoration: const BoxDecoration(
-                                    image: DecorationImage(
-                                  image: AssetImage("assets/logo.png"),
-                                  fit: BoxFit.fitWidth,
-                                )),
-                              ),
-                              const SizedBox(
-                                width: 10,
-                              ),
-                              // const Text(
-                              //   "Surplus Food Management",
-                              //   style: TextStyle(
-                              //       fontSize: 16,
-                              //       fontFamily: "Roboto",
-                              //       color: Color(0xff05240E)),
-                              //   textAlign: TextAlign.center,
-                              // )
-                            ],
+          if (storeName != '') {
+            return Scaffold(
+              backgroundColor: Colors.white,
+              appBar: AppBar(
+                iconTheme: const IconThemeData(color: Colors.green),
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                actions: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 14),
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: const BoxDecoration(
+                          image: DecorationImage(
+                        image: AssetImage("assets/logo.png"),
+                        fit: BoxFit.fitWidth,
+                      )),
+                    ),
+                  ),
+                ],
+              ),
+              drawer: Drawer(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      myHeaderDrawer(),
+                      myDrawerList(),
+                    ],
+                  ),
+                ),
+              ),
+              body: Padding(
+                padding: const EdgeInsets.only(
+                    top: 25, left: 22, right: 8, bottom: 8),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              "Food Requests by NGOs",
+                              style: TextStyle(
+                                  fontSize:
+                                      MediaQuery.of(context).size.width * 0.06,
+                                  fontFamily: "Roboto",
+                                  color: Colors.black),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                      endDrawer: Drawer(
-                        child: SingleChildScrollView(
-                          child: Column(
-                            children: [
-                              myHeaderDrawer(),
-                              myDrawerList(),
-                            ],
-                          ),
-                        ),
+                      const SizedBox(
+                        height: 5,
                       ),
-                      body: Padding(
-                        padding: const EdgeInsets.only(
-                            top: 25, left: 22, right: 8, bottom: 8),
-                        child: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
+                      Container(
+                        color: Colors.green,
+                        height: 2,
+                        width: MediaQuery.of(context).size.width * 0.55,
+                      ),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.02,
+                      ),
+                      StreamBuilder<Map<String, List<List<String>>>>(
+                          stream: _getRequestDetails(),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData) {
+                              final data = snapshot.data as Map;
+
+                              List<String> cities = [];
+                              data.forEach(
+                                (key, value) {
+                                  cities.add(key);
+                                },
+                              );
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Expanded(
-                                    child: Text(
-                                      "Food Requests by NGOs",
-                                      style: TextStyle(
-                                          fontSize: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.06,
-                                          fontFamily: "Roboto",
-                                          color: Colors.black),
+                                  SizedBox(
+                                    height: 25,
+                                    child: ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      shrinkWrap: true,
+                                      itemCount: cities.length,
+                                      itemBuilder: (context, index) {
+                                        return index == 0
+                                            ? _cities(
+                                                cities[0],
+                                                showYourCity
+                                                    ? "RobotoBold"
+                                                    : "Roboto",
+                                                showYourCity
+                                                    ? const Color(0xff05240E)
+                                                    : Colors.green,
+                                                selectedCity == cities[index],
+                                                () {
+                                                setState(() {
+                                                  selectedCity = cities[index];
+                                                  showYourCity = true;
+                                                });
+                                              })
+                                            : _cities(
+                                                cities[index],
+                                                "Roboto",
+                                                Colors.green,
+                                                selectedCity == cities[index],
+                                                () {
+                                                setState(() {
+                                                  selectedCity = cities[index];
+                                                  showYourCity = false;
+                                                });
+                                              });
+                                      },
                                     ),
                                   ),
-                                ],
-                              ),
-                              const SizedBox(
-                                height: 5,
-                              ),
-                              Container(
-                                color: Colors.green,
-                                height: 2,
-                                width: MediaQuery.of(context).size.width * 0.55,
-                              ),
-                              SizedBox(
-                                height:
-                                    MediaQuery.of(context).size.height * 0.02,
-                              ),
-                              StreamBuilder<Map<String, List<List<String>>>>(
-                                  stream: _getRequestDetails(),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.hasData) {
-                                      final data = snapshot.data as Map;
-
-                                      List<String> cities = [];
-                                      data.forEach(
-                                        (key, value) {
-                                          cities.add(key);
-                                        },
-                                      );
-
-                                      return Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          SizedBox(
-                                            height: 25,
-                                            child: ListView.builder(
-                                              scrollDirection: Axis.horizontal,
-                                              shrinkWrap: true,
-                                              itemCount: cities.length,
-                                              itemBuilder: (context, index) {
-                                                return index == 0
-                                                    ? _cities(
-                                                        cities[0],
-                                                        showYourCity
-                                                            ? "RobotoBold"
-                                                            : "Roboto",
-                                                        showYourCity
-                                                            ? const Color(
-                                                                0xff05240E)
-                                                            : Colors.green,
-                                                        selectedCity ==
-                                                            cities[index], () {
-                                                        setState(() {
-                                                          selectedCity =
-                                                              cities[index];
-                                                          showYourCity = true;
-                                                        });
-                                                      })
-                                                    : _cities(
-                                                        cities[index],
-                                                        "Roboto",
-                                                        Colors.green,
-                                                        selectedCity ==
-                                                            cities[index], () {
-                                                        setState(() {
-                                                          selectedCity =
-                                                              cities[index];
-                                                          showYourCity = false;
-                                                        });
-                                                      });
-                                              },
+                                  SizedBox(
+                                    height: MediaQuery.of(context).size.height *
+                                        0.025,
+                                  ),
+                                  showYourCity
+                                      ? Padding(
+                                          padding: const EdgeInsets.only(
+                                              right: 14.0),
+                                          child: SingleChildScrollView(
+                                            child: Column(
+                                              children: [
+                                                data[userCity].isEmpty
+                                                    ? Center(
+                                                        child: Column(
+                                                          children: const [
+                                                            Text(
+                                                              "No food requests in your area.",
+                                                              style: TextStyle(
+                                                                fontSize: 14,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                color:
+                                                                    Colors.grey,
+                                                              ),
+                                                            ),
+                                                            SizedBox(
+                                                              height: 10,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      )
+                                                    : data[userCity].isNotEmpty
+                                                        ? ListView.builder(
+                                                            physics:
+                                                                const NeverScrollableScrollPhysics(),
+                                                            shrinkWrap: true,
+                                                            itemCount:
+                                                                data[userCity]
+                                                                    .length,
+                                                            itemBuilder:
+                                                                (context,
+                                                                    index) {
+                                                              return (_requestIltem(
+                                                                context,
+                                                                data[userCity]
+                                                                    [index][2],
+                                                                data[userCity]
+                                                                    [index][3],
+                                                                data[userCity]
+                                                                    [index][1],
+                                                                data[userCity]
+                                                                    [index][4],
+                                                                data[userCity]
+                                                                    [index][0],
+                                                              ));
+                                                            })
+                                                        : const SizedBox()
+                                              ],
                                             ),
                                           ),
-                                          SizedBox(
-                                            height: MediaQuery.of(context)
-                                                    .size
-                                                    .height *
-                                                0.025,
+                                        )
+                                      : Padding(
+                                          padding: const EdgeInsets.only(
+                                              right: 14.0),
+                                          child: SingleChildScrollView(
+                                            child: Column(
+                                              children: [
+                                                data[selectedCity] != null
+                                                    ? ListView.builder(
+                                                        physics:
+                                                            const NeverScrollableScrollPhysics(),
+                                                        shrinkWrap: true,
+                                                        itemCount:
+                                                            data[selectedCity]
+                                                                .length,
+                                                        itemBuilder:
+                                                            (context, index) {
+                                                          return (_requestIltem(
+                                                            context,
+                                                            data[selectedCity]
+                                                                [index][2],
+                                                            data[selectedCity]
+                                                                [index][3],
+                                                            data[selectedCity]
+                                                                [index][1],
+                                                            data[selectedCity]
+                                                                [index][4],
+                                                            data[selectedCity]
+                                                                [index][0],
+                                                          ));
+                                                        })
+                                                    : const SizedBox()
+                                              ],
+                                            ),
                                           ),
-                                          showYourCity
-                                              ? Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          right: 14.0),
-                                                  child: SingleChildScrollView(
-                                                    child: Column(
-                                                      children: [
-                                                        data[userCity].isEmpty
-                                                            ? Center(
-                                                                child: Column(
-                                                                  children: const [
-                                                                    Text(
-                                                                      "No food requests in your area.",
-                                                                      style:
-                                                                          TextStyle(
-                                                                        fontSize:
-                                                                            14,
-                                                                        fontWeight:
-                                                                            FontWeight.bold,
-                                                                        color: Colors
-                                                                            .grey,
-                                                                      ),
-                                                                    ),
-                                                                    SizedBox(
-                                                                      height:
-                                                                          10,
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              )
-                                                            : data[userCity]
-                                                                    .isNotEmpty
-                                                                ? ListView
-                                                                    .builder(
-                                                                        physics:
-                                                                            const NeverScrollableScrollPhysics(),
-                                                                        shrinkWrap:
-                                                                            true,
-                                                                        itemCount:
-                                                                            data[userCity]
-                                                                                .length,
-                                                                        itemBuilder:
-                                                                            (context,
-                                                                                index) {
-                                                                          return (_requestIltem(
-                                                                            context,
-                                                                            data[userCity][index][2],
-                                                                            data[userCity][index][3],
-                                                                            data[userCity][index][1],
-                                                                            data[userCity][index][4],
-                                                                            data[userCity][index][0],
-                                                                          ));
-                                                                        })
-                                                                : const SizedBox()
-                                                      ],
-                                                    ),
-                                                  ),
-                                                )
-                                              : Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          right: 14.0),
-                                                  child: SingleChildScrollView(
-                                                    child: Column(
-                                                      children: [
-                                                        data[selectedCity] !=
-                                                                null
-                                                            ? ListView.builder(
-                                                                physics:
-                                                                    const NeverScrollableScrollPhysics(),
-                                                                shrinkWrap:
-                                                                    true,
-                                                                itemCount: data[
-                                                                        selectedCity]
-                                                                    .length,
-                                                                itemBuilder:
-                                                                    (context,
-                                                                        index) {
-                                                                  return (_requestIltem(
-                                                                    context,
-                                                                    data[selectedCity]
-                                                                        [
-                                                                        index][2],
-                                                                    data[selectedCity]
-                                                                        [
-                                                                        index][3],
-                                                                    data[selectedCity]
-                                                                        [
-                                                                        index][1],
-                                                                    data[selectedCity]
-                                                                        [
-                                                                        index][4],
-                                                                    data[selectedCity]
-                                                                        [
-                                                                        index][0],
-                                                                  ));
-                                                                })
-                                                            : const SizedBox()
-                                                      ],
-                                                    ),
-                                                  ),
-                                                )
-                                        ],
-                                      );
-                                    } else {
-                                      return Column(
+                                        )
+                                ],
+                              );
+                            } else {
+                              return Column(
+                                children: [
+                                  _cities(userCity, "RobotoBold",
+                                      const Color(0xff05240E), true, () {}),
+                                  SizedBox(
+                                    height: MediaQuery.of(context).size.height *
+                                        0.025,
+                                  ),
+                                  _isLoading
+                                      ? Center(
+                                          child: SizedBox(
+                                          height: 50,
+                                          child: OverflowBox(
+                                            minHeight: 150,
+                                            maxHeight: 150,
+                                            child: Lottie.asset(
+                                              "assets/animation/loading-utensils.json",
+                                            ),
+                                          ),
+                                        ))
+                                      : const Text(
+                                          "No Request Data",
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                  const SizedBox(
+                                    height: 10,
+                                  ),
+                                ],
+                              );
+                            }
+                          }),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.005,
+                      ),
+                      Padding(
+                          padding: const EdgeInsets.only(right: 14.0),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "My Surplus Food",
+                                    style: TextStyle(
+                                        fontSize:
+                                            MediaQuery.of(context).size.width *
+                                                0.06,
+                                        fontFamily: "Roboto",
+                                        color: const Color(0xff05240E)),
+                                  ),
+                                  IconButton(
+                                      onPressed: _showDialog,
+                                      icon: const Icon(
+                                        Icons.add,
+                                        color: Colors.green,
+                                      ))
+                                ],
+                              ),
+                            ],
+                          )),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.014,
+                      ),
+                      StreamBuilder<List<List<String>>>(
+                          stream: _getListingDetails(),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData) {
+                              List<List<String>> data = snapshot.data!;
+                              data.sort((a, b) =>
+                                  int.parse(b[5]).compareTo(int.parse(a[5])));
+                              data.sort((a, b) {
+                                var dateA = DateTime.parse(
+                                    "${a[4].split("-")[2]}-${a[4].split("-")[1]}-${a[4].split("-")[0]}");
+                                var dateB = DateTime.parse(
+                                    "${b[4].split("-")[2]}-${b[4].split("-")[1]}-${b[4].split("-")[0]}");
+                                return dateB.compareTo(dateA);
+                              });
+                              if (data.isNotEmpty) {
+                                int numberOfListing = data.length;
+
+                                return SizedBox(
+                                    height: MediaQuery.of(context).size.height *
+                                        0.39,
+                                    child: ListView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        shrinkWrap: true,
+                                        itemCount: numberOfListing,
+                                        itemBuilder: ((context, index) {
+                                          return _foodListingItem(
+                                              context,
+                                              data[index][0],
+                                              data[index][1],
+                                              data[index][2],
+                                              data[index][3]);
+                                        })));
+                              } else {
+                                return Center(
+                                  child: Column(
+                                    children: [
+                                      SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.014,
+                                      ),
+                                      const Text(
+                                        "No food listing made. Make some listings",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        height: 10,
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                            } else {
+                              return Center(
+                                child: _isLoading
+                                    ? SizedBox(
+                                        height: 50,
+                                        child: OverflowBox(
+                                          minHeight: 150,
+                                          maxHeight: 150,
+                                          child: Lottie.asset(
+                                            "assets/animation/loading-utensils.json",
+                                          ),
+                                        ),
+                                      )
+                                    : Column(
                                         children: [
-                                          _cities(
-                                              userCity,
-                                              "RobotoBold",
-                                              const Color(0xff05240E),
-                                              true,
-                                              () {}),
                                           SizedBox(
                                             height: MediaQuery.of(context)
                                                     .size
                                                     .height *
-                                                0.025,
+                                                0.014,
                                           ),
-                                          _isLoading
-                                              ? Center(
-                                                  child: SizedBox(
-                                                  height: 50,
-                                                  child: OverflowBox(
-                                                    minHeight: 150,
-                                                    maxHeight: 150,
-                                                    child: Lottie.asset(
-                                                      "assets/animation/loading-utensils.json",
-                                                    ),
-                                                  ),
-                                                ))
-                                              : const Text(
-                                                  "No Request Data",
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.grey,
-                                                  ),
-                                                ),
+                                          const Text(
+                                            "No food listing made. Make some listings",
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
                                           const SizedBox(
                                             height: 10,
                                           ),
                                         ],
-                                      );
-                                    }
-                                  }),
-                              SizedBox(
-                                height:
-                                    MediaQuery.of(context).size.height * 0.005,
-                              ),
-                              Padding(
-                                  padding: const EdgeInsets.only(right: 14.0),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            "My Surplus Food",
-                                            style: TextStyle(
-                                                fontSize: MediaQuery.of(context)
-                                                        .size
-                                                        .width *
-                                                    0.06,
-                                                fontFamily: "Roboto",
-                                                color: const Color(0xff05240E)),
-                                          ),
-                                          IconButton(
-                                              onPressed: _showDialog,
-                                              icon: const Icon(
-                                                Icons.add,
-                                                color: Colors.green,
-                                              ))
-                                        ],
                                       ),
-                                    ],
-                                  )),
-                              SizedBox(
-                                height:
-                                    MediaQuery.of(context).size.height * 0.014,
-                              ),
-                              StreamBuilder<List<List<String>>>(
-                                  stream: _getListingDetails(),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.hasData) {
-                                      List<List<String>> data = snapshot.data!;
-                                      data.sort((a, b) => int.parse(b[5])
-                                          .compareTo(int.parse(a[5])));
-                                      data.sort((a, b) {
-                                        var dateA = DateTime.parse(
-                                            "${a[4].split("-")[2]}-${a[4].split("-")[1]}-${a[4].split("-")[0]}");
-                                        var dateB = DateTime.parse(
-                                            "${b[4].split("-")[2]}-${b[4].split("-")[1]}-${b[4].split("-")[0]}");
-                                        return dateB.compareTo(dateA);
-                                      });
-                                      if (data.isNotEmpty) {
-                                        int numberOfListing = data.length;
-
-                                        return SizedBox(
-                                            height: MediaQuery.of(context)
-                                                    .size
-                                                    .height *
-                                                0.39,
-                                            child: ListView.builder(
-                                                scrollDirection:
-                                                    Axis.horizontal,
-                                                shrinkWrap: true,
-                                                itemCount: numberOfListing,
-                                                itemBuilder: ((context, index) {
-                                                  return _foodListingItem(
-                                                      context,
-                                                      data[index][0],
-                                                      data[index][1],
-                                                      data[index][2],
-                                                      data[index][3]);
-                                                })));
-                                      } else {
-                                        return Center(
-                                          child: Column(
-                                            children: [
-                                              SizedBox(
-                                                height: MediaQuery.of(context)
-                                                        .size
-                                                        .height *
-                                                    0.014,
-                                              ),
-                                              const Text(
-                                                "No food listing made. Make some listings",
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
-                                              const SizedBox(
-                                                height: 10,
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      }
-                                    } else {
-                                      return Center(
-                                        child: _isLoading
-                                            ? SizedBox(
-                                                height: 50,
-                                                child: OverflowBox(
-                                                  minHeight: 150,
-                                                  maxHeight: 150,
-                                                  child: Lottie.asset(
-                                                    "assets/animation/loading-utensils.json",
-                                                  ),
-                                                ),
-                                              )
-                                            : Column(
-                                                children: [
-                                                  SizedBox(
-                                                    height:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .height *
-                                                            0.014,
-                                                  ),
-                                                  const Text(
-                                                    "No food listing made. Make some listings",
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: Colors.grey,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 10,
-                                                  ),
-                                                ],
-                                              ),
-                                      );
-                                    }
-                                  }),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  } else {
-                    return const Scaffold();
-                  }
-                });
+                              );
+                            }
+                          }),
+                    ],
+                  ),
+                ),
+              ),
+            );
           } else {
             return const Scaffold();
           }
@@ -975,9 +918,9 @@ class _HomeDonatorsState extends State<HomeDonators> {
         CircleAvatar(
           backgroundColor: Colors.grey[300],
           radius: 42,
-          foregroundImage: filePath == ""
+          foregroundImage: profilePath == ""
               ? const AssetImage("assets/images/user2.png")
-              : networkFile,
+              : NetworkImage(profilePath) as ImageProvider<Object>?,
         ),
         const SizedBox(
           height: 7,
@@ -2074,16 +2017,6 @@ Stream<void> getDataStream() async* {
     userName = snapshot["Full Name"];
     userEmail = snapshot["Email"];
     storeNumber = snapshot["Store Contact Number"];
+    profilePath = snapshot["Profile Picture"];
   });
-}
-
-Future<String> getPics() async {
-  final user = FirebaseAuth.instance.currentUser;
-  final String userID = user!.uid;
-  try {
-    filePath = await storage.downloadURL("$userID/userProfile.jpg");
-    networkFile = NetworkImage(filePath);
-    // ignore: empty_catches
-  } catch (error) {}
-  return "";
 }

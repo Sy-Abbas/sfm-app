@@ -399,126 +399,128 @@ class _MainRecentChatsState extends State<MainRecentChats> {
               fontFamily: "RobotoBold"),
         ),
       ),
-      body: Column(
-        children: [
-          const SizedBox(
-            height: 20,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              InkWell(
-                onTap: () {
-                  setState(() {
-                    selectedTag = otherText;
-                    showYour = false;
-                  });
-                },
-                child: Column(
-                  children: [
-                    Text(
-                      otherText,
-                      style: TextStyle(
-                          color: selectedTag == otherText
-                              ? Colors.green
-                              : Colors.grey.shade400,
-                          fontSize: MediaQuery.of(context).size.width * 0.042,
-                          fontFamily: "RobotoBold"),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Container(
-                      color: selectedTag == otherText
-                          ? Colors.green
-                          : Colors.grey.shade400,
-                      height: 5,
-                      width: MediaQuery.of(context).size.width * 0.5,
-                    ),
-                  ],
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(
+              height: 20,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      selectedTag = otherText;
+                      showYour = false;
+                    });
+                  },
+                  child: Column(
+                    children: [
+                      Text(
+                        otherText,
+                        style: TextStyle(
+                            color: selectedTag == otherText
+                                ? Colors.green
+                                : Colors.grey.shade400,
+                            fontSize: MediaQuery.of(context).size.width * 0.042,
+                            fontFamily: "RobotoBold"),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Container(
+                        color: selectedTag == otherText
+                            ? Colors.green
+                            : Colors.grey.shade400,
+                        height: 5,
+                        width: MediaQuery.of(context).size.width * 0.5,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              InkWell(
-                onTap: () {
-                  setState(() {
-                    selectedTag = youText;
-                    showYour = true;
-                  });
-                },
-                child: Column(
-                  children: [
-                    Text(
-                      youText,
-                      style: TextStyle(
-                          color: selectedTag == youText
-                              ? Colors.green
-                              : Colors.grey.shade400,
-                          fontSize: MediaQuery.of(context).size.width * 0.042,
-                          fontFamily: "RobotoBold"),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Container(
-                      color: selectedTag == youText
-                          ? Colors.green
-                          : Colors.grey.shade400,
-                      height: 5,
-                      width: MediaQuery.of(context).size.width * 0.5,
-                    )
-                  ],
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      selectedTag = youText;
+                      showYour = true;
+                    });
+                  },
+                  child: Column(
+                    children: [
+                      Text(
+                        youText,
+                        style: TextStyle(
+                            color: selectedTag == youText
+                                ? Colors.green
+                                : Colors.grey.shade400,
+                            fontSize: MediaQuery.of(context).size.width * 0.042,
+                            fontFamily: "RobotoBold"),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Container(
+                        color: selectedTag == youText
+                            ? Colors.green
+                            : Colors.grey.shade400,
+                        height: 5,
+                        width: MediaQuery.of(context).size.width * 0.5,
+                      )
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          widget.data != null
-              ? showYour
-                  ? SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.8,
-                      child: ListView.builder(
-                          itemCount: widget.data![0].length,
-                          itemBuilder: ((context, index) {
-                            List<String> uids = [];
-                            final uidData = widget.data![0];
-                            uidData.forEach((key, value) {
-                              uids.add(key);
-                            });
-                            return showRecent(
-                              uids[index],
-                              widget.pictures![0][index][0],
-                              widget.pictures![0][index][1],
-                              widget.data![0][uids[index]]![3],
-                              widget.data![0][uids[index]]![2],
-                              widget.data![0][uids[index]]![4],
-                              widget.data![0][uids[index]]![1],
-                              widget.data![0][uids[index]]![0],
-                            );
-                          })),
-                    )
-                  : SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.8,
-                      child: ListView.builder(
-                          itemCount: widget.data![1].length,
-                          itemBuilder: ((context, index) {
-                            List<String> uids = [];
-                            final uidData = widget.data![1];
-                            uidData.forEach((key, value) {
-                              uids.add(key);
-                            });
-                            return showRecent(
-                              uids[index],
-                              widget.pictures![1][index][0],
-                              widget.pictures![1][index][1],
-                              widget.data![1][uids[index]]![3],
-                              widget.data![1][uids[index]]![2],
-                              widget.data![1][uids[index]]![4],
-                              widget.data![1][uids[index]]![1],
-                              widget.data![1][uids[index]]![0],
-                            );
-                          })),
-                    )
-              : const SizedBox(),
-        ],
+              ],
+            ),
+            widget.data != null
+                ? showYour
+                    ? SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.8,
+                        child: ListView.builder(
+                            itemCount: widget.data![0].length,
+                            itemBuilder: ((context, index) {
+                              List<String> uids = [];
+                              final uidData = widget.data![0];
+                              uidData.forEach((key, value) {
+                                uids.add(key);
+                              });
+                              return showRecent(
+                                uids[index],
+                                widget.pictures![0][index][0],
+                                widget.pictures![0][index][1],
+                                widget.data![0][uids[index]]![3],
+                                widget.data![0][uids[index]]![2],
+                                widget.data![0][uids[index]]![4],
+                                widget.data![0][uids[index]]![1],
+                                widget.data![0][uids[index]]![0],
+                              );
+                            })),
+                      )
+                    : SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.8,
+                        child: ListView.builder(
+                            itemCount: widget.data![1].length,
+                            itemBuilder: ((context, index) {
+                              List<String> uids = [];
+                              final uidData = widget.data![1];
+                              uidData.forEach((key, value) {
+                                uids.add(key);
+                              });
+                              return showRecent(
+                                uids[index],
+                                widget.pictures![1][index][0],
+                                widget.pictures![1][index][1],
+                                widget.data![1][uids[index]]![3],
+                                widget.data![1][uids[index]]![2],
+                                widget.data![1][uids[index]]![4],
+                                widget.data![1][uids[index]]![1],
+                                widget.data![1][uids[index]]![0],
+                              );
+                            })),
+                      )
+                : const SizedBox(),
+          ],
+        ),
       ),
     );
   }

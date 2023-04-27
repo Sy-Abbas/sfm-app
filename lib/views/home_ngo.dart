@@ -52,7 +52,7 @@ class _HomeNGOState extends State<HomeNGO> {
   bool showYourCity = true;
   String selectedData = userCity;
   bool _isLoading = true;
-  late Future<String> _getDetails;
+
   Timer? _timer;
   FToast? fToast;
 
@@ -60,7 +60,7 @@ class _HomeNGOState extends State<HomeNGO> {
   void initState() {
     fToast = FToast();
     fToast!.init(context);
-    _getDetails = getPics();
+
     super.initState();
     _timer = Timer(const Duration(seconds: 5), () {
       setState(() {
@@ -105,468 +105,162 @@ class _HomeNGOState extends State<HomeNGO> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: _getDetails,
+    return StreamBuilder(
+        stream: getDataStream(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            return StreamBuilder(
-                stream: getDataStream(),
-                builder: (context, snapshot) {
-                  if (ngoName != '') {
-                    return Scaffold(
-                      backgroundColor: Colors.white,
-                      appBar: AppBar(
-                        iconTheme: const IconThemeData(color: Colors.green),
-                        backgroundColor: Colors.transparent,
-                        elevation: 0,
-                        automaticallyImplyLeading: false,
-                        title: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 50,
-                                height: 50,
-                                decoration: const BoxDecoration(
-                                    image: DecorationImage(
-                                  image: AssetImage("assets/logo.png"),
-                                  fit: BoxFit.fitWidth,
-                                )),
-                              ),
-                              const SizedBox(
-                                width: 10,
-                              ),
-                              // Text(
-                              //   "Surplus Food Management",
-                              //   style: TextStyle(
-                              //       fontSize:
-                              //           MediaQuery.of(context).size.width *
-                              //               0.046,
-                              //       fontFamily: "Roboto",
-                              //       color: const Color(0xff05240E)),
-                              //   textAlign: TextAlign.center,
-                              // )
-                            ],
+          if (ngoName != '') {
+            return Scaffold(
+              backgroundColor: Colors.white,
+              drawer: Drawer(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      myHeaderDrawer(),
+                      myDrawerList(),
+                    ],
+                  ),
+                ),
+              ),
+              appBar: AppBar(
+                iconTheme: const IconThemeData(color: Colors.green),
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                actions: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 14),
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: const BoxDecoration(
+                          image: DecorationImage(
+                        image: AssetImage("assets/logo.png"),
+                        fit: BoxFit.fitWidth,
+                      )),
+                    ),
+                  ),
+                ],
+              ),
+              body: Padding(
+                padding: const EdgeInsets.only(
+                    top: 25, left: 22, right: 8, bottom: 8),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              "Surplus Food Available",
+                              style: TextStyle(
+                                  fontSize:
+                                      MediaQuery.of(context).size.width * 0.060,
+                                  fontFamily: "Roboto",
+                                  color: const Color(0xff05240E)),
+                              // textAlign: TextAlign.center,
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                      endDrawer: Drawer(
-                        child: SingleChildScrollView(
-                          child: Column(
-                            children: [
-                              myHeaderDrawer(),
-                              myDrawerList(),
-                            ],
-                          ),
-                        ),
+                      const SizedBox(
+                        height: 5,
                       ),
-                      body: Padding(
-                        padding: const EdgeInsets.only(
-                            top: 25, left: 22, right: 8, bottom: 8),
-                        child: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
+                      Container(
+                        color: Colors.green,
+                        height: 2,
+                        width: MediaQuery.of(context).size.width * 0.50,
+                      ),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.02,
+                      ),
+                      StreamBuilder<Map<String, List<List<String>>>>(
+                          stream: _getListing(),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData) {
+                              final data = snapshot.data as Map;
+
+                              Map<String, List<List<String>>> cuisineData = {};
+                              data.forEach((key, value) {
+                                final d = value as List<List<String>>;
+                                for (List<String> x in d) {
+                                  if (x.length > 1) {
+                                    if (cuisineData.containsKey(x[0])) {
+                                      final cuisineList = cuisineData[x[0]]
+                                          as List<List<String>>;
+                                      cuisineList.add(x);
+                                      cuisineData[x[0]] = cuisineList;
+                                    } else {
+                                      List<List<String>> newList = [[]];
+                                      newList.add(x);
+                                      cuisineData[x[0]] = newList;
+                                    }
+                                  }
+                                }
+                              });
+
+                              List<String> cuisine = ["Nearby"];
+                              cuisineData.forEach(
+                                (key, value) {
+                                  cuisine.add(key);
+                                },
+                              );
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Expanded(
-                                    child: Text(
-                                      "Surplus Food Available",
-                                      style: TextStyle(
-                                          fontSize: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.060,
-                                          fontFamily: "Roboto",
-                                          color: const Color(0xff05240E)),
-                                      // textAlign: TextAlign.center,
+                                  SizedBox(
+                                    height: 25,
+                                    child: ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      shrinkWrap: true,
+                                      itemCount: cuisine.length,
+                                      itemBuilder: (context, index) {
+                                        return index == 0
+                                            ? _cities(
+                                                cuisine[0],
+                                                showYourCity
+                                                    ? "RobotoBold"
+                                                    : "Roboto",
+                                                showYourCity
+                                                    ? const Color(0xff05240E)
+                                                    : Colors.green,
+                                                selectedData == cuisine[index],
+                                                () {
+                                                setState(() {
+                                                  selectedData = cuisine[index];
+                                                  showYourCity = true;
+                                                });
+                                              })
+                                            : _cities(
+                                                cuisine[index],
+                                                "Roboto",
+                                                Colors.green,
+                                                selectedData == cuisine[index],
+                                                () {
+                                                setState(() {
+                                                  selectedData = cuisine[index];
+                                                  showYourCity = false;
+                                                });
+                                              });
+                                      },
                                     ),
                                   ),
-                                ],
-                              ),
-                              const SizedBox(
-                                height: 5,
-                              ),
-                              Container(
-                                color: Colors.green,
-                                height: 2,
-                                width: MediaQuery.of(context).size.width * 0.50,
-                              ),
-                              SizedBox(
-                                height:
-                                    MediaQuery.of(context).size.height * 0.02,
-                              ),
-                              StreamBuilder<Map<String, List<List<String>>>>(
-                                  stream: _getListing(),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.hasData) {
-                                      final data = snapshot.data as Map;
-
-                                      Map<String, List<List<String>>>
-                                          cuisineData = {};
-                                      data.forEach((key, value) {
-                                        final d = value as List<List<String>>;
-                                        for (List<String> x in d) {
-                                          if (x.length > 1) {
-                                            if (cuisineData.containsKey(x[0])) {
-                                              final cuisineList =
-                                                  cuisineData[x[0]]
-                                                      as List<List<String>>;
-                                              cuisineList.add(x);
-                                              cuisineData[x[0]] = cuisineList;
-                                            } else {
-                                              List<List<String>> newList = [[]];
-                                              newList.add(x);
-                                              cuisineData[x[0]] = newList;
-                                            }
-                                          }
-                                        }
-                                      });
-
-                                      List<String> cuisine = ["Nearby"];
-                                      cuisineData.forEach(
-                                        (key, value) {
-                                          cuisine.add(key);
-                                        },
-                                      );
-                                      return Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          SizedBox(
-                                            height: 25,
-                                            child: ListView.builder(
-                                              scrollDirection: Axis.horizontal,
-                                              shrinkWrap: true,
-                                              itemCount: cuisine.length,
-                                              itemBuilder: (context, index) {
-                                                return index == 0
-                                                    ? _cities(
-                                                        cuisine[0],
-                                                        showYourCity
-                                                            ? "RobotoBold"
-                                                            : "Roboto",
-                                                        showYourCity
-                                                            ? const Color(
-                                                                0xff05240E)
-                                                            : Colors.green,
-                                                        selectedData ==
-                                                            cuisine[index], () {
-                                                        setState(() {
-                                                          selectedData =
-                                                              cuisine[index];
-                                                          showYourCity = true;
-                                                        });
-                                                      })
-                                                    : _cities(
-                                                        cuisine[index],
-                                                        "Roboto",
-                                                        Colors.green,
-                                                        selectedData ==
-                                                            cuisine[index], () {
-                                                        setState(() {
-                                                          selectedData =
-                                                              cuisine[index];
-                                                          showYourCity = false;
-                                                        });
-                                                      });
-                                              },
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            height: MediaQuery.of(context)
-                                                    .size
-                                                    .height *
-                                                0.025,
-                                          ),
-                                          showYourCity
-                                              ? Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          right: 14.0),
-                                                  child: SingleChildScrollView(
-                                                    child: Column(
-                                                      children: [
-                                                        data[userCity].isEmpty
-                                                            ? Center(
-                                                                child: Column(
-                                                                  children: const [
-                                                                    Text(
-                                                                      "No food listings from donators near you.",
-                                                                      style:
-                                                                          TextStyle(
-                                                                        fontSize:
-                                                                            14,
-                                                                        fontWeight:
-                                                                            FontWeight.bold,
-                                                                        color: Colors
-                                                                            .grey,
-                                                                      ),
-                                                                    ),
-                                                                    SizedBox(
-                                                                      height:
-                                                                          10,
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              )
-                                                            : SizedBox(
-                                                                height: MediaQuery.of(
-                                                                            context)
-                                                                        .size
-                                                                        .height *
-                                                                    0.39,
-                                                                child: ListView
-                                                                    .builder(
-                                                                        scrollDirection:
-                                                                            Axis
-                                                                                .horizontal,
-                                                                        shrinkWrap:
-                                                                            true,
-                                                                        itemCount:
-                                                                            data[userCity]
-                                                                                .length,
-                                                                        itemBuilder:
-                                                                            (context,
-                                                                                index) {
-                                                                          return (_foodListingItem(
-                                                                            context,
-                                                                            data[userCity][index][1],
-                                                                            data[userCity][index][6],
-                                                                            data[userCity][index][3],
-                                                                            data[userCity][index][4],
-                                                                            data[userCity][index][7],
-                                                                            data[userCity][index][8],
-                                                                            data[userCity][index][9],
-                                                                            data[userCity][index][0],
-                                                                            data[userCity][index][10],
-                                                                            data[userCity][index][5],
-                                                                            data[userCity][index][11],
-                                                                            data[userCity][index][12],
-                                                                            data[userCity][index][13],
-                                                                            data[userCity][index][14],
-                                                                          ));
-                                                                        }),
-                                                              )
-                                                      ],
-                                                    ),
-                                                  ),
-                                                )
-                                              : Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          right: 14.0),
-                                                  child: SingleChildScrollView(
-                                                    child: Column(
-                                                      children: [
-                                                        SizedBox(
-                                                          height: MediaQuery.of(
-                                                                      context)
-                                                                  .size
-                                                                  .height *
-                                                              0.39,
-                                                          child: cuisineData[selectedData] !=
-                                                                  null
-                                                              ? ListView
-                                                                  .builder(
-                                                                      scrollDirection:
-                                                                          Axis
-                                                                              .horizontal,
-                                                                      shrinkWrap:
-                                                                          true,
-                                                                      itemCount:
-                                                                          cuisineData[selectedData]!
-                                                                              .length,
-                                                                      itemBuilder:
-                                                                          (context,
-                                                                              index) {
-                                                                        return index ==
-                                                                                0
-                                                                            ? const SizedBox()
-                                                                            : cuisineData[selectedData] != null
-                                                                                ? (_foodListingItem(
-                                                                                    context,
-                                                                                    cuisineData[selectedData]![index][1],
-                                                                                    cuisineData[selectedData]![index][2],
-                                                                                    cuisineData[selectedData]![index][3],
-                                                                                    cuisineData[selectedData]![index][4],
-                                                                                    cuisineData[selectedData]![index][7],
-                                                                                    cuisineData[selectedData]![index][8],
-                                                                                    cuisineData[selectedData]![index][9],
-                                                                                    cuisineData[selectedData]![index][0],
-                                                                                    cuisineData[selectedData]![index][10],
-                                                                                    cuisineData[selectedData]![index][5],
-                                                                                    cuisineData[selectedData]![index][11],
-                                                                                    cuisineData[selectedData]![index][12],
-                                                                                    cuisineData[selectedData]![index][13],
-                                                                                    cuisineData[selectedData]![index][14],
-                                                                                  ))
-                                                                                : const SizedBox();
-                                                                      })
-                                                              : const SizedBox(),
-                                                        )
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                        ],
-                                      );
-                                    } else {
-                                      return Center(
-                                        child: _isLoading
-                                            ? SizedBox(
-                                                height: 50,
-                                                child: OverflowBox(
-                                                  minHeight: 150,
-                                                  maxHeight: 150,
-                                                  child: Lottie.asset(
-                                                    "assets/animation/loading-utensils.json",
-                                                  ),
-                                                ),
-                                              )
-                                            : Column(
-                                                children: [
-                                                  SizedBox(
-                                                    height:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .height *
-                                                            0.025,
-                                                  ),
-                                                  const Text(
-                                                    "No food listing from donators found",
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: Colors.grey,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 10,
-                                                  ),
-                                                ],
-                                              ),
-                                      );
-                                    }
-                                  }),
-                              Padding(
-                                  padding: const EdgeInsets.only(right: 14.0),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            "My Food Requests",
-                                            style: TextStyle(
-                                                fontSize: MediaQuery.of(context)
-                                                        .size
-                                                        .width *
-                                                    0.06,
-                                                fontFamily: "Roboto",
-                                                color: const Color(0xff05240E)),
-                                          ),
-                                          IconButton(
-                                              onPressed: _showDialog,
-                                              icon: const Icon(
-                                                Icons.add,
-                                                color: Colors.green,
-                                              ))
-                                        ],
-                                      ),
-                                      SingleChildScrollView(
-                                        child: StreamBuilder<
-                                                List<List<String>>>(
-                                            stream: _getRequestDetails(),
-                                            builder: (context, snapshot) {
-                                              if (snapshot.hasData) {
-                                                List<List<String>> data =
-                                                    snapshot.data!;
-                                                data.sort((a, b) =>
-                                                    int.parse(b[4]).compareTo(
-                                                        int.parse(a[4])));
-                                                data.sort((a, b) {
-                                                  var dateA = DateTime.parse(
-                                                      "${a[3].split("-")[2]}-${a[3].split("-")[1]}-${a[3].split("-")[0]}");
-                                                  var dateB = DateTime.parse(
-                                                      "${b[3].split("-")[2]}-${b[3].split("-")[1]}-${b[3].split("-")[0]}");
-                                                  return dateB.compareTo(dateA);
-                                                });
-                                                if (data.isNotEmpty) {
-                                                  int numberOfRequest =
-                                                      data.length;
-                                                  return Column(
-                                                    children: [
-                                                      ListView.builder(
-                                                          physics:
-                                                              const NeverScrollableScrollPhysics(),
-                                                          shrinkWrap: true,
-                                                          itemCount:
-                                                              numberOfRequest,
-                                                          itemBuilder:
-                                                              (context, index) {
-                                                            return _requestIltem(
-                                                              context,
-                                                              data[index][1],
-                                                              data[index][2],
-                                                              data[index][0],
-                                                            );
-                                                          })
-                                                    ],
-                                                  );
-                                                } else {
-                                                  return Center(
-                                                    child: Column(
-                                                      children: [
-                                                        SizedBox(
-                                                          height: MediaQuery.of(
-                                                                      context)
-                                                                  .size
-                                                                  .height *
-                                                              0.025,
-                                                        ),
-                                                        const Text(
-                                                          "No food request made. Make some requests",
-                                                          style: TextStyle(
-                                                            fontSize: 14,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            color: Colors.grey,
-                                                          ),
-                                                        ),
-                                                        const SizedBox(
-                                                          height: 10,
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  );
-                                                }
-                                              } else {
-                                                return Center(
-                                                  child: _isLoading
-                                                      ? SizedBox(
-                                                          height: 50,
-                                                          child: OverflowBox(
-                                                            minHeight: 150,
-                                                            maxHeight: 150,
-                                                            child: Lottie.asset(
-                                                              "assets/animation/loading-utensils.json",
-                                                            ),
-                                                          ),
-                                                        )
-                                                      : Column(
-                                                          children: [
-                                                            SizedBox(
-                                                              height: MediaQuery.of(
-                                                                          context)
-                                                                      .size
-                                                                      .height *
-                                                                  0.025,
-                                                            ),
-                                                            const Text(
-                                                              "No food request made. Make some requests",
+                                  SizedBox(
+                                    height: MediaQuery.of(context).size.height *
+                                        0.025,
+                                  ),
+                                  showYourCity
+                                      ? Padding(
+                                          padding: const EdgeInsets.only(
+                                              right: 14.0),
+                                          child: SingleChildScrollView(
+                                            child: Column(
+                                              children: [
+                                                data[userCity].isEmpty
+                                                    ? Center(
+                                                        child: Column(
+                                                          children: const [
+                                                            Text(
+                                                              "No food listings from donators near you.",
                                                               style: TextStyle(
                                                                 fontSize: 14,
                                                                 fontWeight:
@@ -576,26 +270,309 @@ class _HomeNGOState extends State<HomeNGO> {
                                                                     Colors.grey,
                                                               ),
                                                             ),
-                                                            const SizedBox(
+                                                            SizedBox(
                                                               height: 10,
                                                             ),
                                                           ],
                                                         ),
-                                                );
-                                              }
-                                            }),
+                                                      )
+                                                    : SizedBox(
+                                                        height: MediaQuery.of(
+                                                                    context)
+                                                                .size
+                                                                .height *
+                                                            0.39,
+                                                        child: ListView.builder(
+                                                            scrollDirection:
+                                                                Axis.horizontal,
+                                                            shrinkWrap: true,
+                                                            itemCount:
+                                                                data[userCity]
+                                                                    .length,
+                                                            itemBuilder:
+                                                                (context,
+                                                                    index) {
+                                                              return (_foodListingItem(
+                                                                context,
+                                                                data[userCity]
+                                                                    [index][1],
+                                                                data[userCity]
+                                                                    [index][6],
+                                                                data[userCity]
+                                                                    [index][3],
+                                                                data[userCity]
+                                                                    [index][4],
+                                                                data[userCity]
+                                                                    [index][7],
+                                                                data[userCity]
+                                                                    [index][8],
+                                                                data[userCity]
+                                                                    [index][9],
+                                                                data[userCity]
+                                                                    [index][0],
+                                                                data[userCity]
+                                                                    [index][10],
+                                                                data[userCity]
+                                                                    [index][5],
+                                                                data[userCity]
+                                                                    [index][11],
+                                                                data[userCity]
+                                                                    [index][12],
+                                                                data[userCity]
+                                                                    [index][13],
+                                                                data[userCity]
+                                                                    [index][14],
+                                                              ));
+                                                            }),
+                                                      )
+                                              ],
+                                            ),
+                                          ),
+                                        )
+                                      : Padding(
+                                          padding: const EdgeInsets.only(
+                                              right: 14.0),
+                                          child: SingleChildScrollView(
+                                            child: Column(
+                                              children: [
+                                                SizedBox(
+                                                  height: MediaQuery.of(context)
+                                                          .size
+                                                          .height *
+                                                      0.39,
+                                                  child: cuisineData[
+                                                              selectedData] !=
+                                                          null
+                                                      ? ListView.builder(
+                                                          scrollDirection:
+                                                              Axis.horizontal,
+                                                          shrinkWrap: true,
+                                                          itemCount: cuisineData[
+                                                                  selectedData]!
+                                                              .length,
+                                                          itemBuilder:
+                                                              (context, index) {
+                                                            return index == 0
+                                                                ? const SizedBox()
+                                                                : cuisineData[
+                                                                            selectedData] !=
+                                                                        null
+                                                                    ? (_foodListingItem(
+                                                                        context,
+                                                                        cuisineData[selectedData]![index]
+                                                                            [1],
+                                                                        cuisineData[selectedData]![index]
+                                                                            [2],
+                                                                        cuisineData[selectedData]![index]
+                                                                            [3],
+                                                                        cuisineData[selectedData]![index]
+                                                                            [4],
+                                                                        cuisineData[selectedData]![index]
+                                                                            [7],
+                                                                        cuisineData[selectedData]![index]
+                                                                            [8],
+                                                                        cuisineData[selectedData]![index]
+                                                                            [9],
+                                                                        cuisineData[selectedData]![index]
+                                                                            [0],
+                                                                        cuisineData[selectedData]![index]
+                                                                            [
+                                                                            10],
+                                                                        cuisineData[selectedData]![index]
+                                                                            [5],
+                                                                        cuisineData[selectedData]![index]
+                                                                            [
+                                                                            11],
+                                                                        cuisineData[selectedData]![index]
+                                                                            [
+                                                                            12],
+                                                                        cuisineData[selectedData]![index]
+                                                                            [
+                                                                            13],
+                                                                        cuisineData[selectedData]![index]
+                                                                            [
+                                                                            14],
+                                                                      ))
+                                                                    : const SizedBox();
+                                                          })
+                                                      : const SizedBox(),
+                                                )
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                ],
+                              );
+                            } else {
+                              return Center(
+                                child: _isLoading
+                                    ? SizedBox(
+                                        height: 50,
+                                        child: OverflowBox(
+                                          minHeight: 150,
+                                          maxHeight: 150,
+                                          child: Lottie.asset(
+                                            "assets/animation/loading-utensils.json",
+                                          ),
+                                        ),
                                       )
-                                    ],
-                                  ))
+                                    : Column(
+                                        children: [
+                                          SizedBox(
+                                            height: MediaQuery.of(context)
+                                                    .size
+                                                    .height *
+                                                0.025,
+                                          ),
+                                          const Text(
+                                            "No food listing from donators found",
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            height: 10,
+                                          ),
+                                        ],
+                                      ),
+                              );
+                            }
+                          }),
+                      Padding(
+                          padding: const EdgeInsets.only(right: 14.0),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "My Food Requests",
+                                    style: TextStyle(
+                                        fontSize:
+                                            MediaQuery.of(context).size.width *
+                                                0.06,
+                                        fontFamily: "Roboto",
+                                        color: const Color(0xff05240E)),
+                                  ),
+                                  IconButton(
+                                      onPressed: _showDialog,
+                                      icon: const Icon(
+                                        Icons.add,
+                                        color: Colors.green,
+                                      ))
+                                ],
+                              ),
+                              SingleChildScrollView(
+                                child: StreamBuilder<List<List<String>>>(
+                                    stream: _getRequestDetails(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.hasData) {
+                                        List<List<String>> data =
+                                            snapshot.data!;
+                                        data.sort((a, b) => int.parse(b[4])
+                                            .compareTo(int.parse(a[4])));
+                                        data.sort((a, b) {
+                                          var dateA = DateTime.parse(
+                                              "${a[3].split("-")[2]}-${a[3].split("-")[1]}-${a[3].split("-")[0]}");
+                                          var dateB = DateTime.parse(
+                                              "${b[3].split("-")[2]}-${b[3].split("-")[1]}-${b[3].split("-")[0]}");
+                                          return dateB.compareTo(dateA);
+                                        });
+                                        if (data.isNotEmpty) {
+                                          int numberOfRequest = data.length;
+                                          return Column(
+                                            children: [
+                                              ListView.builder(
+                                                  physics:
+                                                      const NeverScrollableScrollPhysics(),
+                                                  shrinkWrap: true,
+                                                  itemCount: numberOfRequest,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    return _requestIltem(
+                                                      context,
+                                                      data[index][1],
+                                                      data[index][2],
+                                                      data[index][0],
+                                                    );
+                                                  })
+                                            ],
+                                          );
+                                        } else {
+                                          return Center(
+                                            child: Column(
+                                              children: [
+                                                SizedBox(
+                                                  height: MediaQuery.of(context)
+                                                          .size
+                                                          .height *
+                                                      0.025,
+                                                ),
+                                                const Text(
+                                                  "No food request made. Make some requests",
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                                const SizedBox(
+                                                  height: 10,
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }
+                                      } else {
+                                        return Center(
+                                          child: _isLoading
+                                              ? SizedBox(
+                                                  height: 50,
+                                                  child: OverflowBox(
+                                                    minHeight: 150,
+                                                    maxHeight: 150,
+                                                    child: Lottie.asset(
+                                                      "assets/animation/loading-utensils.json",
+                                                    ),
+                                                  ),
+                                                )
+                                              : Column(
+                                                  children: [
+                                                    SizedBox(
+                                                      height:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .height *
+                                                              0.025,
+                                                    ),
+                                                    const Text(
+                                                      "No food request made. Make some requests",
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Colors.grey,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(
+                                                      height: 10,
+                                                    ),
+                                                  ],
+                                                ),
+                                        );
+                                      }
+                                    }),
+                              )
                             ],
-                          ),
-                        ),
-                      ),
-                    );
-                  } else {
-                    return const Scaffold();
-                  }
-                });
+                          ))
+                    ],
+                  ),
+                ),
+              ),
+            );
           } else {
             return const Scaffold();
           }
@@ -838,7 +815,7 @@ class _HomeNGOState extends State<HomeNGO> {
           radius: 42,
           foregroundImage: filePath == ""
               ? const AssetImage("assets/images/user2.png")
-              : networkFile,
+              : NetworkImage(filePath) as ImageProvider<Object>?,
         ),
         const SizedBox(
           height: 7,
@@ -1988,6 +1965,7 @@ Stream<void> getDataStream() async* {
     ngoAddress = snapshot["Address Line"];
     userName = snapshot["Full Name"];
     userEmail = snapshot["Email"];
+    filePath = snapshot["Profile Picture"];
   });
 }
 
@@ -2217,15 +2195,4 @@ Stream<Map<String, List<List<String>>>> _getListing() {
   });
 
   return controller.stream;
-}
-
-Future<String> getPics() async {
-  final user = FirebaseAuth.instance.currentUser;
-  final String userID = user!.uid;
-  try {
-    filePath = await storage.downloadURL("$userID/userProfile.jpg");
-    networkFile = NetworkImage(filePath);
-    // ignore: empty_catches
-  } catch (error) {}
-  return "";
 }

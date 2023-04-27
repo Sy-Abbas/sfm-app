@@ -217,7 +217,7 @@ class _DetailsDonatorState extends State<DetailsDonator> {
                                         keyboardType: TextInputType.number,
                                         decoration: const InputDecoration(
                                           counterText: "",
-                                          labelText: "Contact Number",
+                                          labelText: "Store Number",
                                           floatingLabelBehavior:
                                               FloatingLabelBehavior.auto,
                                           prefixIcon: Icon(Icons.phone),
@@ -390,9 +390,12 @@ class _DetailsDonatorState extends State<DetailsDonator> {
                                                   'Address Line':
                                                       _address.text.trim(),
                                                 });
+
+                                                await approveDialog(context);
+
                                                 Navigator.of(context)
                                                     .pushNamedAndRemoveUntil(
-                                                        '/homedonator/',
+                                                        '/logindonator/',
                                                         (route) => false);
                                               } on FirebaseAuthException catch (e) {
                                                 if (e.code == 'not-found') {
@@ -447,6 +450,27 @@ class _DetailsDonatorState extends State<DetailsDonator> {
           ],
         ));
   }
+}
+
+Future<bool> approveDialog(BuildContext context) {
+  return showDialog<bool>(
+      barrierDismissible: false,
+      context: context,
+      builder: ((context) {
+        return AlertDialog(
+          title: const Text("Account Approval"),
+          content: const Text(
+              "Account information sent for approval.\nWe will notify you once have been approved."),
+          actions: [
+            TextButton(
+              onPressed: (() {
+                Navigator.of(context).pop(true);
+              }),
+              child: const Text("Ok"),
+            )
+          ],
+        );
+      })).then((value) => value ?? true);
 }
 
 // ignore: must_be_immutable

@@ -516,6 +516,8 @@ class _RegisterViewDonatorState extends State<RegisterViewDonator> {
                                                     'Country': "",
                                                     'Store Contact Number': "",
                                                     'Store Name': "",
+                                                    'Approved': "false",
+                                                    'Profile Picture': ""
                                                   });
                                                   // ignore: unused_local_variable
                                                   final shouldSend =

@@ -517,6 +517,8 @@ class _RegisterViewNGOState extends State<RegisterViewNGO> {
                                                     'Country': "",
                                                     'NGO Contact Number': "",
                                                     'NGO Name': "",
+                                                    'Approved': "false",
+                                                    'Profile Picture': ""
                                                   });
                                                   // ignore: unused_local_variable
                                                   final shouldSend =

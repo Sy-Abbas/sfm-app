@@ -11,7 +11,7 @@ import '../main.dart';
 
 var userType = "None";
 var userDocID = "None";
-bool isDe = false;
+List<bool> isDe = [false, false];
 
 class Check extends StatefulWidget {
   const Check({super.key});
@@ -90,13 +90,13 @@ class _Check2State extends State<Check2> {
         builder: ((context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.done:
-              if (isDe == false) {
+              if (isDe[0] == false || isDe[1] == false) {
                 if (widget.useT == "NGOs") {
                   return const LoginViewNGO();
                 } else if (widget.useT == "Donators") {
                   return const LoginViewDonator();
                 }
-              } else if (isDe == true) {
+              } else if (isDe[0] && isDe[1]) {
                 if (widget.useT == "NGOs") {
                   return const HomeNGO();
                 } else if (widget.useT == "Donators") {
@@ -122,16 +122,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  @override
-  void initState() {
-    // AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
-    //   if (!isAllowed) {
-    //     AwesomeNotifications().requestPermissionToSendNotifications();
-    //   }
-    // });
-    super.initState();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -215,10 +205,9 @@ class _HomePageState extends State<HomePage> {
                         child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // ignore: prefer_const_constructors
-                              Text(
+                              const Text(
                                 "Ending Hunger, One Meal at a Time with SFM",
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 25,
                                   fontFamily: "Roboto",
                                   color: Color(0xff05240E),
@@ -292,6 +281,7 @@ Future<String> doneGetting() async {
 Future<String> checkingDetailed(String uT) async {
   User? user = FirebaseAuth.instance.currentUser;
   userDocID = await findDocID(user?.uid ?? "None", uT);
-  isDe = await detailsEntered(user?.uid ?? "None", uT, userDocID);
+  isDe[0] = await detailsEntered(user?.uid ?? "None", uT, userDocID);
+  isDe[1] = await accountApproved(user?.uid ?? "None", uT, userDocID);
   return "Done";
 }

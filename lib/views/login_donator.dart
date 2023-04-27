@@ -316,10 +316,22 @@ class _LoginViewDonatorState extends State<LoginViewDonator> {
                                                           "Donators",
                                                           idDoc);
                                                   if (isDetail == true) {
-                                                    Navigator.of(context)
-                                                        .pushNamedAndRemoveUntil(
-                                                            '/homedonator/',
-                                                            (route) => false);
+                                                    bool isApproved =
+                                                        await accountApproved(
+                                                            user?.uid ?? "None",
+                                                            "Donators",
+                                                            idDoc);
+                                                    if (isApproved) {
+                                                      Navigator.of(context)
+                                                          .pushNamedAndRemoveUntil(
+                                                              '/homedonator/',
+                                                              (route) => false);
+                                                    } else {
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                      showToast(
+                                                          "Account not approved");
+                                                    }
                                                   } else {
                                                     Navigator.of(context)
                                                         .pushNamedAndRemoveUntil(

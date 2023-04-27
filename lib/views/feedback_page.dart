@@ -763,15 +763,15 @@ class _FeedbackPageState extends State<FeedbackPage> {
                           }
                           var effRating = "";
                           if (_effOne) {
-                            effRating = "";
+                            effRating = "1";
                           } else if (_effTwo) {
-                            effRating = "";
+                            effRating = "2";
                           } else if (_effThree) {
-                            effRating = "";
+                            effRating = "3";
                           } else if (_effFour) {
-                            effRating = "";
+                            effRating = "4";
                           } else if (_effFive) {
-                            effRating = "";
+                            effRating = "5";
                           }
                           final dateTime = getFormattedDate();
                           try {
