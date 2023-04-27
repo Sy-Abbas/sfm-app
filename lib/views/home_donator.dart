@@ -702,7 +702,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
                       textInputAction: TextInputAction.next,
                       keyboardType: TextInputType.text,
                       decoration: const InputDecoration(
-                        labelText: "Number of people",
+                        labelText: "Servings Available",
                         floatingLabelBehavior: FloatingLabelBehavior.auto,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(14.0)),
@@ -717,7 +717,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return "Please enter the number of people";
+                          return "Please enter the servings available";
                         }
                         final pattern = RegExp(r'^(\d+|\d+-\d+)$');
                         if (!pattern.hasMatch(value)) {
@@ -1192,7 +1192,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
               String foodItem = requestData["Food Item"];
               String numberOfPeople = requestData["Number of people"];
               String lineOne = "$foodItem - $cuisine";
-              String lineTwo = "$numberOfPeople people, $area";
+              String lineTwo = "$numberOfPeople servings, $area";
               final dateTime = orderTime as String;
               final date = dateTime.split(" ")[0];
               final time = dateTime.split(" ")[1].replaceAll(":", "");
@@ -1247,7 +1247,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
           String foodItem = requestData["Food Item"];
           String numberOfPeople = requestData["Number of people"];
           String lineOne = "$foodItem - $cuisine";
-          String lineTwo = "$numberOfPeople people, $area";
+          String lineTwo = "$numberOfPeople servings, $area";
           final dateTime = orderTime as String;
           final date = dateTime.split(" ")[0];
           final time = dateTime.split(" ")[1].replaceAll(":", "");
@@ -1291,7 +1291,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
           String foodItem = requestData["Food Item"];
           String numberOfPeople = requestData["Number of people"];
           String lineOne = "$foodItem - $cuisine";
-          String lineTwo = "$numberOfPeople people, $area";
+          String lineTwo = "$numberOfPeople servings, $area";
           final dateTime = orderTime as String;
           final date = dateTime.split(" ")[0];
           final time = dateTime.split(" ")[1].replaceAll(":", "");
@@ -1353,7 +1353,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
           foodItem = value["Food Item"];
           numberOfPeople = value["Number of people"];
           lineOne = "$foodItem - $cuisine";
-          lineTwo = "$numberOfPeople people";
+          lineTwo = "$numberOfPeople servings";
           final filePath = value["File Path"];
           final dateTime = key as String;
           final date = dateTime.split(" ")[0];
@@ -1382,7 +1382,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
       numberOfPeople = data["Number of people"];
       lineOne = "$foodItem - $cuisine";
       // lineTwo = "$numberOfPeople people, Expiry: $beforeDate";
-      lineTwo = "$numberOfPeople people";
+      lineTwo = "$numberOfPeople servings";
       final filePath = data["File Path"];
       final dateTime = event.snapshot.key as String;
       final date = dateTime.split(" ")[0];
@@ -1420,7 +1420,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
       numberOfPeople = data["Number of people"];
       lineOne = "$foodItem - $cuisine";
       // lineTwo = "$numberOfPeople people, Expiry: $beforeDate";
-      lineTwo = "$numberOfPeople people";
+      lineTwo = "$numberOfPeople servings";
       final filePath = data["File Path"];
       final dateTime = event.snapshot.key as String;
       final date = dateTime.split(" ")[0];
@@ -1553,7 +1553,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
                           numberOfPeopleData.text =
                               requestData["Number of people"];
                           showDialog(
-                            barrierDismissible: false,
+                            // barrierDismissible: false,
                             context: context,
                             builder: (BuildContext context) {
                               return AlertDialog(
@@ -1640,7 +1640,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                           textInputAction: TextInputAction.next,
                                           keyboardType: TextInputType.text,
                                           decoration: const InputDecoration(
-                                            labelText: "Number of people",
+                                            labelText: "Servings Available",
                                             floatingLabelBehavior:
                                                 FloatingLabelBehavior.auto,
                                             border: OutlineInputBorder(
@@ -1662,7 +1662,7 @@ class _HomeDonatorsState extends State<HomeDonators> {
                                           validator: (value) {
                                             if (value == null ||
                                                 value.isEmpty) {
-                                              return "Please enter the number of people";
+                                              return "Please enter the servings available";
                                             }
                                             final pattern =
                                                 RegExp(r'^(\d+|\d+-\d+)$');

@@ -459,7 +459,7 @@ class _HomeNGOState extends State<HomeNGO> {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
-                                            "My Requests",
+                                            "My Food Requests",
                                             style: TextStyle(
                                                 fontSize: MediaQuery.of(context)
                                                         .size
@@ -677,7 +677,7 @@ class _HomeNGOState extends State<HomeNGO> {
                       textInputAction: TextInputAction.next,
                       keyboardType: TextInputType.text,
                       decoration: const InputDecoration(
-                        labelText: "Number of people",
+                        labelText: "Servings Available",
                         floatingLabelBehavior: FloatingLabelBehavior.auto,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(14.0)),
@@ -692,7 +692,7 @@ class _HomeNGOState extends State<HomeNGO> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return "Please enter the number of people";
+                          return "Please enter the servings available";
                         }
                         final pattern = RegExp(r'^(\d+|\d+-\d+)$');
                         if (!pattern.hasMatch(value)) {
@@ -1483,7 +1483,7 @@ Widget _requestIltem(
                               _numberOfPeople.text =
                                   requestData["Number of people"];
                               showDialog(
-                                barrierDismissible: false,
+                                // barrierDismissible: false,
                                 context: context,
                                 builder: (BuildContext context) {
                                   return AlertDialog(
@@ -1592,7 +1592,8 @@ Widget _requestIltem(
                                                     TextInputType.text,
                                                 decoration:
                                                     const InputDecoration(
-                                                  labelText: "Number of people",
+                                                  labelText:
+                                                      "Servings Available",
                                                   floatingLabelBehavior:
                                                       FloatingLabelBehavior
                                                           .auto,
@@ -1620,7 +1621,7 @@ Widget _requestIltem(
                                                 validator: (value) {
                                                   if (value == null ||
                                                       value.isEmpty) {
-                                                    return "Please enter the number of people";
+                                                    return "Please enter the servings available";
                                                   }
                                                   final pattern = RegExp(
                                                       r'^(\d+|\d+-\d+)$');
@@ -1921,7 +1922,7 @@ Stream<List<List<String>>> _getRequestDetails() {
         foodItem = data2["Food Item"];
         numberOfPeople = data2["Number of people"];
         lineOne = "$foodItem - $cuisine";
-        lineTwo = "$numberOfPeople people";
+        lineTwo = "$numberOfPeople servings";
         final dateTime = key as String;
         final date = dateTime.split(" ")[0];
         final time = dateTime.split(" ")[1].replaceAll(":", "");
@@ -1947,7 +1948,7 @@ Stream<List<List<String>>> _getRequestDetails() {
     foodItem = data["Food Item"];
     numberOfPeople = data["Number of people"];
     lineOne = "$foodItem - $cuisine";
-    lineTwo = "$numberOfPeople people";
+    lineTwo = "$numberOfPeople servings";
     final dateTime = event.snapshot.key as String;
     final date = dateTime.split(" ")[0];
     final time = dateTime.split(" ")[1].replaceAll(":", "");
@@ -2027,8 +2028,8 @@ Stream<Map<String, List<List<String>>>> _getListing() {
             String foodItem = requestData["Food Item"];
             String numberOfPeople = requestData["Number of people"];
             String lineOne = "$storeName - $foodItem";
-            String lineTwo = "$numberOfPeople people, $cityKey";
-            String lineThree = "$numberOfPeople people, $area";
+            String lineTwo = "$numberOfPeople servings, $cityKey";
+            String lineThree = "$numberOfPeople servings, $area";
             final dateTime = orderTime as String;
             final date = dateTime.split(" ")[0];
             final time = dateTime.split(" ")[1].replaceAll(":", "");
@@ -2096,8 +2097,8 @@ Stream<Map<String, List<List<String>>>> _getListing() {
         String foodItem = requestData["Food Item"];
         String numberOfPeople = requestData["Number of people"];
         String lineOne = "$storeName - $foodItem";
-        String lineTwo = "$numberOfPeople people, $keyCity";
-        String lineThree = "$numberOfPeople people, $area";
+        String lineTwo = "$numberOfPeople servings, $keyCity";
+        String lineThree = "$numberOfPeople servings, $area";
         final dateTime = orderTime as String;
         final date = dateTime.split(" ")[0];
         final time = dateTime.split(" ")[1].replaceAll(":", "");
@@ -2164,8 +2165,8 @@ Stream<Map<String, List<List<String>>>> _getListing() {
         String foodItem = requestData["Food Item"];
         String numberOfPeople = requestData["Number of people"];
         String lineOne = "$storeName - $foodItem";
-        String lineTwo = "$numberOfPeople people, $keyCity";
-        String lineThree = "$numberOfPeople people, $area";
+        String lineTwo = "$numberOfPeople servings, $keyCity";
+        String lineThree = "$numberOfPeople servings, $area";
         final dateTime = orderTime as String;
         final date = dateTime.split(" ")[0];
         final time = dateTime.split(" ")[1].replaceAll(":", "");
